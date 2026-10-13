@@ -2751,7 +2751,7 @@
 .we-wind-announcement.we-wind-lv3 { border-top-color: color-mix(in srgb, var(--wind-accent) 55%, transparent); }
 .we-wind-announcement.we-wind-lv3 .we-wind-topic { color: color-mix(in srgb, var(--wind-accent) 78%, var(--we-text)); }
 .we-wind-announcement.we-wind-lv3::after {
-  content: "公告";
+  content: "NOTICE";
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%) rotate(-21deg);
   font-size: 34px; font-weight: 900; letter-spacing: 8px; padding: 5px 16px 7px;
@@ -2775,7 +2775,7 @@
   animation: we-ann-titlestamp 3.4s cubic-bezier(0.2,0.8,0.2,1) infinite;
 }
 .we-wind-announcement.we-wind-lv4::after {
-  content: "公告";
+  content: "NOTICE";
   position: absolute; top: 50%; left: 50%;
   font-size: 36px; font-weight: 900; letter-spacing: 9px; padding: 5px 16px 7px;
   color: color-mix(in srgb, var(--wind-accent) 92%, #fff);
@@ -4045,5 +4045,11 @@
 :root[data-we-theme] #we-sec-cp-blackbox > .we-section-title,
 :root[data-we-theme] #we-sec-blackbox > .we-section-title .we-section-arrow,
 :root[data-we-theme] #we-sec-cp-blackbox > .we-section-title .we-section-arrow { color: var(--we-section-blackbox); }
+
+/* [English port] English labels are wider than two Chinese characters. */
+.we-section-toggle { flex-wrap: wrap; white-space: nowrap; }
+.we-section-motto { white-space: normal; }
+.we-wind-field { grid-template-columns: 52px minmax(0, 1fr); }
+.we-wind-label { letter-spacing: 0.3px; }
 
 

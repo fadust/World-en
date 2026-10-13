@@ -52,7 +52,7 @@ window.WORLD_ENGINE_STORE = (function() {
   function idbPut(key, value) {
     if (!db) return;
     try { db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put(value, key); }
-    catch (e) { console.warn('[世界引擎] IndexedDB 写入失败', e); }
+    catch (e) { console.warn('[World Engine] IndexedDB write failed', e); }
   }
 
   function idbDel(key) {
@@ -68,7 +68,7 @@ window.WORLD_ENGINE_STORE = (function() {
       db = await openDB();
       for (const [k, v] of await idbGetAll()) mirror.set(k, v);
     } catch (e) {
-      console.warn('[世界引擎] IndexedDB 不可用，回退到 localStorage', e);
+      console.warn('[World Engine] IndexedDB unavailable, falling back to localStorage', e);
       db = null;
     }
     // 把 localStorage 里遗留的 world_engine_* 搬进 IndexedDB，并腾出 localStorage 空间
@@ -85,9 +85,9 @@ window.WORLD_ENGINE_STORE = (function() {
         if (db) localStorage.removeItem(k); // 仅在 IDB 可用（已落盘）时才删，避免丢数据
       }
       if (db && legacyKeys.length) {
-        console.log(`[世界引擎] 已迁移 ${legacyKeys.length} 条存档至 IndexedDB`);
+        console.log(`[World Engine] Migrated ${legacyKeys.length} saves to IndexedDB`);
       }
-    } catch (e) { console.warn('[世界引擎] 旧存档迁移失败（非致命）', e); }
+    } catch (e) { console.warn('[World Engine] Old save migration failed (non-fatal)', e); }
     ready = true;
   }
 

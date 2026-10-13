@@ -28,7 +28,7 @@ assert.match(
   '世界引擎入口必须有独立运行动效'
 );
 
-const worldComplete = world.indexOf("setStatus('世界推演完成')");
+const worldComplete = world.indexOf("setStatus('World evolution complete')");
 const worldUiStop = world.indexOf('ui.setEvolvingUI(false)', worldComplete);
 const worldUiRefresh = world.indexOf('ui.refresh(true)', worldComplete);
 const memoryLinkStart = world.indexOf('await window.MEMORY_ENGINE?.ingestWorldEvolution?.');

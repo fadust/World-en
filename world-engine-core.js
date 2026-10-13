@@ -3,21 +3,128 @@ window.WORLD_ENGINE_CORE = (function() {
   const STORAGE_PREFIX = 'world_engine_';
   const EVENT_TYPES = ['conflict', 'progress'];
   const EVENT_STAGE_ORDER = {
-    conflict: ['萌芽', '发酵', '逼近'],
-    progress: ['筹备', '执行', '关键']
+    conflict: ['Brewing', 'Escalating', 'Imminent'],
+    progress: ['Preparing', 'Underway', 'Critical']
   };
   const EVENT_STAGE_MAP = {
-    conflict: ['萌芽', '发酵', '逼近', '已爆发', '已消散'],
-    progress: ['筹备', '执行', '关键', '已完成', '已失败']
+    conflict: ['Brewing', 'Escalating', 'Imminent', 'Erupted', 'Dissipated'],
+    progress: ['Preparing', 'Underway', 'Critical', 'Completed', 'Failed']
   };
   const EVENT_SUCCESS_STAGE = {
-    conflict: '已爆发',
-    progress: '已完成'
+    conflict: 'Erupted',
+    progress: 'Completed'
   };
   const EVENT_TERMINAL_STAGES = {
-    conflict: ['已爆发', '已消散'],
-    progress: ['已完成', '已失败']
+    conflict: ['Erupted', 'Dissipated'],
+    progress: ['Completed', 'Failed']
   };
+
+  // ========== [English port] Canonical vocabulary ==========
+  // Every status/stage/relation word is stored in English. Values from older Chinese saves,
+  // from models that answer in Chinese, or in a different letter case are mapped back here,
+  // so the dice, colors, verdicts and filters keep working whatever the model wrote.
+  const VOCAB_LEGACY = {
+    '萌芽': 'Brewing', '发酵': 'Escalating', '逼近': 'Imminent', '已爆发': 'Erupted', '已消散': 'Dissipated',
+    '筹备': 'Preparing', '执行': 'Underway', '关键': 'Critical', '已完成': 'Completed', '已失败': 'Failed',
+    '成功': 'Success', '保持': 'Hold', '受挫': 'Setback',
+    '血盟': 'Blood pact', '盟友': 'Ally', '友好': 'Friendly', '中立': 'Neutral', '冷淡': 'Cold', '紧张': 'Cold',
+    '敌对': 'Hostile', '世仇': 'Sworn enemy',
+    '鼎盛': 'Ascendant', '稳固': 'Stable', '倾轧': 'Infighting', '困顿': 'Beleaguered', '衰落': 'Declining', '瓦解': 'Collapsing',
+    '天怒人怨': 'Reviled', '声名狼藉': 'Notorious', '默默无闻': 'Unknown', '小有名气': 'Respected', '受人尊敬': 'Respected', '万众敬仰': 'Revered',
+    '繁荣': 'Booming', '平稳': 'Steady', '衰退': 'Recession', '动荡': 'Turbulent',
+    '持续中': 'Ongoing', '已结束': 'Ended',
+    '追踪中': 'Tracking', '策划中': 'Plotting', '执行中': 'Striking', '已终结': 'Resolved',
+    '有效': 'Active', '过期': 'Stale', '暴露': 'Exposed', '失效': 'Void'
+  };
+  const VOCAB_FIELDS = {
+    stage: ['Brewing', 'Escalating', 'Imminent', 'Erupted', 'Dissipated', 'Preparing', 'Underway', 'Critical', 'Completed', 'Failed'],
+    evolveResult: ['Success', 'Hold', 'Setback'],
+    relation: ['Blood pact', 'Ally', 'Friendly', 'Neutral', 'Cold', 'Hostile', 'Sworn enemy'],
+    factionStatus: ['Ascendant', 'Stable', 'Infighting', 'Beleaguered', 'Declining', 'Collapsing'],
+    reputation: ['Reviled', 'Notorious', 'Unknown', 'Respected', 'Revered'],
+    climate: ['Booming', 'Steady', 'Recession', 'Turbulent'],
+    trendStatus: ['Ongoing', 'Ended'],
+    enemyStatus: ['Tracking', 'Plotting', 'Striking', 'Resolved'],
+    assetStatus: ['Active', 'Stale', 'Exposed', 'Void']
+  };
+  // Common English variants a model may write instead of the exact word.
+  const VOCAB_SYNONYMS = {
+    stage: { brewing: 'Brewing', budding: 'Brewing', emerging: 'Brewing', fermenting: 'Escalating', escalation: 'Escalating', looming: 'Imminent', approaching: 'Imminent', erupt: 'Erupted', erupts: 'Erupted', exploded: 'Erupted', 'broke out': 'Erupted', dissipate: 'Dissipated', faded: 'Dissipated', defused: 'Dissipated', preparation: 'Preparing', planning: 'Preparing', 'in progress': 'Underway', executing: 'Underway', execution: 'Underway', 'critical stage': 'Critical', key: 'Critical', complete: 'Completed', done: 'Completed', finished: 'Completed', succeeded: 'Completed', fail: 'Failed', failure: 'Failed' },
+    evolveResult: { succeeded: 'Success', advance: 'Success', advanced: 'Success', held: 'Hold', 'hold steady': 'Hold', unchanged: 'Hold', setback: 'Setback', 'set back': 'Setback', regressed: 'Setback' },
+    relation: { 'blood pact': 'Blood pact', 'blood-pact': 'Blood pact', bloodpact: 'Blood pact', allied: 'Ally', allies: 'Ally', alliance: 'Ally', friendly: 'Friendly', neutral: 'Neutral', cold: 'Cold', cool: 'Cold', distant: 'Cold', tense: 'Cold', hostile: 'Hostile', enemy: 'Hostile', 'sworn enemy': 'Sworn enemy', 'sworn enemies': 'Sworn enemy', nemesis: 'Sworn enemy', 'blood feud': 'Sworn enemy' },
+    factionStatus: { thriving: 'Ascendant', flourishing: 'Ascendant', peak: 'Ascendant', stable: 'Stable', steady: 'Stable', 'internal strife': 'Infighting', divided: 'Infighting', struggling: 'Beleaguered', strained: 'Beleaguered', besieged: 'Beleaguered', decline: 'Declining', waning: 'Declining', collapse: 'Collapsing', collapsed: 'Collapsing', disintegrating: 'Collapsing' },
+    reputation: { hated: 'Reviled', infamous: 'Notorious', disreputable: 'Notorious', unknown: 'Unknown', obscure: 'Unknown', 'somewhat known': 'Respected', known: 'Respected', respected: 'Respected', esteemed: 'Respected', revered: 'Revered', renowned: 'Revered', legendary: 'Revered' },
+    climate: { boom: 'Booming', prosperous: 'Booming', prosperity: 'Booming', stable: 'Steady', steady: 'Steady', normal: 'Steady', recession: 'Recession', slump: 'Recession', decline: 'Recession', turbulent: 'Turbulent', turmoil: 'Turbulent', volatile: 'Turbulent', chaotic: 'Turbulent' },
+    trendStatus: { ongoing: 'Ongoing', active: 'Ongoing', continuing: 'Ongoing', ended: 'Ended', over: 'Ended', finished: 'Ended', concluded: 'Ended' },
+    enemyStatus: { tracking: 'Tracking', hunting: 'Tracking', watching: 'Tracking', plotting: 'Plotting', planning: 'Plotting', scheming: 'Plotting', striking: 'Striking', attacking: 'Striking', acting: 'Striking', executing: 'Striking', resolved: 'Resolved', ended: 'Resolved', terminated: 'Resolved', dead: 'Resolved' },
+    assetStatus: { active: 'Active', valid: 'Active', stale: 'Stale', expired: 'Stale', outdated: 'Stale', exposed: 'Exposed', compromised: 'Exposed', void: 'Void', invalid: 'Void', lost: 'Void' }
+  };
+  function canonWord(value, field) {
+    if (typeof value !== 'string') return value;
+    const s = value.trim();
+    if (Object.prototype.hasOwnProperty.call(VOCAB_LEGACY, s)) return VOCAB_LEGACY[s];
+    const low = s.toLowerCase().replace(/[\s_]+/g, ' ');
+    const groups = field ? [field] : Object.keys(VOCAB_FIELDS);
+    for (const g of groups) {
+      const hit = (VOCAB_FIELDS[g] || []).find(w => w.toLowerCase() === low);
+      if (hit) return hit;
+    }
+    for (const g of groups) {
+      const syn = VOCAB_SYNONYMS[g] || {};
+      if (Object.prototype.hasOwnProperty.call(syn, low)) return syn[low];
+    }
+    return s;
+  }
+  function normalizeVocab(obj) {
+    if (!obj || typeof obj !== 'object') return obj;
+    const fix = (item, key, field) => {
+      if (item && typeof item === 'object' && typeof item[key] === 'string') item[key] = canonWord(item[key], field);
+    };
+    const each = (arr, pairs) => {
+      if (!Array.isArray(arr)) return;
+      for (const item of arr) for (const [key, field] of pairs) fix(item, key, field);
+    };
+    each(obj.events, [['stage', 'stage'], ['evolveResult', 'evolveResult']]);
+    each(obj.factions, [['status', 'factionStatus'], ['relation', 'relation']]);
+    each(obj.worldTrends, [['status', 'trendStatus']]);
+    each(obj.enemies, [['status', 'enemyStatus']]);
+    fix(obj.economy, 'climate', 'climate');
+    for (const dim of ['authority', 'common', 'shadow', 'circuit']) fix(obj.reputation, dim, 'reputation');
+    if (obj.blackbox && typeof obj.blackbox === 'object') each(obj.blackbox.secretAssets, [['status', 'assetStatus']]);
+    return obj;
+  }
+  // Power pillars were capped at 4 Chinese characters. English keeps a short label instead:
+  // up to 4 words and 28 characters, cut at a word boundary.
+  function clipPillar(name) {
+    name = String(name || '').trim();
+    if (/[㐀-鿿]/.test(name) || !/[A-Za-z]/.test(name)) return name.slice(0, 4);
+    const words = name.split(/\s+/).slice(0, 4);
+    let out = words.join(' ');
+    const dangling = /^(of|the|and|for|in|on|at|to|a|an|with|from|by|or)$/i;
+    while (words.length > 1 && (out.length > 28 || dangling.test(words[words.length - 1]))) { words.pop(); out = words.join(' '); }
+    return out.length > 28 ? out.slice(0, 28) : out;
+  }
+  // English number words for story-time parsing ("three", "twenty-first", "a hundred and two").
+  const EN_NUM_SMALL = { zero: 0, a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+    eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+    twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+    first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10,
+    eleventh: 11, twelfth: 12, thirteenth: 13, fourteenth: 14, fifteenth: 15, sixteenth: 16, seventeenth: 17, eighteenth: 18, nineteenth: 19,
+    twentieth: 20, thirtieth: 30, fortieth: 40, fiftieth: 50, sixtieth: 60, seventieth: 70, eightieth: 80, ninetieth: 90 };
+  const EN_NUM_MULT = { hundred: 100, hundredth: 100, thousand: 1000, thousandth: 1000 };
+  function enWordsToNum(s) {
+    const ord = /^(\d+)(?:st|nd|rd|th)$/i.exec(s);
+    if (ord) return parseInt(ord[1], 10);
+    const words = s.toLowerCase().replace(/-/g, ' ').split(/\s+/).filter(w => w && w !== 'and');
+    if (!words.length || !words.every(w => w in EN_NUM_SMALL || w in EN_NUM_MULT)) return null;
+    let total = 0, cur = 0;
+    for (const w of words) {
+      if (w in EN_NUM_SMALL) cur += EN_NUM_SMALL[w];
+      else if (EN_NUM_MULT[w] === 100) cur = (cur || 1) * 100;
+      else { total += (cur || 1) * EN_NUM_MULT[w]; cur = 0; }
+    }
+    return total + cur;
+  }
 
   function getSettings() {
     return window.WORLD_ENGINE_API && window.WORLD_ENGINE_API.getSettings ? window.WORLD_ENGINE_API.getSettings() : {};
@@ -31,20 +138,20 @@ window.WORLD_ENGINE_CORE = (function() {
   function getDefaultState() {
     return {
       round: 0,
-      worldDigest: '世界正在苏醒，一切尚未可知。',
+      worldDigest: 'The world is waking; nothing is known yet.',
       events: [],
       factions: [],
       winds: [],
       worldTrends: [],
       reputation: {
-        authority: '默默无闻',
-        common: '默默无闻',
-        shadow: '默默无闻',
-        circuit: '默默无闻',
+        authority: 'Unknown',
+        common: 'Unknown',
+        shadow: 'Unknown',
+        circuit: 'Unknown',
         lastChange: ''
       },
       economy: {
-        climate: '平稳',
+        climate: 'Steady',
         signals: []
       },
       memories: [],
@@ -92,7 +199,7 @@ window.WORLD_ENGINE_CORE = (function() {
       const character = ctx?.characters?.[ctx?.characterId];
       if (character?.name) return character.name;
     } catch(e) {}
-    return '用户';
+    return 'User';
   }
 
   /** UI 渲染：替换文本中的 {{user}} 为当前角色名 */
@@ -223,6 +330,7 @@ window.WORLD_ENGINE_CORE = (function() {
   }
 
   function ensureArrays(state) {
+    normalizeVocab(state);
     state.memories = state.memories || [];
     state.events = state.events || [];
     ensureEntityIds(state.events, ENTITY_ID_PREFIXES.events);
@@ -254,18 +362,18 @@ window.WORLD_ENGINE_CORE = (function() {
     }
     state.factions = state.factions || [];
     ensureEntityIds(state.factions, ENTITY_ID_PREFIXES.factions);
-    const FACTION_RELATIONS = ['血盟', '盟友', '友好', '中立', '冷淡', '敌对', '世仇'];
-    const FACTION_STATUSES = ['鼎盛', '稳固', '倾轧', '困顿', '衰落', '瓦解'];
+    const FACTION_RELATIONS = ['Blood pact', 'Ally', 'Friendly', 'Neutral', 'Cold', 'Hostile', 'Sworn enemy'];
+    const FACTION_STATUSES = ['Ascendant', 'Stable', 'Infighting', 'Beleaguered', 'Declining', 'Collapsing'];
     for (const f of state.factions) {
-      f.status = FACTION_STATUSES.includes(f.status) ? f.status : '稳固';
+      f.status = FACTION_STATUSES.includes(f.status) ? f.status : 'Stable';
       // 八级→七级迁移：旧存档的"紧张"归并到"冷淡"
-      if (f.relation === '紧张') f.relation = '冷淡';
-      f.relation = FACTION_RELATIONS.includes(f.relation) ? f.relation : '中立';
+      if (f.relation === 'Tense') f.relation = 'Cold';
+      f.relation = FACTION_RELATIONS.includes(f.relation) ? f.relation : 'Neutral';
       f.scope = f.scope || '';
       if (!Array.isArray(f.powerPillars)) f.powerPillars = [];
       else f.powerPillars = f.powerPillars.map(p => {
         const name = typeof p === 'string' ? p : (p.name || '');
-        return name.length > 4 ? name.slice(0, 4) : name;
+        return clipPillar(name);
       }).filter(Boolean);
       if (f.powerPillars.length > 3) f.powerPillars.length = 3;
     }
@@ -275,22 +383,22 @@ window.WORLD_ENGINE_CORE = (function() {
     state.winds = state.winds || [];
     ensureEntityIds(state.winds, ENTITY_ID_PREFIXES.winds);
     state.winds = state.winds.map((wind, index) => {
-      wind.topic = wind.topic || wind.content || `风声${index + 1}`;
+      wind.topic = wind.topic || wind.content || `News ${index + 1}`;
       if (!['announcement', 'report', 'rumor', 'sentiment'].includes(wind.type)) wind.type = 'rumor';
       wind.level = Math.min(4, Math.max(1, parseInt(wind.level) || 1));
       wind.content = wind.content || '';
-      wind.scope = wind.scope || '来源地';
-      wind.source = wind.source || '来源不明';
+      wind.scope = wind.scope || 'Place of origin';
+      wind.source = wind.source || 'Unknown source';
       wind.quietRounds = Math.max(0, parseInt(wind.quietRounds) || 0);
       return wind;
     });
-    state.reputation = state.reputation || { authority: '默默无闻', common: '默默无闻', shadow: '默默无闻', circuit: '默默无闻' };
+    state.reputation = state.reputation || { authority: 'Unknown', common: 'Unknown', shadow: 'Unknown', circuit: 'Unknown' };
     // 六级→五级迁移：旧存档的"小有名气"归并到"受人尊敬"
     for (const _dim of ['authority', 'common', 'shadow', 'circuit']) {
-      if (state.reputation[_dim] === '小有名气') state.reputation[_dim] = '受人尊敬';
+      if (state.reputation[_dim] === 'Somewhat known') state.reputation[_dim] = 'Respected';
     }
     if (!state.reputation.lastChange) state.reputation.lastChange = '';
-    state.economy = state.economy || { climate: '平稳', signals: [] };
+    state.economy = state.economy || { climate: 'Steady', signals: [] };
     if (!state.economy.signals) state.economy.signals = [];
     state.enemies = state.enemies || [];
     ensureEntityIds(state.enemies, ENTITY_ID_PREFIXES.enemies);
@@ -350,11 +458,11 @@ window.WORLD_ENGINE_CORE = (function() {
             const checkpoint = ensureArrays(JSON.parse(checkpointRaw));
             inheritLegacyIds(merged, checkpoint);
           } catch (e) {
-            console.warn('[世界引擎] 旧当前状态 ID 对齐失败，将按当前状态现状补号', e);
+            console.warn('[World Engine] Failed to align IDs of the old current state; the current state will be numbered as it is', e);
           }
         }
         return ensureArrays(merged);
-      } catch(e) { console.warn('[世界引擎] 加载状态失败', e); }
+      } catch(e) { console.warn('[World Engine] Failed to load state', e); }
     }
     return ensureArrays(getDefaultState());
   }
@@ -414,7 +522,7 @@ window.WORLD_ENGINE_CORE = (function() {
       try {
         const cp = JSON.parse(raw);
         return ensureArrays(cp);
-      } catch(e) { console.warn('[世界引擎] 存档点读取失败', e); }
+      } catch(e) { console.warn('[World Engine] Failed to read the checkpoint', e); }
     }
     return null;
   }
@@ -548,6 +656,8 @@ window.WORLD_ENGINE_CORE = (function() {
     s = String(s).trim();
     if (s === '') return 0;
     if (/^-?\d+$/.test(s)) return parseInt(s, 10);
+    const enNum = enWordsToNum(s);
+    if (enNum !== null) return enNum;
     const D = { 零:0, 〇:0, 一:1, 二:2, 两:2, 三:3, 四:4, 五:5, 六:6, 七:7, 八:8, 九:9 };
     s = s.replace(/^初/, '');               // 初九 → 九
     // 含「万」：拆高低两段递归（万前空按 1 算，即「万」=10000）
@@ -629,6 +739,8 @@ window.WORLD_ENGINE_CORE = (function() {
   }
 
   function ensureEventFields(ev) {
+    if (ev && typeof ev.stage === 'string') ev.stage = canonWord(ev.stage, 'stage');
+    if (ev && typeof ev.evolveResult === 'string') ev.evolveResult = canonWord(ev.evolveResult, 'evolveResult');
     if (!ev.type || !EVENT_TYPES.includes(ev.type)) ev.type = 'conflict';
     if (ev.stageRound === undefined) ev.stageRound = 1;
     if (ev.level === undefined) ev.level = 1;
@@ -679,16 +791,16 @@ window.WORLD_ENGINE_CORE = (function() {
   function addFaction(state, faction) {
     if (!state.factions) state.factions = [];
     ensureEntityIds(state.factions, ENTITY_ID_PREFIXES.factions);
-    const FACTION_RELATIONS = ['血盟', '盟友', '友好', '中立', '冷淡', '敌对', '世仇'];
-    const FACTION_STATUSES = ['鼎盛', '稳固', '倾轧', '困顿', '衰落', '瓦解'];
-    if (!FACTION_STATUSES.includes(faction.status)) faction.status = '稳固';
-    if (faction.relation === '紧张') faction.relation = '冷淡';
-    if (!FACTION_RELATIONS.includes(faction.relation)) faction.relation = '中立';
+    const FACTION_RELATIONS = ['Blood pact', 'Ally', 'Friendly', 'Neutral', 'Cold', 'Hostile', 'Sworn enemy'];
+    const FACTION_STATUSES = ['Ascendant', 'Stable', 'Infighting', 'Beleaguered', 'Declining', 'Collapsing'];
+    if (!FACTION_STATUSES.includes(faction.status)) faction.status = 'Stable';
+    if (faction.relation === 'Tense') faction.relation = 'Cold';
+    if (!FACTION_RELATIONS.includes(faction.relation)) faction.relation = 'Neutral';
     faction.scope = faction.scope || '';
     if (!Array.isArray(faction.powerPillars)) faction.powerPillars = [];
     else faction.powerPillars = faction.powerPillars.map(p => {
       const name = typeof p === 'string' ? p : (p.name || '');
-      return name.length > 4 ? name.slice(0, 4) : name;
+      return clipPillar(name);
     }).filter(Boolean);
     if (faction.powerPillars.length > 3) faction.powerPillars.length = 3;
     const idx = findEntityIndex(state.factions, faction, ENTITY_ID_PREFIXES.factions, 'name');
@@ -707,14 +819,14 @@ window.WORLD_ENGINE_CORE = (function() {
     if (!state.worldTrends) state.worldTrends = [];
     ensureEntityIds(state.worldTrends, ENTITY_ID_PREFIXES.worldTrends);
     if (!trend || !trend.name) return;
-    trend.status = trend.status === '已结束' ? '已结束' : '持续中';
-    trend.scope = trend.scope || '天下';
+    trend.status = trend.status === 'Ended' ? 'Ended' : 'Ongoing';
+    trend.scope = trend.scope || 'Everywhere';
     trend.description = trend.description || '';
     trend.source = trend.source || '';
     const idx = findEntityIndex(state.worldTrends, trend, ENTITY_ID_PREFIXES.worldTrends, 'name');
     if (idx !== -1) {
       trend.id = state.worldTrends[idx].id;
-      if (state.worldTrends[idx].status === '已结束') trend.status = '已结束';
+      if (state.worldTrends[idx].status === 'Ended') trend.status = 'Ended';
       state.worldTrends[idx] = { ...state.worldTrends[idx], ...trend };
     } else {
       assignEntityId(state.worldTrends, trend, ENTITY_ID_PREFIXES.worldTrends);
@@ -728,11 +840,11 @@ window.WORLD_ENGINE_CORE = (function() {
     if (!state.winds) state.winds = [];
     ensureEntityIds(state.winds, ENTITY_ID_PREFIXES.winds);
     delete wind.quietRounds;
-    wind.topic = wind.topic || wind.content || `风声${Date.now()}`;
+    wind.topic = wind.topic || wind.content || `News ${Date.now()}`;
     if (!['announcement', 'report', 'rumor', 'sentiment'].includes(wind.type)) wind.type = 'rumor';
     wind.level = Math.min(4, Math.max(1, parseInt(wind.level) || 1));
-    wind.scope = wind.scope || '来源地';
-    wind.source = wind.source || '来源不明';
+    wind.scope = wind.scope || 'Place of origin';
+    wind.source = wind.source || 'Unknown source';
     wind.quietRounds = 0;
     const idx = findEntityIndex(state.winds, wind, ENTITY_ID_PREFIXES.winds, 'topic');
     if (idx !== -1) {
@@ -816,6 +928,7 @@ window.WORLD_ENGINE_CORE = (function() {
     saveCheckpoint, restoreCheckpoint, clearCheckpoint, getAnchorLayer, setAnchorLayer,
     getChatLayer, getChatFingerprint, saveFingerprint, loadFingerprint, isNewRound,
     getCleanExport, importState,
+    normalizeVocab, canonWord, clipPillar,
     cnToNum, parseStoryDay, getLastStoryDay, setLastStoryDay, filterDialogue,
     validateFilterRegex
   };

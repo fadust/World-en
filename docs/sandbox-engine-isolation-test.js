@@ -67,7 +67,7 @@ async function testExecutionCrashDoesNotBlockMemory() {
   vm.runInNewContext(source, sandbox, { filename: 'world-engine.js' });
   await new Promise(resolve => setTimeout(resolve, 30));
   assert.strictEqual(memoryInitCount, 1, '世界模块/界面失败后，记忆引擎仍应独立初始化一次');
-  assert.ok(errors.some(args => String(args[0]).includes('接口契约不完整') || String(args[0]).includes('模块加载失败')),
+  assert.ok(errors.some(args => String(args[0]).includes('interface contract incomplete') || String(args[0]).includes('module failed to load')),
     '世界接口契约缺失应被明确记录');
 }
 
@@ -107,7 +107,7 @@ function testChatCacheOwnsChatLifecycle() {
   vm.runInNewContext(cacheSource, sandbox, { filename: 'world-engine-chatcache.js' });
   sandbox.WORLD_ENGINE_CHATCACHE.init();
   assert.strictEqual(typeof listeners.get('chat_loaded'), 'function', 'ChatCache 必须自行订阅 CHAT_LOADED');
-  assert.throws(() => sandbox.WORLD_ENGINE_CHATCACHE.forScope('unknown-engine'), /未知聊天缓存 scope/);
+  assert.throws(() => sandbox.WORLD_ENGINE_CHATCACHE.forScope('unknown-engine'), /Unknown chat cache scope/);
 }
 
 (async () => {

@@ -60,7 +60,7 @@ const context = {
 };
 const sandbox = {
   window: null,
-  __WE_SetExternalStatus(text) { if (String(text).startsWith('正在进行')) startSignals.push('status'); },
+  __WE_SetExternalStatus(text) { if (String(text).startsWith('Running')) startSignals.push('status'); },
   console,
   setTimeout,
   clearTimeout,
@@ -112,18 +112,18 @@ for (const filename of [
 
 {
   const taskPrompt = sandbox.MEMORY_ENGINE_PROMPT.TASK_PROMPT;
-  assert.ok(taskPrompt.includes('"memory": "一条独立的人物主观记忆"'),
+  assert.ok(taskPrompt.includes('"memory": "one independent subjective memory of a character"'),
     '组合人物实体任务必须保留非空 JSON 条目结构，不能只给空数组');
-  assert.ok(taskPrompt.includes('每一项都必须重复填写相同的 time'),
+  assert.ok(taskPrompt.includes('every item must repeat the same time'),
     '组合 Prompt 必须明确同一时间的多条记忆逐项重复填写 time');
-  assert.ok(taskPrompt.includes('PersonalMemory 只能包含 name、known_by、memory、time'));
-  assert.ok(taskPrompt.includes('EntityUpdate 只能包含 type、name、aliases、description、event、time'));
-  assert.ok(taskPrompt.includes('不得增加统一输出模板之外的顶层字段或任何额外条目字段'),
+  assert.ok(taskPrompt.includes('PersonalMemory may only contain name, known_by, memory, time'));
+  assert.ok(taskPrompt.includes('EntityUpdate may only contain type, name, aliases, description, event, time'));
+  assert.ok(taskPrompt.includes('Do not add top-level fields outside the unified output template'),
     '组合 Prompt 必须保留完整的 JSON 字段与类型约束');
   const sharedSummaryPrompt = sandbox.MEMORY_ENGINE_SMALL_SUMMARY_PROMPT.buildUserPrompt({
     startLayer: 3, endLayer: 4, conversation: '这段正文不应再次附加', reuseConversation: true
   });
-  assert.ok(sharedSummaryPrompt.includes('沿用同一请求前文人物/实体任务中的【待提取对话】'));
+  assert.ok(sharedSummaryPrompt.includes('Reuse the [Conversation to extract] from the character/entity task'));
   assert.ok(!sharedSummaryPrompt.includes('这段正文不应再次附加'),
     '人物实体与纪要范围相同时不得重复附加待处理正文');
   const engineSource = fs.readFileSync(path.join(root, 'memory-engine.js'), 'utf8');
@@ -192,8 +192,8 @@ for (const filename of [
   const lengthPrompt = sandbox.MEMORY_ENGINE_BIG_SUMMARY_PROMPT.buildUserPrompt({
     summaries: [{ content: '甲'.repeat(600) }, { content: '乙'.repeat(600) }]
   });
-  assert.ok(lengthPrompt.includes('不超过 600 字'), '总述 Prompt 必须写入计算后的具体上限');
-  assert.ok(!lengthPrompt.includes('本批纪要正文合计'), '总述 Prompt 不应暴露纪要合计字数');
+  assert.ok(lengthPrompt.includes('at most 600 words'), '总述 Prompt 必须写入计算后的具体上限');
+  assert.ok(!lengthPrompt.includes('total word count of this batch'), '总述 Prompt 不应暴露纪要合计字数');
   assert.strictEqual(
     sandbox.MEMORY_ENGINE._test.parseResponse(JSON.stringify({ small_summary: longSmall }), { small: {} }).smallSummary,
     longSmall,
@@ -310,7 +310,7 @@ for (const filename of [
     sandbox.WORLD_ENGINE_UI.setMemoryEvolvingUI = originalSetMemoryEvolvingUI;
     assert.strictEqual(calls.length, 1, 'AI 回复后历史修复应调用一次纪要修复 API');
     assert.deepStrictEqual(animationStates, [
-      { active: true, label: '历史记忆对账', running: true },
+      { active: true, label: 'history memory reconciliation', running: true },
       { active: false, label: '', running: false }
     ], '历史修复期间 isRunning 必须保持为 true，让悬浮球持续显示运行动画');
     calls.length = 0;
@@ -321,16 +321,16 @@ for (const filename of [
   const refreshesBeforeCombined = memoryRefreshes;
   const combined = await sandbox.MEMORY_ENGINE.manualSmallSummary();
   assert.strictEqual(calls.length, 2, '达到阈值时应先生成并保存小总结，再独立请求大总结');
-  assert.ok(calls[0].includes('世界进程的纪要记录员'));
+  assert.ok(calls[0].includes('note-taker of the world'));
   assert.ok(!calls[0].includes('这是角色卡的开场白'), '初始化纪要必须忽略第 0 层 AI 开场白');
   assert.ok(calls[0].includes('守卫说明北方发生叛乱'), '忽略开场白后仍应读取窗口内最新的 AI 回复');
-  assert.ok(!calls[0].includes('世界进程的总述编纂者'));
+  assert.ok(!calls[0].includes('overview compiler of the world'));
   assert.ok(!calls[0].includes('"personal_memory": []'), '未到人物实体任务时不应携带人物实体输出字段');
-  assert.ok(calls[1].includes('世界进程的总述编纂者'));
+  assert.ok(calls[1].includes('overview compiler of the world'));
   assert.ok(!calls[1].includes('既有故事总览'), '总述只能读取本批尚未整理的纪要');
-  assert.ok(!calls[1].includes('世界进程的纪要记录员'));
-  assert.ok(!calls[1].includes('【最新对话片段】'), '大总结只能读取已落库的小总结与既有大总结');
-  assert.deepStrictEqual(runningLabels.slice(0, 2), ['纪要', '总述']);
+  assert.ok(!calls[1].includes('note-taker of the world'));
+  assert.ok(!calls[1].includes('[Latest conversation'), '大总结只能读取已落库的小总结与既有大总结');
+  assert.deepStrictEqual(runningLabels.slice(0, 2), ['Notes', 'Overview']);
   assert.deepStrictEqual(startSignals.slice(0, 4), ['status', 'ui', 'status', 'ui'],
     '顶部提示必须先于记忆球运行态刷新，否则会清除自动动画类');
   assert.strictEqual(combined.addedSmall, 1);
@@ -376,8 +376,8 @@ for (const filename of [
   calls.length = 0;
   await sandbox.MEMORY_ENGINE.manualBigSummary();
   assert.strictEqual(calls.length, 1);
-  assert.ok(calls[0].includes('世界进程的总述编纂者'));
-  assert.ok(!calls[0].includes('世界进程的纪要记录员'), '手动大总结只应携带大总结 Prompt');
+  assert.ok(calls[0].includes('overview compiler of the world'));
+  assert.ok(!calls[0].includes('note-taker of the world'), '手动大总结只应携带大总结 Prompt');
   assert.ok(!calls[0].includes('"personal_memory": []'));
 
   const legacy = sandbox.MEMORY_ENGINE_DATA.defaultState();
@@ -524,10 +524,10 @@ for (const filename of [
   assert.strictEqual(calls.length, 2, '从进入聊天的基线起新增满 X 轮后，才生成纪要并独立生成总述');
   assert.ok(calls[0].includes('"small_summary": ""'));
   assert.ok(!calls[0].includes('"personal_memory": []'));
-  assert.ok(!calls[0].includes('事件记忆的总述整理器'));
+  assert.ok(!calls[0].includes('overview organizer of event memory'));
   assert.ok(calls[1].includes('"big_summary": ""'));
   assert.ok(!calls[1].includes('"personal_memory": []'));
-  assert.deepStrictEqual(runningLabels, ['纪要', '总述']);
+  assert.deepStrictEqual(runningLabels, ['Notes', 'Overview']);
 
   console.log('✓ 事件记忆大小总结测试通过');
 })().catch(error => {

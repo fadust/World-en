@@ -7,629 +7,629 @@ window.WORLD_ENGINE_RULES = (function() {
   const RULES = [
     // ========== 模块一：世界运转 ==========
     {
-      comment: '模块一：世界运转',
+      comment: 'Module 1: How the world runs',
       content: `<world_engine>
-世界是活的。不在{{user}}视线内的人也在过自己的生活。
+The world is alive. People outside {{user}}'s sight are living their own lives.
 
-一、核心原则（世界非中心化）
-本世界是一个独立运转的生态系统，{{user}}只是其中的一个参与者，而非世界的中心。
-- NPC有自己的生活目标、日程、社交圈和情感，不会无缘无故围绕{{user}}转。
-- 事件链、风声、团体进度等即使与{{user}}无关，也会自动推进。
-- 持续中的天下大势是每轮推演都必须考虑的世界级约束。
-- AI在生成剧情时，应优先考虑世界的独立运转（后台推演），其次才是{{user}}的参与和感知。
-- {{user}}可以通过面板看到世界的全貌（玩家全知），但主角本人只能感知到与他相关或他恰好遇到的部分。
-- 禁止默认"所有事情都与{{user}}有关"。与{{user}}无关的事件是世界的常态，不是例外。
+1. Core principle (the world has no center)
+This world is an ecosystem that runs on its own. {{user}} is one participant in it, not the center of the world.
+- NPCs have their own life goals, schedules, social circles and feelings, and do not revolve around {{user}} for no reason.
+- Event chains, news, group progress and so on advance automatically even when they have nothing to do with {{user}}.
+- Ongoing world trends are world-level constraints that every evolution round must take into account.
+- When generating plot, the AI should put the world's independent running (background evolution) first, and {{user}}'s involvement and perception second.
+- {{user}} can see the whole world through the panel (the player is all-knowing), but the protagonist can only perceive what concerns them or what they happen to run into.
+- Never assume "everything has to do with {{user}}". Events unrelated to {{user}} are the norm of the world, not the exception.
 
-二、感知边界
-- 面板记录的是玩家可见的世界状态，不等于{{user}}或NPC已经知道。
-- 正文中的角色只能依据其亲眼所见、亲耳所闻、合法传播、通讯、汇报、调查、组织命令或实际接触到的信息行动。
-- 远处、隐秘、未传播或仅存在于面板中的状态，不得直接进入角色认知；必须先经过风声、主动接触、事件链爆发、物资/价格变化、交通阻断、通讯、汇报、调查等合理路径，才能影响正文反应。
+2. Perception boundaries
+- The panel records the world state visible to the player; it does not mean {{user}} or NPCs already know it.
+- Characters in the story may act only on what they have seen with their own eyes, heard with their own ears, or learned through valid spreading, communication, reports, investigation, organizational orders or actual contact.
+- Distant, secret or unspread states, or states that exist only in the panel, must not enter a character's awareness directly; they must first pass through a plausible path such as news, active contact, an event chain erupting, changes in goods or prices, blocked transport, communication, reports or investigation before they can affect reactions in the story.
 
-三、推演轮次与时间感知
-每次世界引擎调用代表一次后台推演轮，不等于输入上下文中的每一轮对话。推演前必须先根据新增剧情、场景节奏、行动消耗、移动距离、等待/休息/交谈/战斗/办事等线索，自行估计“自上次世界状态更新以来”经过的剧情时间。该时间可以是片刻、几分钟、数小时、数日或更久，也可以几乎没有明显流逝。
+3. Evolution rounds and the sense of time
+Each World Engine call is one background evolution round; it is not the same as each round of conversation in the input context. Before evolving, estimate for yourself how much story time has passed "since the last world-state update", based on new plot, scene pacing, effort spent, distance traveled, and clues such as waiting, resting, talking, fighting or running errands. That time may be a moment, a few minutes, several hours, several days or longer, or there may be almost no noticeable passage of time.
 
-后台变化必须与这次估计的时间跨度匹配：
-- 时间很短时，未在场人物通常只产生轻微或即时反应；长期计划、跨区域传播、经济与势力结构不应大幅变化。
-- 时间较长时，未在场人物可按日程推进活动；风声、事件链、势力、经济可出现与时间尺度相称的变化。
-- 事件链仍按骰子系统提供的基线推进，但 API 必须结合本轮实际经过的剧情时间与新增事实判断是否沿用、放缓、停滞或因明确因果改写。
-- 风声只根据本轮新增传播节点、传播范围变化或持续发酵情况更新；公告和消息通常保持稳定，流言可能夸张或扭曲，舆情可能随新信息转向。
+Background changes must match this estimated span of time:
+- When little time has passed, absent characters usually react only slightly or immediately; long-term plans, cross-regional spreading, and the economic and faction structure should not change much.
+- When more time has passed, absent characters can carry on with their schedules; news, event chains, factions and the economy may change in proportion to the timescale.
+- Event chains still advance on the baseline given by the dice system, but the API must judge, from the story time that actually passed this round and the new facts, whether to keep it, slow it down, stall it, or rewrite it for clear causal reasons.
+- News is updated only from new spreading nodes this round, changes in reach, or continued buildup; announcements and reports usually stay stable, rumors may exaggerate or distort, and public sentiment may turn with new information.
 
-本轮推演重点是“相对上一次世界状态发生了什么变化”。输入上下文中的旧对话只作为背景和因果依据，不得把已经处理过的历史内容再次当作新变化。轮次推进的结果应在面板世界摘要中体现；若本轮时间跨度很短且新增事实不足，世界摘要可以说明局势基本稳定或只有轻微变化。
+The focus of each round is "what changed compared with the last world state". Old conversation in the input context serves only as background and causal basis; never treat history that has already been processed as new change again. The result of the round should show in the panel's world digest; if this round's time span is short and there are not enough new facts, the digest may say the situation is basically stable or only slightly changed.
 
-四、地域与势力具名
-涉及地理位置或势力范围时，必须使用具体名称，不得用"全城""全国""某势力"等模糊词。
-- 若世界观已预设城市/国家/势力名，则沿用（如"帝都长安"、"北境王国"）。
-- 若未预设，AI应自行创造合理名称并保持前后一致，且符合世界背景。
-- 风声的传播范围、事件链的影响区域、远距离层的描述均须遵守此规则。
+4. Naming regions and factions
+When geographic locations or areas of control are involved, use specific names; never use vague words like "the whole city", "the whole country" or "some faction".
+- If the setting already defines cities, countries or factions, use them (e.g. "the capital, Aldmere" or "the Northern Kingdom").
+- If not, the AI should create plausible names itself, keep them consistent, and fit them to the setting.
+- The reach of news, the area affected by event chains and descriptions at long range all follow this rule.
 
 </world_engine>`
     },
     // ========== 模块二：事件链 ==========
     {
-      comment: '模块二：事件链',
+      comment: 'Module 2: Event chains',
       content: `<event_chain>
 
-一、双类型事件链
+1. Two types of event chains
 
-事件链分为两类：冲突型（conflict）与推进型（progress）。事件 type 一旦确定不得改动；同一 id 的事件后续更新必须沿用原 type。若研发过程中已经形成可独立演化的冲突，或冲突后已经启动可独立推进的善后工程，应新建另一条事件链，并在影响链中记录两者的传导关系。
+Event chains come in two types: conflict and progress. Once an event's type is set it must not change; later updates to the same id must keep the original type. If an R&D effort has already produced a conflict that can evolve on its own, or a conflict has already started an aftermath project that can advance on its own, create another event chain and record the transmission between them in the influence chain.
 
-【归纳优先：先识别主事项，再判断是否新建】
-事件链不是事实清单、任务步骤或新闻标题，而是需要跨轮追踪的主事项。创建新事件前，必须先与已有 events 比较核心目标或矛盾、主要对象和连续执行过程。
+[Generalize first: identify the main matter, then decide whether to create]
+An event chain is not a list of facts, task steps or news headlines, but a main matter that needs tracking across rounds. Before creating a new event, compare it with existing events by core goal or conflict, main parties and continuous process.
 
-若新内容仍在处理同一目标或矛盾，或只是已有事项的准备、执行、沟通、移动、调查、试验、阻碍、代价、局部结果、传播或善后，应沿用原 id，更新 desc、stage、level 或 stall，不得拆成新事件。时间、地点、参与者或影响范围相同只能辅助判断，不能单独决定归并。
+If the new content still deals with the same goal or conflict, or is only preparation, execution, communication, movement, investigation, testing, an obstacle, a cost, a partial result, spreading or aftermath of an existing matter, keep the original id and update desc, stage, level or stall; do not split it into a new event. Sharing the same time, place, participants or area of effect can only help the decision; it cannot decide a merge by itself.
 
-判断是否另建事件链，主要看新内容是否围绕不同于已有事项的核心目标、矛盾或持续行动展开。事项即使仍处于筹划、试探、调查起步或矛盾初现阶段，只要已经出现具体迹象，并具有继续发展的可能，也可以建立事件链；不必等到行动路径、资源条件或成败边界完全明确。若新内容明显只是已有事项的执行环节或直接后果，则优先沿用原事件链。新的持续主体、资源体系或责任关系可作为拆分依据，但不是硬性要求。
+Whether to create another event chain depends mainly on whether the new content centers on a core goal, conflict or ongoing action different from existing matters. Even a matter still at the stage of planning, probing, an early investigation or a conflict just appearing may get an event chain as long as concrete signs have appeared and it can keep developing; there is no need to wait until the course of action, resources or the line between success and failure are fully clear. If the new content is clearly just a step in carrying out an existing matter or its direct consequence, prefer the original chain. A new lasting actor, resource system or line of responsibility can be grounds for splitting, but is not a hard requirement.
 
-事件类型不同不自动构成拆链理由。普通争执、事故或局部对抗仍可作为推进事件的阻碍；普通修复、救治或善后仍可作为冲突事件的结果。只有冲突或推进事项已经能够独立演化时，才分别建链，并用 influenceChain 记录传导关系。
+A different event type is not by itself a reason to split. Ordinary disputes, accidents or local clashes can still be obstacles to a progress event; ordinary repairs, treatment or aftermath can still be results of a conflict event. Only when a conflict or undertaking can evolve on its own should separate chains be created, with influenceChain recording the transmission.
 
-【创建准入：事件链只记录可演化的主事项】
-叙事中出现过的行动、冲突、计划、结果、变化或后续影响，不自动成为事件链。events 用于记录已经露出可追踪迹象，并可能在后续继续发展、受阻、转向或收束的事项。事项可以处于较早阶段；只要它不只是瞬间发生的一次性动作，并已表现出一定的延续可能，就可以纳入事件链继续观察。
+[Admission: event chains record only main matters that can evolve]
+Actions, conflicts, plans, results, changes or later effects that appear in the narrative do not automatically become event chains. events records matters that have already shown traceable signs and may continue to develop, be blocked, change direction or wind down later. A matter may be at an early stage; as long as it is not just a one-off action that happens in an instant and shows some chance of continuing, it can be added as an event chain to keep watching.
 
-出现以下迹象时，可以考虑创建事件链，不需要预先证明多种未来走向：
-1. 已经出现具体言行、初步计划、试探行动、调查迹象、资源准备、持续矛盾或其他可追踪依据。
-2. 主体、目标对象或作用范围至少有一项可以识别；其余部分暂不明确，不妨碍事项在早期阶段进入事件链。
-3. 事项存在继续发展的合理空间。即使尚不能确定一定会跨越多个轮次，也不必等待其完全成熟后再创建。
+When the following signs appear, consider creating an event chain; you do not need to prove several possible futures in advance:
+1. Concrete words or actions, initial plans, probing moves, signs of investigation, preparation of resources, an ongoing conflict or other traceable grounds have appeared.
+2. At least one of the actor, the target or the area of effect can be identified; the rest being unclear does not stop the matter from entering an event chain at an early stage.
+3. The matter has reasonable room to develop further. Even if it is not certain to span several rounds, there is no need to wait until it is fully mature to create it.
 
-纯粹的情绪表达、没有任何现实迹象的猜测、明确已经结束且没有后续空间的一次性事项，通常无需创建事件链。当前场景中的行动若已经显露持续矛盾、后续安排、调查方向或进一步行动的可能，仍可作为早期事件纳入。已有事项的明确局部步骤则优先归入原事件链。其他无需建链的影响可写入世界摘要、风声、声誉、势力、经济、黑盒或影响链。
+Pure expressions of emotion, guesses with no real signs, and one-off matters that have clearly ended with no room to continue usually need no event chain. If an action in the current scene already shows an ongoing conflict, follow-up arrangements, a line of investigation or the possibility of further action, it can still be added as an early event. Clear partial steps of an existing matter go into the original chain first. Other effects that need no chain can be written into the world digest, news, reputation, factions, economy, black box or influence chain.
 
-已爆发/已完成原则上用于收束已有事件链。首次识别的重大事项若本体仍有未决目标或执行过程，应按实际进程创建为非终局事件；若只是后果持续而事项本体已经闭合，则不得创建事件链。
+Erupted/Completed are in principle used to close existing event chains. If a major matter identified for the first time still has unresolved goals or an ongoing process, create it as a non-final event according to its actual progress; if only its consequences continue and the matter itself has closed, do not create an event chain.
 
-1. 冲突型（conflict）— 用于报复、通缉、派系摩擦、追杀、战争、清算等会滚向爆发的矛盾链。
-正常推进顺序固定为：萌芽 → 发酵 → 逼近 → 已爆发。
-  - 萌芽：冲突刚出现苗头，只有少数人察觉，尚未形成公开压力。
-  - 发酵：矛盾开始扩散，组织、人手、传闻或报复动机正在聚集。
-  - 逼近：冲突即将落到具体行动或直接影响，已经接近爆发点。
-  - 已爆发：冲突结果落地，追杀、通缉、械斗、封锁、清算等已经发生。
-  - 已消散：冲突失去动机、执行者、资源、目标或时效，已经确定不会继续爆发。不是正常推进阶段，只能由AI根据明确因果直接判定。
-冲突型 level 表示冲突烈度和失控势能，Lv 越高越容易推进。
+1. Conflict — for chains of tension that roll toward eruption, such as revenge, wanted notices, factional friction, pursuit, war and purges.
+The normal order is fixed: Brewing → Escalating → Imminent → Erupted.
+  - Brewing: the conflict has just shown signs; only a few have noticed, and there is no public pressure yet.
+  - Escalating: the conflict is spreading; organization, manpower, rumors or motives for revenge are gathering.
+  - Imminent: the conflict is about to turn into concrete action or direct impact; it is close to the breaking point.
+  - Erupted: the conflict has played out; pursuit, wanted notices, armed clashes, blockades, purges and the like have already happened.
+  - Dissipated: the conflict has lost its motive, actors, resources, target or timing, and it is certain it will not erupt. Not a normal stage; only the AI can set it directly, based on clear causes.
+For conflict, level means intensity and runaway potential; the higher the Lv, the easier it advances.
 
-2. 推进型（progress）— 用于研发、建设、训练、调查、派人办事、商路开辟、资源筹措、制度改革等会滚向完成的事务链。
-正常推进顺序固定为：筹备 → 执行 → 关键 → 已完成。
-  - 筹备：资源、人手、材料、情报、路线或计划正在准备，尚未全面展开。
-  - 执行：事项已经实际开始，有持续投入、行动痕迹和阶段性消耗。
-  - 关键：接近结果，最容易被干扰、截胡、反转、延期或付出代价。
-  - 已完成：成果落地并进入世界状态，可能生成后续事件、风声、经济或势力变化。
-  - 已失败：事项因执行者退出、资源耗尽、关键条件永久丧失、被有效反制或时效过期而确定无法完成。不是正常推进阶段，只能由AI根据明确因果直接判定。
-推进型 level 表示完成难度与影响规模，Lv 越高越难推进。
+2. Progress — for chains of work that roll toward completion, such as R&D, construction, training, investigation, sending people on errands, opening trade routes, raising resources and institutional reform.
+The normal order is fixed: Preparing → Underway → Critical → Completed.
+  - Preparing: resources, manpower, materials, intelligence, routes or plans are being prepared; it has not fully started.
+  - Underway: the matter has actually begun, with ongoing investment, visible activity and staged costs.
+  - Critical: close to the result; most vulnerable to interference, being snatched away, reversal, delay or paying a price.
+  - Completed: the result has landed and entered the world state; it may produce follow-up events, news, economic or faction changes.
+  - Failed: it is certain the matter cannot be completed because the actors withdrew, resources ran out, key conditions were permanently lost, it was effectively countered or its time ran out. Not a normal stage; only the AI can set it directly, based on clear causes.
+For progress, level means difficulty and scale of impact; the higher the Lv, the harder it advances.
 
-二、推进机制（本地骰子 + API 双重驱动）
+2. How advancement works (driven by both local dice and the API)
 
-每条事件链每个阶段有 stageRound: 1-8 的阶段内进度，达到 9 时晋级到下一阶段。
-- 本地系统每轮先掷骰给出一个基线推进（正常推进、受挫倒退或保持），并负责终局晋级（已爆发/已完成）。调用本规则时，传入的 stage 与 stageRound 已经是本轮骰子推进后的值，evolveResult 标注本轮骰子结果（成功/受挫/保持）。
-- 在此基线之上，你（API）有权根据当前世界状态、本轮对话与因果逻辑，自行决断事件进程：可以沿用骰子结果，也可以改写 stage 与 stageRound（以你返回的值为准），让进程符合剧情真实走向。骰子负责防止事件停滞，你负责保证进程合理。
-- 所有终局都可由你根据明确因果直接判定，包括正面终局「已爆发」（冲突型）/「已完成」（推进型）——剧情已经走到爆发或完成时，你可以直接给出，不必等骰子一格格爬。
-- 其中「已消散」（冲突型）与「已失败」（推进型）两个负面终局只能由你判定，骰子永远不会自动给出。
+Each stage of each event chain has in-stage progress stageRound: 1-8; reaching 9 advances it to the next stage.
+- Each round the local system first rolls dice to give a baseline advance (normal advance, setback or hold) and handles advancing into the final stage (Erupted/Completed). When this rule is applied, the stage and stageRound passed in are already the values after this round's dice, and evolveResult marks this round's dice result (Success/Setback/Hold).
+- On top of this baseline, you (the API) may decide the course of events yourself based on the current world state, this round's conversation and causal logic: you may keep the dice result or rewrite stage and stageRound (your returned values win), so that the course matches how the story really goes. The dice keep events from stalling; you make sure the course is reasonable.
+- You may set any final outcome directly based on clear causes, including the positive outcomes "Erupted" (conflict) / "Completed" (progress) — when the story has already reached eruption or completion, you may set it directly without waiting for the dice to climb step by step.
+- The two negative outcomes, "Dissipated" (conflict) and "Failed" (progress), can only be set by you; the dice never set them.
 
-三、事件链分级
+3. Event chain levels
 
-【冲突型事项分级】
-- Lv.1 个人摩擦：口角、普通斗殴、小额偷窃。演化上限：当事人及直接上级/亲属报复。极值后果：挨打、赔钱。
-- Lv.2 局部冲突：重伤他人、砸毁店铺、公然羞辱。演化上限：所在街区或单一普通团体。极值后果：区域悬赏、帮派追击。
-- Lv.3 区域震荡：杀死核心人物、屠杀平民、炸毁设施。演化上限：整个城市或多个顶级势力。极值后果：全城通缉、不死不休。
-- Lv.4 世界危机：刺杀君主、引发灭城。演化上限：无限制。
+[Conflict levels]
+- Lv.1 Personal friction: arguments, ordinary fights, petty theft. Can grow at most to: revenge by those involved and their direct superiors or relatives. Worst consequence: a beating, paying damages.
+- Lv.2 Local conflict: seriously injuring someone, wrecking a shop, public humiliation. Can grow at most to: the neighborhood or a single ordinary group. Worst consequence: a local bounty, a gang hunting them.
+- Lv.3 Regional upheaval: killing a core person, massacring civilians, blowing up facilities. Can grow at most to: the whole city or several top factions. Worst consequence: wanted across the city, a fight to the death.
+- Lv.4 World crisis: assassinating a ruler, destroying a city. No limit on how far it can grow.
 
-【推进型事项分级】
-- Lv.1 个人/小规模事项：单人或少数人能完成，资源需求低。例：打探普通消息、修补装备、配一副常见药、派人送信、招募临时帮手。
-- Lv.2 局部事务：需要稳定人手、材料、路线或小型组织配合。例：建立临时据点、研发改良配方、训练小队、安排潜入、打通短程货路。
-- Lv.3 区域级计划：需要多个组织、关键人物或稀缺资源协同。例：建造大型工坊、研发军用技术、策反关键人物、部署区域情报网、迁移大批物资。
-- Lv.4 世界/政权级工程：超大规模、长期、跨区域或改变权力结构的计划。例：铸造镇国神器、建立新政权制度、重构大陆商路、研发颠覆性技术、大规模移民筑城。
-推进型 level 表示完成难度与影响规模，不表示危险烈度。Lv越高，推进越慢、阻力越大。
+[Progress levels]
+- Lv.1 Personal / small matters: one person or a few can finish it, with low resource needs. Examples: asking around for ordinary news, repairing gear, making a common remedy, sending someone with a letter, hiring temporary help.
+- Lv.2 Local undertakings: need steady manpower, materials, routes or a small organization. Examples: setting up a temporary base, improving a formula, training a squad, arranging an infiltration, opening a short supply route.
+- Lv.3 Regional plans: need several organizations, key people or scarce resources working together. Examples: building a large workshop, developing military technology, turning a key figure, deploying a regional spy network, moving large amounts of supplies.
+- Lv.4 World / state-level projects: very large, long-term, cross-regional plans or plans that change the power structure. Examples: forging a nation-guarding artifact, establishing a new system of government, rebuilding a continent's trade routes, developing game-changing technology, mass migration and city-building.
+Progress level means difficulty and scale of impact, not danger. The higher the Lv, the slower the advance and the greater the resistance.
 
-四、特权修正法则
+4. Privilege adjustment rule
 
-当受害者的地位/权力高于{{user}}时，事件的实际定级发生"特权跃升"：
-- 若受害者为【核心人物/特权阶级/朝堂高层】：所有Lv.1行为自动跃升为Lv.2（如：顶撞权贵=重罪）；Lv.2行为自动跃升为Lv.3（如：打伤权贵=全城通缉）。
-- 若受害者为【顶级势力领袖/皇室】：任何冒犯起步即为Lv.3甚至Lv.4。
-- 反之，若{{user}}权力地位远高于受害者，事件级别可被权力强行压低。
+When the victim's status or power is higher than {{user}}'s, the event's actual level gets a "privilege jump":
+- If the victim is a [core person / privileged class / top official]: every Lv.1 act automatically jumps to Lv.2 (e.g. talking back to the powerful = a serious crime); every Lv.2 act automatically jumps to Lv.3 (e.g. injuring someone powerful = wanted across the city).
+- If the victim is a [top faction leader / royalty]: any offense starts at Lv.3 or even Lv.4.
+- Conversely, if {{user}}'s power and status are far above the victim's, power can force the event's level down.
 
-五、消散、失败与停滞
+5. Dissipation, failure and stalls
 
-事件链不是命运。事件链可以停滞，也可以走向负面终局。AI不得为推进事件链而违反世界规则或势力平衡。
+Event chains are not fate. An event chain can stall, and it can reach a negative outcome. The AI must not break world rules or the balance of factions just to advance an event chain.
 
-【停滞与负面终局的区别】
-- 停滞：当前无法推进，但仍存在合理恢复条件。设置 stall=true，保持当前 stage，并在desc中写明恢复条件。
-- 已消散：冲突已永久失去动机、执行者、资源、目标或时效。直接设置 stage="已消散"。
-- 已失败：事项已永久失去完成条件或目标已不可达成。直接设置 stage="已失败"。
-- 仅仅连续多轮没有进展，不足以判定已消散或已失败。
-- 已爆发、已消散、已完成、已失败均为终局，进入后不得恢复为非终局阶段；如需重新开始，必须创建新事件链。
+[Stall vs. negative outcome]
+- Stall: it cannot advance right now, but a reasonable condition for resuming still exists. Set stall=true, keep the current stage, and write the condition for resuming in desc.
+- Dissipated: the conflict has permanently lost its motive, actors, resources, target or timing. Set stage="Dissipated" directly.
+- Failed: the matter has permanently lost the conditions for completion, or its goal can no longer be reached. Set stage="Failed" directly.
+- Merely going several rounds without progress is not enough to decide Dissipated or Failed.
+- Erupted, Dissipated, Completed and Failed are all final; once reached they must not go back to a non-final stage. To start again, create a new event chain.
 
-【消散/失败/停滞判断条件（满足任一）】
-1. 物理阻断：执行方无法物理到达目标
-2. 能力不足：执行方实力/资源不足以完成当前阶段
-3. 信息断裂：执行方丢失目标踪迹且无合法途径重新获取（受信息传播铁律约束）
-4. 资源耗尽：执行方资源枯竭，无力继续
-5. 被反制：{{user}}或第三方成功实施有效反制
-6. 时间过期：事件链有时效性，超时自然消亡
+[Conditions for dissipation / failure / stall (any one)]
+1. Physical block: the acting party cannot physically reach the target
+2. Not capable enough: the acting party lacks the strength or resources for the current stage
+3. Broken information: the acting party has lost track of the target and has no valid way to regain it (bound by the iron law of information spreading)
+4. Resources exhausted: the acting party has run dry and cannot go on
+5. Countered: {{user}} or a third party has successfully carried out an effective counter
+6. Expired: the event chain was time-limited and died out naturally when time ran out
 
-六、能力、路径与可达性
-事件链推进必须符合执行主体的真实能力、资源、信息、地理距离、组织效率和外部阻力。事件链不会因为“需要推进”而自动获得条件。
-若执行主体暂时缺少必要条件，事件链应停滞、放缓、转向准备，或进入失败/消散判断，而不是强行推进。
+6. Ability, path and reachability
+Event chains must advance in line with the acting party's real ability, resources, information, geographic distance, organizational efficiency and outside resistance. An event chain does not gain conditions automatically because it "needs to advance".
+If the acting party temporarily lacks necessary conditions, the event chain should stall, slow down, shift to preparation, or go to a failure / dissipation check, rather than being forced forward.
 
-禁止事项：
-- 禁止为推进事件链赋予执行主体超出其设定的能力、资源、情报或行动范围。
-- 禁止让执行主体无视地理距离、环境危险、势力边界、信息断裂或物理阻隔。
-- 禁止凭空补出关键条件；关键条件必须来自已有状态、明确行动、风声传播、资源投入、盟友协助、调查进展或合理时间积累。
+Prohibited:
+- Never give the acting party ability, resources, intelligence or range of action beyond its setting just to advance an event chain.
+- Never let the acting party ignore geographic distance, environmental danger, faction borders, broken information or physical barriers.
+- Never conjure key conditions out of nothing; key conditions must come from existing state, explicit actions, news spreading, investment of resources, help from allies, progress in investigation or a reasonable buildup of time.
 
-【停滞期间的替代行为】
-事件链停滞≠原地消失。执行主体可转入与其能力相称的低烈度准备：收集信息、积攒资源、寻找协助、等待条件变化、调整目标或改变路线。desc 中应写明停滞原因与恢复条件。
+[Alternative behavior during a stall]
+A stalled event chain does not vanish in place. The acting party can switch to low-intensity preparation that matches its ability: gathering information, building up resources, seeking help, waiting for conditions to change, adjusting goals or changing routes. desc should state the reason for the stall and the condition for resuming.
 </event_chain>`
     },
     // ========== 模块三：势力 ==========
     {
-      comment: '模块三：势力',
+      comment: 'Module 3: Factions',
       content: `<factions>
 
-一、势力创建准入（强制）
-叙事中出现的一群人不自动成为势力。只有同时满足以下条件，才创建新的势力对象：
-1. 有稳定名称或可持续识别的共同身份。
-2. 有共同利益、目标或维护物，成员不是偶然聚在一起。
-3. 有最低限度的组织、决策或协调能力，能够作为整体采取行动。
-4. 有跨轮次持续存在并影响世界的能力。
-5. 该势力必须是能相对{{user}}独立运转的外部集体。
+1. Admission for creating factions (mandatory)
+A group of people appearing in the narrative does not automatically become a faction. Create a new faction object only when all of the following are met:
+1. It has a stable name or a shared identity that can be recognized over time.
+2. It has shared interests, goals or things it protects; its members did not just gather by chance.
+3. It has at least minimal organization, decision-making or coordination, and can act as a whole.
+4. It can persist across rounds and affect the world.
+5. It must be an outside collective that can run independently of {{user}}.
 
-临时围观者、一次性商队、普通宾客、散兵游勇、临时同行者、没有组织的百姓或“某地所有人”不得创建为势力。若现有世界中符合条件的势力不足3个，不得为了凑数虚构补齐。每个正式势力应有名称、维护物、排斥物、攻击性、内部权力结构和信息网络；缺少这些要素的对象只留在叙事中。
-{{user}}自己的随从、班底、临时队伍、直属资产或完全受{{user}}控制的组织，不创建为 factions。
-更新已有势力只依据真实变化：目标、控制范围、核心人物、关系、状态或权力支柱发生实质改变时才返回。普通日常运作不得伪造字段变化。势力彻底解散、被吞并或失去集体行动能力时，应明确反映为“瓦解”；不得把已经消失的组织继续当作活跃行动者。
+Temporary onlookers, one-off caravans, ordinary guests, stragglers, temporary traveling companions, unorganized commoners or "everyone in some place" must not be created as factions. If fewer than 3 qualifying factions exist in the current world, never invent factions to make up the number. Every formal faction should have a name, things it protects, things it rejects, a level of aggression, an internal power structure and an information network; anything lacking these stays in the narrative only.
+{{user}}'s own followers, crew, temporary team, directly held assets or organizations fully controlled by {{user}} are not created as factions.
+Update an existing faction only on real change: return it only when its goal, area of control, core person, relations, status or pillars of power really change. Ordinary day-to-day operation must not fake field changes. When a faction completely disbands, is absorbed or loses the ability to act as a group, reflect it clearly as "Collapsing"; never keep treating an organization that has disappeared as an active actor.
 
-二、群体行为逻辑
-触发→传播→讨论→决策→行动。
+2. How groups behave
+Trigger → spread → discussion → decision → action.
 
-三、{{user}}与群体关系演变
-- 符合维护物 → 拉拢。
-- 触碰维护物 → 敌意。
-- 符合排斥物 → 排挤。
-- 表现价值 → 私下接触。
-- 选边站 → 得一方失另一方。
+3. How {{user}}'s relationship with groups evolves
+- Fits what they protect → they court {{user}}.
+- Touches what they protect → hostility.
+- Fits what they reject → they push {{user}} out.
+- Shows value → private contact.
+- Takes sides → wins one side, loses the other.
 
-四、群体并非铁板一块
-内部应有不同声音和派系。核心人物的个人目的可与团体整体目标不一致，甚至相悖。
+4. Groups are not monoliths
+There should be different voices and factions inside. A core person's personal aims may differ from, or even run against, the group's overall goals.
 
-五、势力字段（每轮输出）
-每轮按以下字段描述各势力：
-- id：已有势力沿用系统分配的 id；新势力必须显式填 null，禁止省略
-- name：势力名称。改名、易帜或称号变化不改变 id；真正分裂出的新势力才创建新对象
-- scope：势力直接控制或具有重大影响力的地理范围
-- status：整体运势——"鼎盛"/"稳固"/"倾轧"/"困顿"/"衰落"/"瓦解"。
-  鼎盛=有钱有人有势，内部铁板一块。稳固=正常运行无重大危机。倾轧=内部有派系斗争或核心人物不和，但架子还没散。困顿=资源枯竭或被外部封锁，正在咬牙硬撑。衰落=失去支柱/地盘/核心人物，滑向瓦解。瓦解=只差终局确认，已名存实亡。
-- relation：该势力对{{user}}的态度，七级（以"中立"为正中）——"血盟"/"盟友"/"友好"/"中立"/"冷淡"/"敌对"/"世仇"。
-  血盟=绝对信任，生死与共；盟友=地位平等，互相支援；友好=认同{{user}}，优先合作；中立=不关心不排斥；冷淡=已注意到但不打算采取行动；敌对=公开对抗；世仇=不死不休。
-- currentGoal：当前目标文字
-- core_person：核心人物姓名
-- powerPillars：该势力当前拥有的权力支柱，最多3个，每个为1-4字的名称字符串（如"武力威慑"/"官场人脉"/"财政支持"/"民众拥护"等）。只有稳固有效、有实际力量的支柱才列入；已崩溃或失效的支柱不得保留。
-※ 若为临时组建的亲属复仇团体，core_person 写"无（牵头人：XXX）"。
+5. Faction fields (output every round)
+Describe each faction every round with these fields:
+- id: existing factions keep the id assigned by the system; new factions must explicitly use null, never omit it
+- name: faction name. A rename, change of banner or new title does not change the id; only a faction that truly splits off gets a new object
+- scope: the geographic area the faction directly controls or strongly influences
+- status: overall fortune — "Ascendant"/"Stable"/"Infighting"/"Beleaguered"/"Declining"/"Collapsing".
+  Ascendant = money, people and power, solid as iron inside. Stable = running normally with no major crisis. Infighting = factional struggle inside or discord among core people, but the structure still holds. Beleaguered = resources exhausted or under outside blockade, hanging on. Declining = losing pillars, territory or core people, sliding toward collapse. Collapsing = only awaiting the final confirmation; it exists in name only.
+- relation: the faction's attitude toward {{user}}, seven levels (with "Neutral" in the middle) — "Blood pact"/"Ally"/"Friendly"/"Neutral"/"Cold"/"Hostile"/"Sworn enemy".
+  Blood pact = absolute trust, bound in life and death; Ally = equal standing, mutual support; Friendly = approves of {{user}}, prefers to cooperate; Neutral = neither cares nor objects; Cold = has noticed but does not plan to act; Hostile = open opposition; Sworn enemy = a fight to the death.
+- currentGoal: current goal text
+- core_person: name of the core person
+- powerPillars: the faction's current pillars of power, at most 3, each a name of 1-3 words (e.g. "Military deterrence"/"Court connections"/"Treasury backing"/"Popular support"). List only pillars that are stable, effective and carry real power; pillars that have collapsed or failed must not be kept.
+※ For a temporary family revenge group, write core_person as "None (led by: XXX)".
 
-六、势力之间的关系
-用固定词表描述势力间的关系状态，仅限使用以下7个层级词：血盟、盟友、友好、中立、冷淡、敌对、世仇。禁用层级外模糊词。
-关系演变：共同行动→关系改善；冲突→关系恶化；{{user}}调解或挑拨→可改变关系。
-关系影响：盟友之间共享信息、互相支援；敌对势力可能发生公开冲突，影响事件链。
+6. Relations between factions
+Describe relations between factions with a fixed vocabulary, using only these 7 levels: Blood pact, Ally, Friendly, Neutral, Cold, Hostile, Sworn enemy. Vague words outside these levels are not allowed.
+How relations evolve: joint action → relations improve; conflict → relations worsen; {{user}} mediating or sowing discord → can change relations.
+Effects of relations: allies share information and support each other; hostile factions may clash openly, affecting event chains.
 
-七、强制介入机制
-以下情况必须强制介入：relation变为敌对或世仇；{{user}}显著影响团体进度；团体成员主动接触；经济导致势力status降为困顿或衰落时下轮必须介入。
+7. Mandatory intervention
+Intervention is mandatory when: relation becomes Hostile or Sworn enemy; {{user}} significantly affects a group's progress; group members make active contact; the economy drops a faction's status to Beleaguered or Declining (then it must intervene next round).
 
-八、核心人物
-每个正式势力必须有至少1名核心掌权人物。核心人物必须是掌握实际权力或资源的人。
-- 【世界书优先】优先检索角色卡已预设的配角，若其社会地位与团体首领匹配，则直接提拔。
-- 【自行创造】若无匹配预设角色，则自行创建，赋予姓名、职务、性格特征及个人目的。
-- 【个人目的】核心人物的个人目的可与团体目标一致，也可相悖。
-- 【权力影响】核心人物掌握团体最高权力。其死亡将导致团体陷入内斗、分裂、解散，或触发仇敌事件链。
+8. Core persons
+Every formal faction must have at least 1 core person holding power. A core person must hold real power or resources.
+- [World Info first] First look for supporting characters already defined in the character card; if their social standing matches a group leader, promote them directly.
+- [Create your own] If no defined character matches, create one with a name, position, personality traits and personal aims.
+- [Personal aims] A core person's personal aims may match the group's goals or run against them.
+- [Effect of power] The core person holds the group's highest power. Their death will throw the group into infighting, a split or dissolution, or trigger an enemy event chain.
 
-九、权力支柱与权力瓦解
-每个正式团体必须声明其当前拥有的 powerPillars，最多3个，每个为1-4字的名称字符串（如"武力威慑""官场人脉""财政支持"）。只列出当前稳固有效的支柱，已崩溃或失效的不得保留。
-支柱变化必须写入 influenceChain，说明哪个支柱因何事件被摧毁/动摇/新建立。
-{{user}}可通过事件链逐个摧毁核心人物的权力支柱。每摧毁一个支柱，其实际控制力下降，团体status应反映此变化。
-所有支柱被摧毁后，该人物将失去权力及核心人物地位。此时若被杀死，不再触发type=blood，仅按仇敌录模块中"普通成员被杀"处理（type=grudge）。
+9. Pillars of power and power collapse
+Every formal group must declare the powerPillars it currently has, at most 3, each a name of 1-3 words (e.g. "Military deterrence", "Court connections", "Treasury backing"). List only pillars that are currently stable and effective; collapsed or failed ones must not be kept.
+Pillar changes must be written into influenceChain, explaining which pillar was destroyed, shaken or newly established by which event.
+{{user}} can destroy a core person's pillars of power one by one through event chains. Each pillar destroyed lowers their actual control, and the group's status should reflect this.
+Once all pillars are destroyed, the person loses power and their status as a core person. If killed then, it no longer triggers type=blood and is handled only as "an ordinary member was killed" in the enemy roster module (type=grudge).
 </factions>`
     },
     // ========== 模块四：风声 ==========
     {
-      comment: '模块四：风声',
+      comment: 'Module 4: News',
       content: `<winds>
 
-风声是世界中正在传播的公开说法，是事件、势力、经济、声誉与主动接触之间的信息中介。它不是客观真相记录，也不是无意义的气氛列表。
+News is the public talk spreading through the world, the information layer between events, factions, the economy, reputation and active contact. It is not a record of objective truth, and not a meaningless list of atmosphere.
 
-一、风声结构
-- id：已有风声沿用系统分配的 id；新风声必须显式填 null，禁止省略。
-- topic：风声主题。同一传播脉络允许随说法或焦点变化而改名，但必须沿用 id；禁止重复创建近义条目。
-- type："announcement"/"report"/"rumor"/"sentiment"，分别表示公告、消息、流言、舆情。
-- level：实际传播规模。Lv1=圈内少数人；Lv2=地方；Lv3=州郡、省份、等大区；Lv4=国家、国际、天下。
-- content：当前正在传播的具体说法。
-- scope：当前实际传播到的具体地区或圈层。
-- source：来源与传播链。与{{user}}相关时必须写完整信息链。
+1. News structure
+- id: existing news keeps the id assigned by the system; new news must explicitly use null, never omit it.
+- topic: news topic. The same line of spreading may be renamed as the claims or focus change, but must keep its id; never create duplicate near-synonymous entries.
+- type: "announcement"/"report"/"rumor"/"sentiment", meaning an announcement, a report, a rumor or public sentiment.
+- level: actual scale of spreading. Lv1 = a few people in a circle; Lv2 = local; Lv3 = a province, state or other large region; Lv4 = national, international, the whole world.
+- content: the specific claim now in circulation.
+- scope: the specific region or circle it has actually reached so far.
+- source: the source and chain of spreading. When it involves {{user}}, write out the full chain of information.
 
-二、归并优先
-风声记录的是正在传播的“信息主题”，不是事实清单、细节清单、版本清单或后续标题。风声可以是真实消息、流言、误传、夸张说法或片面理解；不因真假而排除。
-创建风声前，必须先判断新信息是否与已有风声属于同一信息主题。
-若它们共享同一核心对象、核心事件/事项、核心说法、传播含义或社会指向，应更新已有风声，不得新建。
-同一信息主题的补充、续传、细节增加、范围扩大、语气变化、版本变形、可信度变化、情绪升温或影响扩散，都应合并到原风声中，更新 content、level、scope、source 等字段。禁止仅因标题变化、措辞变化、版本后缀或传播阶段变化，创建重复风声。
-只有当新信息的核心传播含义发生改变，已经指向不同对象、不同判断、不同利益关系、不同风险判断或不同群体行动时，才允许创建新风声。
+2. Merge first
+News records an "information topic" in circulation, not a list of facts, details, versions or follow-up headlines. News can be true reports, rumors, misinformation, exaggeration or partial understanding; truth or falsehood does not rule it out.
+Before creating news, first decide whether the new information belongs to the same topic as existing news.
+If they share the same core subject, core event or matter, core claim, meaning in circulation or social target, update the existing news; do not create a new one.
+Additions, further spreading, more details, a wider scope, a change of tone, version drift, a change in credibility, rising emotion or spreading effects of the same topic should all be merged into the original news by updating content, level, scope, source and other fields. Never create duplicate news just because the headline, wording, a version suffix or the stage of spreading changed.
+Only when the core meaning in circulation of the new information has changed and points to a different subject, judgment, interest, risk assessment or group action may new news be created.
 
-三、生成边界
-- 当一项具体信息被公开发布、由目击者转述、经现实渠道传递、开始在小范围内流传，或形成可以辨认的群体议论时，即可创建风声。传播可以处于起始阶段，不要求已经形成较大规模。
-- 新风声应有明确的信息主题，并至少具有一定的传播价值，例如可能引起他人关注、讨论、判断或回应，或者仍有继续转述、扩散、变形的空间。不要求它已经实际改变人物行动、声誉、经济、势力或事件链，也不要求预先证明会持续多个轮次。
-- 私信、密令、秘密情报等仅有明确接收者的信息不属于风声；泄露并开始传播后才创建。
-- 单人随口一句且无人听闻或转述、普通寒暄、没有明确主题的闲话、纯环境气氛，以及没有带来新信息的机械复述，通常不创建风声。
-- “事情重大”本身不等于“已经传播”。若尚未发生公开发布、他人听闻、转述、传递或共同议论，即使事情足够重要，也不创建风声。公告被正式公开发布，本身即可视为传播开始。
-- 禁止每轮强制生成风声，禁止用"世界平静无大事"等占位风声凑数。
-- 公告只证明发布者公开说过这件事，不保证内容为真；流言也可能恰好为真。风声不使用可信度或热度字段。
+3. Limits on generation
+- News can be created once a specific piece of information has been publicly released, retold by witnesses, passed on through real channels, begun circulating in a small circle, or become recognizable group discussion. Spreading may be at its very start; it need not have reached a large scale.
+- New news should have a clear information topic and at least some value in spreading, such as being likely to draw others' attention, discussion, judgment or response, or still having room to be retold, spread or distorted. It need not have actually changed character actions, reputation, the economy, factions or event chains, and need not be proven in advance to last several rounds.
+- Private letters, secret orders, secret intelligence and other information with only specific recipients are not news; create news only after it leaks and starts spreading.
+- A single offhand remark nobody heard or retold, ordinary small talk, idle chatter with no clear topic, pure atmosphere, and mechanical repetition that brings no new information usually do not create news.
+- "The matter is big" does not by itself mean "it has spread". If there has been no public release, no one else has heard it, and it has not been retold, passed on or discussed together, do not create news even if the matter is important enough. An announcement that has been formally released counts as the start of spreading by itself.
+- Never force news every round, and never fill space with placeholder news like "the world is calm, nothing major".
+- An announcement only proves the publisher said it publicly, not that it is true; a rumor may also happen to be true. News uses no credibility or heat fields.
 
-四、传播与升级
-- 每轮检查已有风声是否获得新的合法传播节点。没有传播节点时，level 与 scope 保持不变。
-- 连续多轮没有实质更新的风声会由本地系统判定消散，并在下一轮后台推演前直接删除。
-- 若一条风声本轮仍在传播、变质、扩大范围或持续影响世界，必须返回相同 id 的更新；仅原样复述而没有实际变化不算更新。
-- 风声寿命与消散由本地系统管理，禁止输出或操纵内部计数。
-- 同一场景可即时传播；同一区域通常需1-2轮；跨区域通常需3-5轮；世界观内的广播、网络、法术通讯等可缩短时间。
-- level 只表示传播规模，不表示事情的重要性或真假。
-- 公告和消息传播时通常保持内容稳定；流言可能夸张、扭曲或分化；舆情可因新信息转向。
-- 风声可以长期停留在原等级，但必须有持续传播或影响作为依据。
+4. Spreading and escalation
+- Each round, check whether existing news gained new valid spreading nodes. Without spreading nodes, level and scope stay the same.
+- News with no real update for several rounds in a row will be judged faded by the local system and deleted directly before the next background evolution.
+- If a news item is still spreading, mutating, widening its scope or still affecting the world this round, you must return an update with the same id; merely repeating it unchanged does not count as an update.
+- News lifetime and fading are managed by the local system; never output or manipulate internal counters.
+- News can spread instantly within the same scene; within the same region it usually takes 1-2 rounds; across regions it usually takes 3-5 rounds; broadcasts, networks, magical communication and the like within the setting can shorten this.
+- level only shows the scale of spreading, not how important or true the matter is.
+- Announcements and reports usually keep their content stable as they spread; rumors may exaggerate, distort or branch; public sentiment can turn with new information.
+- News can stay at its level for a long time, but there must be continued spreading or influence to justify it.
 
-五、跨系统联动（强制）
-- 风声只有传播到相关对象所在范围或圈层后，该对象才能据此行动。
-- 风声可改变势力目标、资源调度或对{{user}}关注度；可触发、推进、延缓或终结事件链；可改变声誉；可促成调查、接触、封锁、抢购等行为。
-- 重大经济 signals 应产生对应风声，公众因风声采取行动后又可反过来改变经济。
-- 与{{user}}有关的行为只有形成覆盖对应圈层的风声后，才能改变该圈层声誉。
-- 仇敌只有通过覆盖其情报来源的风声或其他合法渠道获知线索后，才能据此追踪。
-- 每当风声造成跨系统变化，必须写入 influenceChain，明确"哪条风声 → 谁获知 → 采取何种行动或形成何种判断"。
-- 没有实际外溢影响的风声只更新自身，禁止硬造联动。
+5. Cross-system linkage (mandatory)
+- An actor may act on news only after it has spread into the area or circle where that actor is.
+- News can change a faction's goals, allocation of resources or attention to {{user}}; it can trigger, advance, delay or end event chains; it can change reputation; it can lead to investigations, contact, blockades, panic buying and similar actions.
+- Major economic signals should produce matching news, and the public acting on news can in turn change the economy.
+- Actions involving {{user}} can change a circle's reputation only after they form news that reaches that circle.
+- An enemy may track based on leads only after learning of them through news reaching its intelligence sources or other valid channels.
+- Whenever news causes a cross-system change, it must be written into influenceChain, making clear "which news → who learned of it → what action they took or what judgment they formed".
+- News with no real spillover effect only updates itself; never force linkage.
 </winds>`
     },
     // ========== 模块五：影响链 ==========
     {
-      comment: '模块五：影响链',
+      comment: 'Module 5: Influence chains',
       content: `<influence_chain>
 
-influenceChain 用于记录重要变化在世界中的传播过程。它不是新的事件链，不参与骰子推进，不表示 stage 进度。它回答的是"什么触发了变化、直接改变了什么、又产生了什么后续余波"。
+influenceChain records how important changes spread through the world. It is not a new event chain, takes no part in dice advancement and does not show stage progress. It answers "what triggered the change, what it directly changed, and what aftermath followed".
 
-一、可记录的影响
-- 事件链对风声、经济、声誉、势力行动、NPC接触的影响
-- 天下大势对事件链、势力行动、经济与风声的长期约束
-- 风声传播对势力判断、公众态度、官方动作的影响
-- 经济变化对资源、物价、行动能力、势力计划的影响
-- 声誉变化对不同圈层NPC态度和主动接触的影响
-- 黑盒信息泄露或未泄露对外界认知、调查方向、错误判断的影响
-- 一个事件链对另一个事件链的加速、延缓、转向、消散或失败影响
+1. Effects that can be recorded
+- Effects of event chains on news, the economy, reputation, faction actions and NPC contact
+- Long-term constraints of world trends on event chains, faction actions, the economy and news
+- Effects of spreading news on faction judgments, public attitudes and official actions
+- Effects of economic changes on resources, prices, ability to act and faction plans
+- Effects of reputation changes on the attitudes and active contact of NPCs in different circles
+- Effects of black-box information leaking or not leaking on outside awareness, lines of investigation and wrong judgments
+- One event chain speeding up, slowing down, redirecting, dissipating or failing another event chain
 
-【创建准入】
-只有触发源已经使另一个系统的持久状态发生实质变化时，才创建 influenceChain。必须同时满足：
-1. trigger 是已经发生或已经生效的明确触发源。
-2. impact 是已经发生、可观察或可验证的直接改变，不是猜测。
-3. 变化跨越至少两个系统，或使另一个持续实体改变目标、状态、资源、范围或行动。
-4. 这段传导对理解后续世界状态确有必要。
+[Admission]
+Create an influenceChain only when the trigger has already made a real change to another system's lasting state. All of the following must be met:
+1. trigger is a clear source that has already happened or taken effect.
+2. impact is a direct change that has already happened and can be observed or verified, not a guess.
+3. The change crosses at least two systems, or makes another lasting entity change its goals, status, resources, reach or actions.
+4. This transmission is truly necessary to understand later world states.
 
-仅有潜在可能、情绪或气氛变化、同一事项内部的普通步骤、事件链自身的常规进度、字段之间没有真实状态改变的文字关联，均不得创建影响链。“可能引发后续”不能充当 impact；有因果依据但尚未发生的趋势只能写入 fallout。
+Mere possibilities, changes in emotion or atmosphere, ordinary internal steps of the same matter, an event chain's own regular progress, and textual links between fields with no real change in state must not create an influence chain. "May lead to something later" cannot serve as impact; trends with causal grounds that have not happened yet may only go into fallout.
 
-二、三段结构
-每条 influenceChain 必须使用三段结构：
-- trigger：触发源。引发变化的具体事件、行动、天下大势、风声、经济变化、声誉变化或黑盒信息。
-- impact：直接影响。触发源已经真实改变了什么世界状态。
-- fallout：后续余波。该影响进一步扩散后产生的次生变化或下一步趋势。
+2. Three-part structure
+Every influenceChain must use the three-part structure:
+- trigger: the source. The specific event, action, world trend, news, economic change, reputation change or black-box information that caused the change.
+- impact: the direct effect. What world state the trigger has actually changed.
+- fallout: the aftermath. Secondary changes or next-step trends after the effect spreads further.
 
-三、禁止事项
-- 不得把 influenceChain 当成新的事件链创建 stage 或 stageRound。
-- 不得把普通事件进度流水账全部塞入 influenceChain；只有产生跨系统外溢影响时才记录。
-- impact 必须是已经发生的直接变化；fallout 必须是由该影响继续扩散产生的余波，不得重复改写 trigger。
-- 不得借 influenceChain 泄露黑盒信息给不知情NPC。
-- 同一 trigger 已有记录时更新该记录，不要无限堆叠重复记录。
-- 只有直接影响或后续余波出现实质变化时才更新同一记录；不得换一种说法重复返回。
-- 当传导已经完成且没有新的余波时，不再更新。影响链是有限期因果记录，不得把它续写成永久事件链。
+3. Prohibited
+- Never use influenceChain as a new event chain to create stage or stageRound.
+- Never stuff the full play-by-play of ordinary event progress into influenceChain; record only when there is cross-system spillover.
+- impact must be a direct change that has already happened; fallout must be aftermath produced as that effect spreads further, and must not restate the trigger.
+- Never use influenceChain to leak black-box information to NPCs who do not know it.
+- When the same trigger already has a record, update that record; do not stack duplicate records endlessly.
+- Update the same record only when the direct effect or aftermath really changes; do not return it again in different words.
+- Once the transmission is complete and there is no new aftermath, stop updating it. An influence chain is a time-limited causal record; never extend it into a permanent event chain.
 </influence_chain>`
     },
     // ========== 模块六：信息传播与知情边界 ==========
     {
-      comment: '模块六：信息传播与知情边界',
+      comment: 'Module 6: Information spreading and knowledge boundaries',
       content: `<contact_and_info>
 
-一、知情边界
-NPC、势力、黑市、仇敌都没有读档能力，也不能读取面板信息。AI在让任何对象获知一条信息前，必须能回答：“它通过什么路径知道？”答不上来，就视为不知道。
+1. Knowledge boundaries
+NPCs, factions, black markets and enemies cannot read save files, and cannot read panel information. Before letting anyone learn a piece of information, the AI must be able to answer: "By what path did they learn it?" If it cannot answer, treat them as not knowing.
 
-合法获知路径包括：
-- 亲眼目睹或亲耳听见。
-- 被合法知情者直接告知。
-- 公开信息，如公告、告示、公开宣布。
-- 风声已经传播到其所在范围或圈层。
-- 所属组织的情报网络覆盖该信息，并经过合理传导时间。
-- 现场物证或痕迹被有能力者调查并解读。
-- 世界观内明确存在且该对象有权使用的通讯、监控、追踪、占卜或类似手段。
+Valid paths to learning include:
+- Seeing it with their own eyes or hearing it with their own ears.
+- Being told directly by someone who validly knows.
+- Public information such as announcements, notices and public declarations.
+- News that has already spread into their area or circle.
+- Their organization's intelligence network covering the information, with a reasonable time for it to travel.
+- Physical evidence or traces at the scene being investigated and interpreted by someone capable.
+- Communication, surveillance, tracking, divination or similar means that clearly exist in the setting and that they are entitled to use.
 
-禁止事项：
-- 禁止“NPC就是知道了”。
-- 禁止把面板信息直接泄露给角色。
-- 禁止用“消息传得快”“有人听说了”替代具体传播路径。
-- 禁止让未接触传播链的对象据此行动。
+Prohibited:
+- No "the NPC just knows".
+- Never leak panel information directly to characters.
+- Never replace a specific spreading path with "word travels fast" or "someone heard about it".
+- Never let anyone who has not touched the chain of spreading act on it.
 
-二、痕迹不等于指向
-物证、痕迹、传闻通常只能证明“发生了什么”，不能自动证明“是谁做的”。
-若要把事件指向{{user}}或某个身份，必须存在额外关联证据：目击者识别、独特特征、独特物品/技能、主动透露、可追溯记录、长期调查结果等。
-缺少关联证据时，NPC只能形成模糊判断、错误猜测或待调查疑点，不得直接锁定{{user}}。
+2. Traces are not pointers
+Physical evidence, traces and hearsay can usually only prove "what happened", not automatically "who did it".
+To point an event at {{user}} or at a particular identity, there must be additional linking evidence: identification by witnesses, unique features, unique items or skills, voluntary disclosure, traceable records, results of a long investigation and so on.
+Without linking evidence, NPCs can only form vague judgments, wrong guesses or open questions to investigate, and must not lock onto {{user}} directly.
 
-三、身份隔离
-{{user}}的匿名、化名、伪装身份默认与本体隔离。只有在出现合法关联证据后，其他对象才能把两个身份联系起来。情报组织、黑市、仇敌也必须遵守该规则；“擅长情报”只代表更容易展开调查，不代表自动全知。
+3. Identity separation
+{{user}}'s anonymity, aliases and disguises are separated from their true identity by default. Only after valid linking evidence appears can others connect the two identities. Intelligence organizations, black markets and enemies must follow this rule too; "good at intelligence" only means they can start investigating more easily, not that they automatically know everything.
 </contact_and_info>`
     },
     // ========== 模块七：声誉 ==========
     {
-      comment: '模块七：声誉',
+      comment: 'Module 7: Reputation',
       content: `<reputation>
 
-一、四维声誉
-{{user}}的声誉拆为四个独立维度，每个维度5级，独立升降，互不冲销。
-- 朝堂之上：掌权建制力量对{{user}}的评价——朝廷/议会/公司董事会/教廷/联邦等。评价标准：守法/逆法、可用/危险、顺从/挑衅。
-- 市井之间：普通百姓/市民/街头舆论对{{user}}的口碑。评价标准：仁善/暴戾、慷慨/贪婪、保护者/威胁者。
-- 草莽之中：体制外力量对{{user}}的看法——绿林、走私者、佣兵、独立黑客、中间人、地下帮派等所有不在台面上吃饭的人。评价标准：不是你是否违法，而是你是否有种。敢以私力对抗体制不公的人受尊敬；只敢欺负弱者的人被鄙视。
-- 同道之间：{{user}}所在行当/职业圈内的同行评价。评价标准：技艺高低、是否守行规、是否对同行有贡献。
+1. Four-dimensional reputation
+{{user}}'s reputation is split into four independent dimensions, each with 5 levels, rising and falling independently without canceling each other out.
+- The halls of power: how the established powers in charge view {{user}} — a royal court, parliament, corporate board, church, federation and so on. Standard: law-abiding or lawbreaking, useful or dangerous, compliant or defiant.
+- The streets: {{user}}'s standing among ordinary people, townsfolk and street opinion. Standard: kind or brutal, generous or greedy, protector or threat.
+- The underworld: how forces outside the system see {{user}} — outlaws, smugglers, mercenaries, independent hackers, fixers, underground gangs and everyone else who doesn't make a living above board. Standard: not whether you break the law, but whether you have guts. Those who dare use private force against systemic injustice are respected; those who only dare bully the weak are despised.
+- Among peers: how fellow members of {{user}}'s trade or profession rate them. Standard: skill, whether they keep the trade's rules, whether they contribute to their peers.
 
-五级层级（每个维度通用，从低到高）：天怒人怨 → 声名狼藉 → 默默无闻 → 受人尊敬 → 万众敬仰
-中点为"默默无闻"，向下两级为负评（声名狼藉、天怒人怨），向上两级为正评（受人尊敬、万众敬仰）。
+Five levels (shared by every dimension, low to high): Reviled → Notorious → Unknown → Respected → Revered
+The midpoint is "Unknown"; the two levels below are negative (Notorious, Reviled) and the two above are positive (Respected, Revered).
 
-【变化准入】
-声誉不是行为评分器，而是相关圈层已经形成的群体评价。只有同时满足“行为或结果已被合法传播到对应圈层”与“该信息足以改变该圈层对{{user}}的总体判断”时，才能调整对应维度。
-单个NPC的喜欢、厌恶、感激或记仇，应体现在个人或势力关系中；没有形成圈层认知时不得写入声誉。轻微礼貌、普通交易、日常胜负和重复传播旧事，通常不足以跨越声誉等级。
-只有出现足以改变当前等级的新事实时才返回 reputation；没有实质变化时不得用 lastChange 制造更新。声誉维度不会因暂时无人谈论而自动清零，后续只能由新的、已传播的群体评价改变。
+[Admission for change]
+Reputation is not a score for behavior but the group view a circle has already formed. Adjust a dimension only when both "the action or result has validly spread to that circle" and "the information is enough to change that circle's overall judgment of {{user}}" are met.
+A single NPC's liking, dislike, gratitude or grudge belongs in personal or faction relations; without forming a circle-wide perception it must not be written into reputation. Slight courtesy, ordinary trades, everyday wins and losses, and old matters spread again are usually not enough to cross a reputation level.
+Return reputation only when new facts appear that are enough to change the current level; without real change, do not use lastChange to fake an update. A reputation dimension does not reset just because nobody is talking about it for a while; it can only be changed later by new, spread group views.
 
-二、声誉判定原则
-声誉变化不是行为打分，而是“对应圈层在获知信息后形成的总体评价变化”。判断时按以下顺序：
+2. Principles for judging reputation
+A reputation change is not a behavior score but "a change in the overall view a circle forms after learning information". Judge in this order:
 
-1. 传播前提  
-   行为、结果或传闻必须已经通过合法风声覆盖对应圈层；未传播、仅单人知晓、仅受害者知晓或仍在黑盒中的行为，不改变四维声誉。
+1. Spreading first
+   The action, result or rumor must already have reached the circle through valid news; actions that have not spread, are known to only one person, are known only to the victim or are still in the black box do not change the four dimensions.
 
-2. 圈层视角  
-   同一事实在不同圈层中的评价可以不同：
-   - 朝堂：关注秩序、合法性、统治稳定、制度威信。
-   - 市井：关注百姓安危、生活利益、公平感、是否为害地方。
-   - 草莽：关注义气、胆色、反抗不公、是否欺压弱者；单纯犯罪不自动加分。
-   - 同道：关注技艺、行规、行业贡献、同行信任。
+2. The circle's point of view
+   The same fact can be judged differently by different circles:
+   - Halls of power: order, legitimacy, stable rule, institutional authority.
+   - Streets: people's safety, livelihoods, sense of fairness, whether someone is a menace to the area.
+   - Underworld: loyalty, nerve, resisting injustice, whether someone oppresses the weak; plain crime earns no automatic credit.
+   - Peers: skill, the trade's rules, contributions to the field, trust among peers.
 
-3. 群体评价  
-   声誉只记录圈层层面的总体评价，不记录单个 NPC 的喜欢、感激、恐惧或记仇。单一团体内部仇怨应写入 factions、enemies 或其他关系，不直接改变整体声誉。
+3. Group view
+   Reputation records only the overall view at circle level, not a single NPC's liking, gratitude, fear or grudge. A grudge inside a single group belongs in factions, enemies or other relations, and does not directly change overall reputation.
 
-4. 变化强度  
-   只有新信息足以改变当前等级时，才调整声誉。轻微礼貌、普通交易、日常胜负、重复旧闻或没有扩散的新细节，不应改变等级。
+4. Strength of change
+   Adjust reputation only when new information is enough to change the current level. Slight courtesy, ordinary trades, everyday wins and losses, repeated old news or new details that have not spread should not change the level.
 
-5. 多维影响限制  
-   同一事实可以影响多个维度，但必须分别符合对应圈层的评价逻辑；通常不超过 3 个维度。不得为了丰富面板强行多维加减。
+5. Limits on multi-dimensional effects
+   One fact can affect several dimensions, but each must fit that circle's logic of judgment; usually no more than 3 dimensions. Never force changes in several dimensions just to make the panel richer.
 
-三、不同观察者看不同维度
-新生成NPC/团体的初始态度，按其所属圈子读取对应维度：
-- 朝堂/权贵/统治阶层 → 看【朝堂之上】
-- 平民/百姓/市民 → 看【市井之间】
-- 草莽/地下/体制外人士 → 看【草莽之中】
-- 同行/同职业/同道中人 → 看【同道之间】
-- 跨圈子人士（如朝堂卧底进草莽）→ 取两个维度的综合判断
+3. Different observers look at different dimensions
+A newly generated NPC or group's initial attitude reads the dimension of the circle it belongs to:
+- Court / the powerful / the ruling class → read [The halls of power]
+- Commoners / ordinary people / townsfolk → read [The streets]
+- Outlaws / the underground / people outside the system → read [The underworld]
+- Peers / the same profession / kindred spirits → read [Among peers]
+- People who cross circles (e.g. a court spy inside the underworld) → combine the two dimensions
 
-四、复合声誉效应
-- 朝堂+市井双高 → "民心所向"事件链（官方授勋/民意拥戴机会）
-- 市井+草莽双高 → "替天行道"事件链（百姓和草莽都认{{user}}是英雄，朝堂反而紧张）
-- 草莽+同道双高 → "一方豪杰"事件链（双线人脉，草莽和同行都敬你三分）
-- 朝堂高+草莽高 → "双面身份"事件链（暴露风险随时间累积）
-- 任一维度跌至天怒人怨 → 该圈子内"通缉/追杀/驱逐/封杀"事件链
+4. Compound reputation effects
+- High in both halls of power and streets → "The People's Choice" event chain (chances for official honors / popular acclaim)
+- High in both streets and underworld → "Champion of the People" event chain (commoners and outlaws alike see {{user}} as a hero, which makes the court nervous)
+- High in both underworld and among peers → "Hero of the Land" event chain (connections on both sides; outlaws and peers alike give you respect)
+- High in halls of power + high in underworld → "Double Life" event chain (exposure risk builds up over time)
+- Any dimension falling to Reviled → a "wanted / hunted / banished / blacklisted" event chain within that circle
 
 </reputation>`
     },
     // ========== 模块八：经济 ==========
     {
-      comment: '模块八：经济',
+      comment: 'Module 8: Economy',
       content: `<world_economy>
 
-经济脉搏是世界的血液循环，不是{{user}}的个人账本。它追踪的是整体经济气候和市场中值得注意的变化。
+The economic pulse is the world's circulation, not {{user}}'s personal ledger. It tracks the overall economic climate and notable changes in the market.
 
-一、经济气候
+1. Economic climate
 
-climate 表示当前区域的经济温度，用四词描述：
-- 繁荣：贸易旺盛、商路安全、物价稳定偏高
-- 平稳：日常运作、物价按季节自然波动
-- 衰退：需求萎缩、商号倒闭、少数刚需品反而暴涨
-- 动荡：战乱/灾荒/封锁导致经济秩序崩溃，以物易物回潮
+climate is the current region's economic temperature, described with four words:
+- Booming: brisk trade, safe trade routes, prices stable to high
+- Steady: business as usual, prices shifting naturally with the seasons
+- Recession: shrinking demand, businesses closing, a few essentials soaring in price
+- Turbulent: war, disaster or blockade has broken economic order; barter returns
 
-climate 的 scope 是{{user}}当前所在区域及其直接关联的经济圈。远处的经济冷暖通过 signals 补充。
+The scope of climate is {{user}}'s current region and the economic sphere directly tied to it. The economic temperature of distant places is added through signals.
 
-二、市场信号
+2. Market signals
 
-signals 记录当前市场上值得注意的经济变化。跟踪标准：
-- 该变化足以影响势力行动、NPC决策或事件链走向
-- 不是日常波动——日常波动不配进 signals
-- 一般不超过3条
+signals records notable economic changes in the market now. Tracking standard:
+- The change is enough to affect faction actions, NPC decisions or the course of event chains
+- It is not an everyday fluctuation — everyday fluctuations don't belong in signals
+- Usually no more than 3
 
-每项包含：
-- summary：一句话描述变化和影响
-- scope：影响的地理范围（具体区域名，不能写"全境"）
+Each item contains:
+- summary: one sentence describing the change and its effect
+- scope: geographic area affected (a specific region name, not "everywhere")
 
-AI 必须让每条 signal 有因果：变化的背后必须有可追溯的事件链或外部原因（天气、战事、贸易中断、新技术、囤积行为、投机）。不能凭空波动。
+The AI must give every signal a cause: behind every change there must be a traceable event chain or outside reason (weather, war, interrupted trade, new technology, hoarding, speculation). No baseless swings.
 
-【创建、更新与退出】
-- 只有变化已经发生在市场、物流、供需、价格或资源配置中时，才创建 signal；仅预测“可能涨价/可能短缺”不得落盘。
-- 同一经济变化应更新原有 signal，不得因措辞、地点别称或后果扩展而重复创建近义条目。
-- 只有幅度、范围、原因或对行动的影响发生实质变化时才更新。
-- 市场恢复正常、影响已被吸收或变化已不再影响任何决策时，应从 signals 中移除，不得作为历史新闻永久保留。
-- climate 只有区域整体经济温度确实跨档时才改变；单一商品或单一商铺的变化通常只进入 signal，不能代表整个经济圈。
+[Creating, updating and removing]
+- Create a signal only when the change has already happened in the market, logistics, supply and demand, prices or resource allocation; a mere forecast like "prices may rise / there may be shortages" must not be saved.
+- Update the original signal for the same economic change; do not create near-synonymous duplicates because of wording, another name for a place or wider consequences.
+- Update only when the size, scope, cause or effect on actions really changes.
+- When the market returns to normal, the effect has been absorbed or the change no longer affects any decision, remove it from signals; do not keep it forever as old news.
+- Change climate only when the region's overall economic temperature truly crosses a level; a change in a single commodity or a single shop usually only goes into a signal and cannot stand for the whole economic sphere.
 
-三、风声与事件链联动
+3. Linkage with news and event chains
 
-- 物价暴涨、物资枯竭等重大变化 → 产生至少1条经济消息或舆情（见模块四）。
-- 人们获知经济风声并采取抢购、囤积、撤资等行动后，可反过来改变经济与事件链。
-- 禁止无视距离让经济信息瞬间全城皆知——signals 的 scope 和风声的 scope 必须一致。
+- Major changes such as soaring prices or depleted supplies → produce at least 1 economic report or public sentiment item (see Module 4).
+- After people learn of economic news and act on it by panic buying, hoarding or pulling out money, they can in turn change the economy and event chains.
+- Never let economic information reach the whole city instantly regardless of distance — the scope of signals and the scope of news must match.
 
-四、经济与事件链联动
+4. Linkage between the economy and event chains
 
-- 连续多轮出现同一方向的严重 signal → API 应创建一个推进型事件链，表示当地正在尝试解决（开辟新商路、寻找替代品等）。
-- 重大经济变化 → 影响势力间关系（受损方和受益方之间紧张度上升）。
+- A serious signal in the same direction for several rounds in a row → the API should create a progress event chain showing local attempts to fix it (opening new trade routes, finding substitutes, and so on).
+- A major economic change → affects relations between factions (tension rises between those harmed and those who benefit).
 
-五、禁止事项
+5. Prohibited
 
-- 禁止追踪{{user}}的个人钱包或背包。这是世界引擎，不是账房。
-- 禁止日常琐碎波动进入 signals。
-- 禁止物资价格毫无原因地波动。
-- 禁止所有区域经济趋势完全一致。
+- Never track {{user}}'s personal wallet or backpack. This is a world engine, not a bookkeeper.
+- Never put everyday small fluctuations into signals.
+- Never let prices swing for no reason.
+- Never make every region's economic trend exactly the same.
 </world_economy>`
     },
     // ========== 模块九：仇敌录 ==========
     {
-      comment: '模块九：仇敌录',
+      comment: 'Module 9: Enemy roster',
       content: `<enemies>
 
-仇敌是因{{user}}的具体伤害行为而产生的、不可逆的个人恩怨。仇敌的核心特征是永不淡化和跨区域追踪。它与势力层面的态度对立（factions.relation）是两套完全不同的东西——势力对立源于立场和利益，可以谈判；仇敌源于伤害，不可谈判。
+An enemy is an irreversible personal grudge caused by concrete harm {{user}} did. The defining traits of an enemy are that it never fades and it tracks across regions. It is something entirely different from faction-level hostility (factions.relation) — faction hostility comes from stances and interests and can be negotiated; an enemy comes from harm and cannot be negotiated.
 
-每条仇敌记录都有系统 id。更新已有仇敌时必须沿用原 id，即使姓名、称号或组织名称改变；新仇敌必须显式填 null，禁止省略。
+Every enemy record has a system id. When updating an existing enemy you must keep the original id, even if its name, title or organization name changes; new enemies must explicitly use null, never omit it.
 
-【创建与更新总则】
-先检查下述血仇或非致死恩怨的完整触发条件；不满足时不得因为角色表现出愤怒、敌意或扬言报复就创建仇敌。仇敌是需要长期追踪的不可逆个人恩怨，不是普通反派名单。
-已有仇敌只有在定位进展、报复能力、行动阶段、组织主体或终结事实发生实质变化时才更新；不得每轮仅改写仇恨措辞。暂时无力行动只改变其行动状态，不会自动删除仇敌。
+[General rules for creating and updating]
+First check the full trigger conditions for a blood feud or non-lethal grudge below; if they are not met, never create an enemy just because a character shows anger, hostility or vows revenge. An enemy is an irreversible personal grudge that needs long-term tracking, not an ordinary list of villains.
+Update an existing enemy only when its progress in locating, ability to retaliate, stage of action, organizing body or the fact of its ending really changes; do not just reword the hatred every round. Being temporarily unable to act only changes its action status; the enemy is not deleted automatically.
 
-一、仇敌类型
-1. 血仇（type: "blood"）— 触发条件（满足任一）：{{user}}杀死某团体的核心人物（但失去权力的前核心人物除外，见势力模块的权力瓦解）；{{user}}导致某人至亲身亡或永久致残。
-   特性：永不淡化、不可谈判、复仇动机永不消失。即使复仇方资源耗尽，仇恨不会消退，只会因能力不足而暂时停滞。
+1. Enemy types
+1. Blood feud (type: "blood") — trigger (any one): {{user}} kills a group's core person (except a former core person who already lost power; see power collapse in the faction module); {{user}} causes someone's close family member to die or be permanently maimed.
+   Traits: never fades, cannot be negotiated, the motive for revenge never disappears. Even if the avengers run out of resources, the hatred does not fade; it only stalls temporarily for lack of ability.
 
-2. 非致死恩怨（type: "grudge"）— 触发条件（必须同时满足）：
-   - 不可逆伤害：{{user}}的行为造成了无法恢复的重大损失（废去武功、夺走毕生基业、设局导致破产/流放/被剥夺身份等）。
-   - 明确复仇意愿：受害者有强烈的、明确的复仇动机，不是泛泛的"不喜欢"或"怀恨在心"。
-   - 有追踪/报复能力：受害者有能力（资源、武艺、人脉、情报网）对{{user}}实施实际的追踪或报复。
-   不满足以上三项的不算grudge。被{{user}}辱骂、一次商业竞争失败、街头斗殴受伤——这些都不够资格进入仇敌录，应在叙事中由AI自然体现，不落盘。
-   特性：同样永不淡化，但恐怖程度通常低于血仇。
+2. Non-lethal grudge (type: "grudge") — trigger (all must be met):
+   - Irreversible harm: {{user}}'s actions caused a major loss that cannot be recovered (crippled in their martial skill, robbed of a life's work, ruined, exiled or stripped of status by a setup, and so on).
+   - Clear will for revenge: the victim has a strong, explicit motive for revenge, not a vague "dislike" or "holding a grudge".
+   - Ability to track or retaliate: the victim has the means (resources, fighting skill, connections, an intelligence network) to actually track or retaliate against {{user}}.
+   Anything not meeting all three is not a grudge. Being insulted by {{user}}, losing one business competition, being hurt in a street fight — none of these qualify for the enemy roster; the AI should show them naturally in the narrative without saving them.
+   Traits: also never fades, but is usually less terrifying than a blood feud.
 
-二、仇敌行为与追踪
-- 血仇提供动机，不提供能力。追杀受势力等级约束：弱势力无法渗透强势力地盘。
-- 跨区域追踪需要时间。仇敌必须先通过合法手段定位{{user}}（情报网、线人、风声等），然后才能组织行动。
-- 仇敌status = "执行中"时，每隔5-10轮才有几率真正发起一次追杀/报复行动。
-- 若仇敌势力 < {{user}}所在地保护势力，追杀强制停滞，转为"追踪中"并积蓄力量。
+2. Enemy behavior and tracking
+- A blood feud supplies motive, not ability. Pursuit is limited by faction level: a weak faction cannot infiltrate a strong faction's territory.
+- Tracking across regions takes time. An enemy must first locate {{user}} through valid means (intelligence network, informants, news and so on) before it can organize action.
+- When an enemy's status = "Striking", it has a chance to actually launch a hunt or act of revenge only once every 5-10 rounds.
+- If the enemy's power < the protecting faction where {{user}} is, the pursuit is forced to stall, switches to "Tracking" and builds strength.
 
-三、仇敌触发（团体视角）
-当{{user}}的行为触发type=blood时，AI必须根据被杀者的身份判定团体走向：
-1. 被杀者为团体核心人物（失去权力的前核心人物除外）：
-   - 走向A（同仇敌忾）：若凝聚力较高且有明确继承人，继承人成为新核心，创建冲突型事件链。
-   - 走向B（内斗）：若派系林立，团体陷入争权夺利，复仇被搁置，原进度停滞。
-   - 走向C（解散）：若凝聚力低或资源枯竭，团体直接解散，从活跃面板移除。
-2. 被杀者为普通成员（或已失去权力的前核心人物）：创建临时复仇团体，名称格式："[被杀者姓名]的亲属复仇队"。创建冲突型事件链。
-无论哪种路径，都必须在enemies中追加一条仇敌录条目，并在influenceChain中记录传导关系。
+3. Enemy triggers (group perspective)
+When {{user}}'s actions trigger type=blood, the AI must decide the group's direction based on who was killed:
+1. The victim was a core person of the group (except a former core person who already lost power):
+   - Path A (united in vengeance): if cohesion is high and there is a clear successor, the successor becomes the new core and a conflict event chain is created.
+   - Path B (infighting): if the group is riddled with factions, it falls into a power struggle; revenge is shelved and the original progress stalls.
+   - Path C (dissolution): if cohesion is low or resources are exhausted, the group disbands outright and is removed from the active panel.
+2. The victim was an ordinary member (or a former core person who already lost power): create a temporary revenge group named "[victim's name]'s Kin Avengers". Create a conflict event chain.
+Whichever path, you must add an entry to enemies and record the transmission in influenceChain.
 
-四、仇敌终结
-只有当仇敌被{{user}}彻底消灭（杀死核心复仇者、摧毁复仇组织），才能标记status="已终结"。
-- 已终结的条目会保留20轮备忘后自动清除。
-- 反杀后{{user}}声誉可回升，但最高只能达到"受人尊敬"（若声誉模块启用）。
-- 对应的冲突型事件链同步标记为已终结。
+4. Ending an enemy
+Only when {{user}} completely eliminates the enemy (kills the core avengers, destroys the revenge organization) may status="Resolved" be set.
+- Resolved entries are kept as a memo for 20 rounds and then cleared automatically.
+- After turning the tables, {{user}}'s reputation can recover, but only up to "Respected" (if the reputation module is enabled).
+- The matching conflict event chain is marked as ended at the same time.
 
-五、禁止事项
-- 禁止仅因"被{{user}}辱骂""商业竞争失败""街头斗殴轻伤"等可逆伤害创建仇敌条目。
-- 禁止将势力层面的态度对立（factions.relation = "敌对"）自动等同于仇敌。
-- 禁止为仇敌赋予超出其势力的能力。弱势力不能凭空召唤强援、渗透强领地或全知定位。
+5. Prohibited
+- Never create an enemy entry just for reversible harm such as "insulted by {{user}}", "lost a business competition" or "lightly hurt in a street fight".
+- Never treat faction-level hostility (factions.relation = "Hostile") as automatically equal to an enemy.
+- Never give an enemy abilities beyond its faction. A weak faction cannot summon strong help out of nowhere, infiltrate strong territory or locate anyone by omniscience.
 </enemies>`
     },
     // ========== 模块十：区域突发事件 ==========
     {
-      comment: '模块十：区域突发事件',
+      comment: 'Module 10: Regional incidents',
       content: `<regional_incident>
 
-一、系统定位
-本系统只负责生成区域级突发事件——足以影响一个地区的重大事件。
-不处理低价值事件
+1. Purpose of the system
+This system only generates region-level incidents — major events big enough to affect a region.
+It does not handle low-value events.
 
-二、职责划分
-区域突发事件是否触发、以及触发哪种类型，完全由本地系统判定。本地不触发时，本规则不会要求你生成区域突发事件，你也不得自发生成。
-仅当本地判定触发并向你注入「区域突发强制指令」时，你才按指令指定的类型，生成具体事件标题、发生地点、影响范围、传播风声与外溢影响。
+2. Division of responsibility
+Whether a regional incident triggers, and which type, is decided entirely by the local system. When the local system does not trigger one, this rule does not ask you to generate a regional incident, and you must not generate one on your own.
+Only when the local system triggers one and injects a "regional incident mandatory order" do you generate, for the type the order specifies, the concrete incident title, location, area of effect, the news it spreads and its spillover effects.
 
-三、事件类型
-以下类型只规定事件的因果类别与影响规模。具体表现必须适配当前世界观、时代、技术水平、地理环境和社会制度，不得照搬示例。
+3. Incident types
+The types below only define the causal category and scale of an incident. The concrete form must fit the current setting, era, level of technology, geography and social system; do not copy the examples.
 
-- banditry 有组织劫掠：针对居民点、运输线、商贸节点、资源储备或移动队伍的成规模袭击与掠夺。
-- fire 重大火灾：仓储区、居住区、生产设施、交通节点、公共设施或重要建筑发生的大范围火灾。
-- massacre 恶性暴力事件：连续杀害、群体遇害、重大袭击或其他足以引发区域恐慌的暴力案件。
-- flood 洪涝灾害：水位异常、堤防失效、区域淹没、交通中断、聚居地或生产区受灾。
-- infrastructure 基础设施崩坏：道路、桥梁、供水、能源、通信、运输或其他关键公共设施严重损毁或停摆。
-- plague 疫病传播：人类、动物、植物或其他适用生命群体出现具有区域传播风险的疾病、污染或异常感染。
-- famine 物资短缺：食物、饮水、能源、药品或其他基本生存物资发生区域性短缺、断供或价格失控。
-- riot 群体骚乱：公共场所、资源分配点、交通节点或权力机构周边发生大规模冲突、踩踏、哄抢或失序。
-- rebellion 组织性反抗：地方群体、武装组织或社会集团针对现有统治与秩序发动持续性的反抗、割据或叛乱。
-- military 军事突变：武装力量发生哗变、溃败、越境、封锁、戒严、袭击或其他足以改变区域安全局势的变化。
-- earthquake 地质灾害：地震、山崩、塌陷、地裂、滑坡或其他大规模地质异常。
-- storm 极端天气：风暴、暴雪、沙尘、寒潮、热浪或其他足以破坏区域生产、交通与生活秩序的天气灾害。
+- banditry, organized raiding: large-scale attacks and plunder against settlements, transport lines, trade hubs, resource stores or traveling groups.
+- fire, major fire: a large fire in storage areas, residential areas, production facilities, transport hubs, public facilities or important buildings.
+- massacre, atrocious violence: serial killings, mass deaths, major attacks or other violent cases severe enough to cause regional panic.
+- flood, flood disaster: abnormal water levels, failed embankments, flooded regions, cut-off transport, settlements or production areas hit.
+- infrastructure, infrastructure failure: roads, bridges, water supply, energy, communications, transport or other key public facilities badly damaged or shut down.
+- plague, spreading disease: disease, contamination or abnormal infection with a risk of regional spread among people, animals, plants or other applicable life.
+- famine, shortage of supplies: regional shortage, cut-off supply or runaway prices of food, water, energy, medicine or other basic necessities.
+- riot, mass unrest: large-scale clashes, stampedes, looting or disorder in public places, distribution points, transport hubs or around seats of power.
+- rebellion, organized resistance: local groups, armed organizations or social blocs launching sustained resistance, secession or rebellion against existing rule and order.
+- military, military upheaval: armed forces mutinying, routing, crossing borders, blockading, imposing martial law, attacking, or other changes big enough to alter regional security.
+- earthquake, geological disaster: earthquakes, landslides, collapses, ground fissures, mudslides or other large-scale geological anomalies.
+- storm, extreme weather: storms, blizzards, dust storms, cold waves, heat waves or other weather disasters severe enough to disrupt regional production, transport and daily life.
 
-四、API生成要求
-当本地骰子触发并注入强制指令后，API必须：
-1. 根据指定类型生成区域级突发事件，事件影响一个明确的区域、道路、城镇、关隘、码头或其他地理范围。
-2. 事件必须产生可传播的风声。
-3. 事件必须造成至少一种外溢影响：经济变化、势力行动、治安变化、事件链变化、声誉变化、黑盒变化或新的影响链。
-4. 事件与{{user}}当前行为没有直接因果，不得写成已有仇敌、已有势力、已有事件链的阴谋结果。
-5. 不得凭空毁灭核心舞台，不得无故摧毁{{user}}核心资产。
-6. 如果事件未发生在{{user}}所在区域，不得强行打断{{user}}当前行动，只作为后台世界变化、远方消息或风声传播。
-7. 禁止将"区域突发事件"写成某个已有势力早已策划的阴谋。
+4. Generation requirements for the API
+When the local dice trigger and inject a mandatory order, the API must:
+1. Generate a region-level incident of the specified type that affects a clear region, road, town, pass, dock or other geographic area.
+2. The incident must produce news that can spread.
+3. The incident must cause at least one spillover effect: an economic change, a faction action, a change in public order, an event-chain change, a reputation change, a black-box change or a new influence chain.
+4. The incident has no direct causal link to {{user}}'s current actions and must not be written as the plot of an existing enemy, existing faction or existing event chain.
+5. Do not wipe out the core stage out of nowhere, and do not destroy {{user}}'s core assets without cause.
+6. If the incident does not happen in {{user}}'s region, do not forcibly interrupt {{user}}'s current action; treat it only as a background world change, distant news or spreading talk.
+7. Never write a "regional incident" as a plot an existing faction planned long ago.
 
-五、数据结构
+5. Data structure
 {
   "regionalIncident": {
     "active": true,
-    "title": "事件标题",
-    "type": "事件类型",
-    "scope": "影响范围",
-    "impact": "一句话概括区域后果"
+    "title": "incident title",
+    "type": "incident type",
+    "scope": "area affected",
+    "impact": "one sentence summing up the regional consequences"
   }
 }
-cooldown 由本地维护，API 不得输出或修改此字段。
+cooldown is maintained locally; the API must not output or modify this field.
 
-六、API返回最低要求
-触发后至少返回 regionalIncident、winds、influenceChain。视情况可额外返回 events、economy、factions、reputation、blackbox。
+6. Minimum API return
+After a trigger, return at least regionalIncident, winds and influenceChain. Depending on the situation, you may also return events, economy, factions, reputation and blackbox.
 </regional_incident>`
     },
     // ========== 模块十一：信息黑盒 ==========
     {
-      comment: '模块十一：信息黑盒',
+      comment: 'Module 11: Information black box',
       content: `<secret_asset>
 
-一、信息黑盒定义（防上帝视角铁律）
-在剧情运行中，存在两类需要被放入【信息黑盒】严格隔离的内容：
-1. 隐秘行为（secretActions）：{{user}}在无人目击、未留痕迹的情况下完成的行动（如深山杀牛、密室暗杀、无声潜入）。关键属性是痕迹——有没有目击者、有没有物证。
-2. 隐秘资产（secretAssets）：{{user}}暗中持有、未公开展示的一切资源（如密信、毒药、把柄、藏匿的物资、暗桩线人、隐秘身份）。关键属性是暴露度和可用性。
-- secretActions 字段：每项 { action, witnesses: "无/仅XX" }
-- secretAssets 字段：每项 { name, exposure: 0-100, status: "有效/过期/暴露/失效" }
+1. What the information black box is (iron law against the god's-eye view)
+While the story runs, two kinds of content must be strictly isolated in the [information black box]:
+1. Secret actions (secretActions): actions {{user}} completed with no witnesses and no traces (such as killing an ox deep in the mountains, an assassination in a sealed room, a silent infiltration). The key attribute is traces — are there witnesses, is there physical evidence.
+2. Secret assets (secretAssets): every resource {{user}} holds secretly and has not shown publicly (such as secret letters, poison, leverage on someone, hidden supplies, planted informants, a secret identity). The key attributes are exposure and usability.
+- secretActions field: each item { action, witnesses: "None / only XX" }
+- secretAssets field: each item { name, exposure: 0-100, status: "Active/Stale/Exposed/Void" }
 
-【创建准入】
-信息未知不等于必须进入黑盒。只有需要跨轮次持续保护知情边界或追踪未来用途/暴露风险时，才写入：
-- secretActions：行为已经发生，且其“谁知道、留下何种可调查痕迹”会影响未来判断或行动。
-- secretAssets：{{user}}实际控制该资源，资源具有未来可调用价值，并且隐秘性、暴露度或有效期需要持续追踪。
+[Admission]
+Information being unknown does not mean it must go into the black box. Write it only when the knowledge boundary needs protecting across rounds, or its future use or exposure risk needs tracking:
+- secretActions: the action has already happened, and "who knows it and what traces it left that can be investigated" will affect future judgments or actions.
+- secretAssets: {{user}} actually controls the resource, it has future value to draw on, and its secrecy, exposure or period of validity needs ongoing tracking.
 
-普通内心想法、尚未实施的念头、无后续价值的小动作、公开物品、临时拿取后立即消耗的物品、与未来世界状态无关的隐私，不得进入黑盒。不得把“NPC目前不知道的所有事情”都收进黑盒。
-已有条目只有在知情者、痕迹、暴露度、控制权、有效性或用途发生实质变化时才更新。行为已经公开且知情边界不再需要隔离时，不再作为活跃秘密维护；资产已消耗、失效、失去控制或彻底公开时，应更新状态并停止把它当作可用暗牌。
+Ordinary inner thoughts, ideas not yet acted on, small moves with no later value, public items, things picked up and used right away, and private matters unrelated to the future world state must not go into the black box. Never put "everything NPCs don't currently know" into the black box.
+Update existing entries only when the people who know, traces, exposure, control, validity or use really change. Once an action is public and the knowledge boundary no longer needs isolating, stop maintaining it as an active secret; when an asset is used up, void, out of control or fully public, update its status and stop treating it as a usable hidden card.
 
-二、知情权校验与物理隔离法则（最高优先级）
-1. 物理屏障原则：对于黑盒中的内容，所有未在案发现场、未直接参与的NPC，默认处于"完全、彻底不知情"的物理隔离状态。
-2. 禁绝上帝视角：AI绝对禁止将{{user}}的隐秘行为自动转化为全知事件。例如：{{user}}在深山里杀了一头牛，只要没有目击者，就算到了城里，也绝对没有任何人知道牛死了，更不可能知道是{{user}}杀的。
-3. 强制校验：AI在描写任何NPC（包括对话、动作、神态、心理活动）前，必须核对该NPC是否在黑盒的"知情名单"中。
-4. 绝对无知表现：若NPC不知情，AI绝对不可让其表现出任何暗示、怀疑、"话里有话"或"第六感"。不知情就是像白纸一样，NPC的反应必须彻底基于其当前的公开认知。
-5. 痕迹推理约束：若{{user}}留下明显物证，NPC必须通过符合其智力和身份的具体"调查行动"才能逐渐获取信息，绝不能直接"顿悟"或"猜到"。
+2. Checking who knows and the law of physical isolation (highest priority)
+1. Physical barrier principle: for content in the black box, every NPC who was not at the scene and not directly involved is by default in a state of "complete, total ignorance", physically isolated from it.
+2. No god's-eye view: the AI is absolutely forbidden to turn {{user}}'s secret actions automatically into events everyone knows. For example: if {{user}} kills an ox deep in the mountains, as long as there were no witnesses, then even in the city absolutely nobody knows the ox is dead, let alone that {{user}} killed it.
+3. Mandatory check: before describing any NPC (including dialogue, actions, expressions and inner thoughts), the AI must check whether that NPC is on the black box's "list of those who know".
+4. Absolute ignorance: if an NPC does not know, the AI must never let them show any hint, suspicion, "double meaning" or "sixth sense". Not knowing means being a blank page; the NPC's reactions must be based entirely on what they currently know publicly.
+5. Constraint on reasoning from traces: if {{user}} leaves obvious physical evidence, NPCs can only gain information gradually through concrete "investigative actions" that fit their intelligence and position, and must never "suddenly realize" or "guess" it.
 
-三、隐秘资产运作机制
-- exposure：0-100，暴露风险。0=绝对隐秘，100=已完全公开。{{user}}频繁活动、当地警戒升级、向他人展示或暗示，均会导致暴露度上升。达到50有遭遇战/走漏风险，达到90可能被查抄/公开。
-- status：有效/过期/暴露/失效。有效=仍可调用；过期=情报过时；暴露=已被发现；失效=已不可用（如物资被查抄、线人断联、身份被识破）。
-- 资产演化：情报有时效性，相关事件发生后可能自动过期。物资藏匿点暴露度随时间自然上升，附近活动加速上升。线人/暗桩暴露后可被反向利用，身份暴露后失去行动灵活性。低暴露度+高有效性=安全资产；低暴露度+已过期=无人知道但已无用；高暴露度+已失效=已被发现且作废。
+3. How secret assets work
+- exposure: 0-100, risk of exposure. 0 = absolutely secret, 100 = fully public. Frequent activity by {{user}}, rising local alert, and showing or hinting to others all raise exposure. At 50 there is a risk of a confrontation or a leak; at 90 it may be seized or made public.
+- status: Active/Stale/Exposed/Void. Active = still usable; Stale = intelligence outdated; Exposed = discovered; Void = no longer usable (e.g. supplies seized, informant out of contact, identity seen through).
+- How assets evolve: intelligence is time-sensitive and may go stale automatically after related events. A hidden cache's exposure rises naturally over time and faster with activity nearby. Informants and moles can be turned against you once exposed; an exposed identity loses freedom of action. Low exposure + high validity = a safe asset; low exposure + stale = nobody knows, but it is useless; high exposure + void = discovered and written off.
 </secret_asset>`
     },
     // ========== 模块十二：天下大势 ==========
     {
-      comment: '模块十二：天下大势',
+      comment: 'Module 12: World trends',
       content: `<world_trends>
 
-天下大势是已经改变国家、国际或整个世界运行方式的长期局势。它不是普通风声，也不是等待推进的事件链，而是其他系统行动时必须考虑的世界级约束。
+A world trend is a long-term situation that has already changed how a nation, the international order or the whole world works. It is not ordinary news and not an event chain waiting to advance, but a world-level constraint other systems must take into account when they act.
 
-一、数据结构
-每条包含：
-- id：已有大势沿用系统分配的 id；新大势必须显式填 null，禁止省略。
-- name：大势名称。措辞变化不改变 id。
-- scope：实际影响范围。
-- status："持续中"/"已结束"。
-- description：当前局势及其正在如何约束世界行动。
-- source：形成该大势的明确来源。
+1. Data structure
+Each item contains:
+- id: existing trends keep the id assigned by the system; new trends must explicitly use null, never omit it.
+- name: trend name. A change of wording does not change the id.
+- scope: actual area of effect.
+- status: "Ongoing"/"Ended".
+- description: the current situation and how it is constraining actions in the world.
+- source: the clear source that formed the trend.
 
-二、形成条件
-每轮检查以下候选来源：
-- Lv4 冲突型事件进入"已爆发"。
-- Lv4 推进型事件进入"已完成"，且成果改变国家或国际格局。
-- Lv4 风声背后的事实被广泛确认，并持续影响多个势力。
-- 长期局势已经形成。
+2. Conditions for forming
+Each round, check these candidate sources:
+- An Lv4 conflict event reaches "Erupted".
+- An Lv4 progress event reaches "Completed", and the result changes the national or international landscape.
+- The facts behind Lv4 news are widely confirmed and keep affecting several factions.
+- A long-term situation has already formed.
 
-候选来源不等于自动创建。只有同时满足"长期持续、广域影响、跨系统作用、迫使多个势力持续调整行动"时，才创建天下大势。全国节庆、单次公告、短期轰动、普通重大新闻不算天下大势。
+A candidate source does not create a trend automatically. Create a world trend only when it is "long-lasting, wide-reaching, cross-system, and forces several factions to keep adjusting their actions" all at once. National festivals, single announcements, short-lived sensations and ordinary major news are not world trends.
 
-三、持续与结束
-- 天下大势不参与骰子，不自动消散，也不因某轮未返回而删除。
-- 所有 status="持续中" 的天下大势，每轮都必须作为事件链、势力、经济、风声与NPC行动的背景约束。
-- 大势本身没有 effects 字段。具体影响应落实到对应系统，并在产生跨系统变化时写入 influenceChain。
-- 只有出现明确改变局势的事实时才更新 description；只有局势确定结束时才标记为"已结束"。
-- 已结束的大势是历史结果，不得重新变为持续中；若类似局势再次发生，应创建新名称的大势。
+3. Persistence and ending
+- World trends take no part in the dice, do not dissipate on their own, and are not deleted because a round did not return them.
+- Every world trend with status="Ongoing" must act each round as a background constraint on event chains, factions, the economy, news and NPC actions.
+- A trend has no effects field of its own. Concrete effects go into the matching systems, and cross-system changes are written into influenceChain.
+- Update description only when a fact clearly changes the situation; mark it "Ended" only when the situation has certainly ended.
+- An ended trend is a historical result and must not go back to Ongoing; if a similar situation happens again, create a trend with a new name.
 </world_trends>`
     }
   ];
@@ -638,93 +638,94 @@ cooldown 由本地维护，API 不得输出或修改此字段。
 
   function loadRules(baseUrl) {
     return new Promise((resolve) => {
-      console.log('[世界引擎] 规则已内置在 JS 中，共', RULES.length, '条');
+      console.log('[World Engine] Rules are built into the JS; total:', RULES.length, 'rules');
       resolve({ count: RULES.length, comments: RULES.map(r => r.comment) });
     });
   }
 
   function getAllRulesText() {
     console.log('[getAllRulesText] RULES:', RULES.length);
-    if (RULES.length === 0) return '【世界规则加载失败，所有规则不可用】';
+    if (RULES.length === 0) return '[World rules failed to load; no rules are available]';
     const orderedRules = RULES.map(r => `========== ${r.comment} ==========\n${r.content}`);
-    return `## 世界推演规则（原文，共${RULES.length}条）\n\n${orderedRules.join('\n\n')}`;
+    return `## World evolution rules (original text, ${RULES.length} rules)
+
+${orderedRules.join('\n\n')}`;
   }
 
   function getCoreRulesSummary() {
     if (RULES.length === 0) return '';
 
     const summary = `
-【世界引擎·正文行为规则】
+[World Engine · story behavior rules]
 
-一、世界运行与时间尺度
-- 世界中的人物、组织、事件和环境按照各自目标持续变化，{{user}}是参与者之一，不是所有变化的默认原因或中心。
-- 当前场景之外的变化可以继续发生，但正文只应通过可观察结果、合理接触或信息传播呈现，不得让角色直接读取面板。
-- 每次世界状态更新不等于固定时长。正文应根据行动、移动、等待、休息、交谈和冲突等线索判断实际经过的时间；变化幅度必须与时间尺度匹配。
-- 世界状态记录的是相对上次更新后的结果。不得把已经处理过的历史内容再次当作本轮新变化。
+1. How the world runs and its timescale
+- People, organizations, events and environments in the world keep changing according to their own goals. {{user}} is one participant, not the default cause or center of every change.
+- Changes outside the current scene can keep happening, but the story should show them only through observable results, plausible contact or the spread of information; characters must never read the panel directly.
+- Each world-state update is not a fixed length of time. The story should judge how much time actually passed from clues such as actions, travel, waiting, rest, conversation and conflict; the size of changes must match the timescale.
+- The world state records results relative to the last update. Never treat history that has already been processed as new change this round.
 
-二、事件
-- “进行中的事件”只表示需要跨轮持续追踪的独立主事项，不是任务清单、新闻列表或所有已发生事实的集合。
-- 发展事件会向完成推进；冲突事件会向爆发推进。等级表示难度、烈度与影响范围，阶段和进度表示当前所处位置。
-- [成功]表示本轮取得进展，[受挫]表示进展倒退或条件恶化，[保持]表示当前阶段基本不变。正文应体现该结果，但不得机械重复标签。
-- 暂停或停滞不等于结束。执行者仍可收集信息、积累资源、寻求协助、调整目标或等待条件变化。
-- 已爆发、已完成、已消散和已失败均为终局。终局结果可以产生后续影响，但不得把原事件写回非终局阶段。
-- 事件发展必须符合执行主体的能力、资源、信息、地理距离、组织效率和外部阻力；不得为了推进而补出不存在的条件。
+2. Events
+- "Events in progress" are only independent main matters that need tracking across rounds, not a task list, a news feed or a collection of every fact that has happened.
+- Progress events move toward completion; conflict events move toward eruption. Level shows difficulty, intensity and reach; stage and progress show where it currently stands.
+- [Success] means progress was made this round, [Setback] means progress went backward or conditions worsened, and [Hold] means the current stage is basically unchanged. The story should reflect that result, but never repeat the label mechanically.
+- A pause or stall is not an end. Those carrying it out can still gather information, build resources, seek help, adjust goals or wait for conditions to change.
+- Erupted, Completed, Dissipated and Failed are all final. A final result can have later consequences, but the original event must never be written back into a non-final stage.
+- Events must develop in line with the acting party's ability, resources, information, geographic distance, organizational efficiency and outside resistance; never conjure conditions that don't exist just to move them forward.
 
-三、组织与关系
-- 组织按照自身目标、资源、内部结构和信息来源行动，不以{{user}}为唯一行动对象。
-- 组织状态描述整体运作能力；与{{user}}的关系描述其行为倾向。角色言行应与当前状态和关系一致，但不能把关系标签演成所有成员完全相同。
-- 组织内部可以存在不同立场、派别和个人目标；核心人物的目的不必与组织整体目标完全一致。
-- 组织只能在其控制或影响范围内有效行动。跨区域、跨权限或突破其他组织边界的行动必须具备时间、路径、资源与信息条件。
-- 主要资源或能力来源决定组织的实际控制力。相关来源失效时，其状态、行动能力与核心人物地位应相应变化。
+3. Organizations and relations
+- Organizations act according to their own goals, resources, internal structure and sources of information, and {{user}} is not their only target.
+- An organization's status describes its overall ability to operate; its relationship with {{user}} describes its leanings. Characters' words and actions should fit the current status and relationship, but a relationship label must not make every member behave exactly the same.
+- An organization can have different stances, factions and personal goals inside it; a core person's aims need not fully match the organization's overall goals.
+- An organization can act effectively only within its area of control or influence. Actions across regions, beyond its authority or through other organizations' borders need time, a route, resources and information.
+- Key resources or sources of power decide an organization's real control. When one fails, its status, ability to act and core persons' standing should change accordingly.
 
-四、全局动态
-- 全局动态是长期、广域、跨系统并迫使多个主体持续调整行动的背景约束，不是单个事件或短期热点。
-- 持续中的全局动态应影响相关范围内的事件、组织、经济、信息传播和角色选择；具体影响仍须落实到相应状态与场景。
-- 全局动态不会因短期未被提及而自动消失，也不得在没有明确事实时擅自结束。
+4. Global trends
+- Global trends are long-term, wide-reaching, cross-system background constraints that force several parties to keep adjusting their actions, not a single event or a short-lived hot topic.
+- Ongoing global trends should affect events, organizations, the economy, the spread of information and characters' choices within their reach; concrete effects still have to land in the matching state and scenes.
+- Global trends do not disappear because they go unmentioned for a while, and must not be ended on a whim without clear facts.
 
-五、公开信息与舆情
-- 公告、消息、流言和舆情记录的是正在传播的说法，不等同于客观事实。公开发布只能证明发布行为发生，不能自动证明内容真实。
-- 信息等级表示实际传播规模，不表示重要性、真实性或影响强度；传播范围决定哪些地区、群体和角色可能接触到该信息。
-- 信息只能通过实际传播节点扩大。没有新增传播路径时，不得让范围外对象据此判断或行动。
-- 同一信息主题可以补充、变形、扩大或改变倾向；正文应理解为同一传播脉络的发展，而不是彼此无关的新消息。
-- 只有信息传播到相关对象后，才可能影响组织判断、经济行为、社会评价、事件发展、调查或接触。
+5. Public information and opinion
+- Announcements, reports, rumors and public sentiment record claims in circulation; they are not the same as objective fact. A public release only proves the release happened; it does not automatically prove the content is true.
+- An information level shows the actual scale of spreading, not importance, truth or strength of effect; the reach decides which regions, groups and characters may come across the information.
+- Information can only widen through actual spreading nodes. Without a new spreading path, nobody outside its reach may judge or act on it.
+- The same information topic can gain details, mutate, widen or change its slant; the story should treat this as the same line of spreading developing, not as unrelated new messages.
+- Only after information reaches the relevant parties can it affect organizational judgments, economic behavior, social standing, the course of events, investigations or contact.
 
-六、信息传播、知情与身份隔离
-- 任何角色或组织获知信息前，都必须存在明确路径：亲历、知情者告知、公开渠道、覆盖其范围的信息传播、组织网络、调查证据，或世界设定中确实可用的通讯与探测手段。
-- “擅长调查”“消息传播很快”或“感觉不对”不能替代具体的信息路径。
-- 痕迹通常只能证明发生了什么，不能自动证明由谁造成。将事实指向{{user}}或特定身份，必须具备额外关联证据。
-- 匿名、化名和伪装身份默认彼此隔离；只有出现有效关联证据后，其他对象才能建立身份对应关系。
-- 接触、定位和追踪必须符合知情状态、行动路径、距离、目的与能力，不得为了制造互动而凭空安排。
+6. Information spreading, knowledge and identity separation
+- Before any character or organization learns information, there must be a clear path: being there, being told by someone who knows, public channels, information spreading that covers them, an organizational network, investigative evidence, or communication and detection means that truly exist in the setting.
+- "Good at investigating", "news travels fast" or "a bad feeling" cannot replace a concrete path of information.
+- Traces can usually only prove what happened, not automatically who caused it. Pointing a fact at {{user}} or a particular identity needs additional linking evidence.
+- Anonymity, aliases and disguises are separated from each other by default; only after valid linking evidence appears can others match the identities.
+- Contact, locating and tracking must fit the state of knowledge, path of action, distance, purpose and ability; never arrange them out of nowhere just to create interaction.
 
-七、经济
-- 经济描述区域整体状态和足以影响决策的市场变化，不记录{{user}}的个人资金、物品或普通日常波动。
-- 市场信号必须已经发生，并具有明确原因、实际范围和可观察影响；预测、可能性或单一细小变化不能当作既成市场状态。
-- 单一商品或局部经营变化通常不代表整个区域经济状态改变。不同区域可以呈现不同趋势。
-- 经济信息也受传播边界限制；价格、供应、物流和资源变化应通过具体场景体现，并影响相关主体的实际选择。
+7. Economy
+- The economy describes a region's overall state and market changes big enough to affect decisions; it does not record {{user}}'s personal money, items or ordinary daily fluctuations.
+- A market signal must have already happened, with a clear cause, an actual reach and observable effects; forecasts, possibilities or a single small change cannot be treated as an established market state.
+- A change in a single commodity or a local business usually does not mean the whole region's economy has changed. Different regions can show different trends.
+- Economic information is also bound by the limits of spreading; changes in prices, supply, logistics and resources should show through concrete scenes and affect the actual choices of those involved.
 
-八、社会评价
-- 社会评价分为官方与权力、公众与民间、非正式与地下、行业与专业四个独立圈层。不同圈层依据各自利益和标准形成判断，评价不会自动互相同步。
-- 社会评价是群体层面的总体认知，不是对{{user}}每次行为的即时打分，也不等同于单个角色的喜欢、感激、恐惧或怨恨。
-- 只有相关信息已合法传播到对应圈层和地区，并足以改变群体总体判断时，评价才影响角色反应。
-- 缺乏关注表示该圈层尚未形成明确认知，应按普通陌生对象处理；评价强度必须按当前等级体现，不得夸大。
+8. Social standing
+- Social standing is divided into four independent circles: official and power, public and popular, informal and underground, trade and professional. Each circle forms its judgment by its own interests and standards, and ratings do not sync with each other automatically.
+- Social standing is an overall perception at group level, not an instant score for each of {{user}}'s actions, and not the same as a single character's liking, gratitude, fear or resentment.
+- A rating affects characters' reactions only after the relevant information has validly spread to the matching circle and region and is enough to change the group's overall judgment.
+- An unknown standing means the circle has not formed a clear perception yet, so treat {{user}} as an ordinary stranger; the strength of a rating must show at its current level and must not be exaggerated.
 
-九、对立关系
-- 对立关系记录由重大、不可逆伤害形成的长期个人或群体冲突，不等同于组织间的一般立场对立。
-- 严重对立提供持续动机，但不自动提供定位、追踪、渗透或行动能力。实际行动仍受资源、信息、距离和其他组织边界限制。
-- 暂时无法行动不等于动机消失；但正文不得让能力不足的一方凭空获得资源、援助或准确位置。
-- 一般冲突、言语冒犯、普通竞争或可恢复损失不应被演成不可调和的长期对立。
+9. Opposition
+- Opposition records long-term personal or group conflicts caused by major, irreversible harm; it is not the same as general differences in stance between organizations.
+- Serious opposition supplies a lasting motive, but not automatically the ability to locate, track, infiltrate or act. Actual action is still limited by resources, information, distance and other organizations' borders.
+- Being temporarily unable to act does not mean the motive is gone; but the story must not let a side lacking ability gain resources, help or an exact location out of nowhere.
+- Ordinary conflicts, verbal offense, normal competition or recoverable losses should not be played as an irreconcilable long-term opposition.
 
-十、区域动态
-- 区域动态是由本地系统触发的地区级事件。正文应按照其类型、发生地点、影响范围和实际后果呈现，不得自行改变触发结果。
-- 发生在{{user}}所在区域时，应通过环境、交通、秩序、供应或人员行为体现；发生在远处时，只能通过合理传播或间接后果进入当前场景。
-- 区域动态不得无因果地归因于{{user}}、既有组织或既有事件，也不得为了制造冲突而摧毁核心场景或关键资源。
+10. Regional developments
+- Regional developments are region-level incidents triggered by the local system. The story should present them by their type, location, area of effect and actual consequences, and must not change the triggered result.
+- When one happens in {{user}}'s region, show it through the environment, transport, public order, supplies or people's behavior; when it happens far away, it can only enter the current scene through plausible spreading or indirect consequences.
+- Regional developments must not be blamed on {{user}}, existing organizations or existing events without cause, and must not destroy core scenes or key resources just to create conflict.
 
-十一、未公开信息
-- 未公开行为和未公开资源用于持续保护知情边界，不代表所有暂时未知的信息都必须进入该区域。
-- 只有明确知情者可以依据未公开信息行动。其他角色不得暗示知情、产生无来源怀疑、使用“直觉”绕过信息隔离，或直接读取相关内容。
-- 目击记录决定谁直接知情；痕迹只能通过具体调查逐步形成认知，不能让角色自动得出完整结论。
-- 暴露程度表示被发现的风险，不等于已经公开。资源处于过期、暴露或失效状态时，正文必须按其当前可用性处理。
-    `.trim();
+11. Unpublicized information
+- Unpublicized actions and unpublicized resources are for keeping knowledge boundaries protected over time; not every piece of temporarily unknown information must go there.
+- Only those who clearly know may act on unpublicized information. Other characters must not hint that they know, have suspicions with no source, use "intuition" to get around the information barrier, or read the content directly.
+- Witness records decide who knows directly; traces can only build awareness step by step through concrete investigation and must not let characters reach the full conclusion automatically.
+- Exposure is the risk of being discovered, not the same as being public. When a resource is Stale, Exposed or Void, the story must treat it according to its current usability.`.trim();
 
     return summary;
   }

@@ -10,7 +10,7 @@
       await window.MEMORY_ENGINE?.prepareHistoryForGeneration?.();
     } catch (error) {
       // 本地撤旧失败不阻断正常聊天；这里没有后台 API 请求。
-      console.error('[记忆引擎] 生成前撤下失效摘要失败', error);
+      console.error('[Memory Engine] Failed to withdraw stale summaries before generation', error);
     }
   };
 
@@ -21,12 +21,12 @@
         const result = handler(...args);
         if (result && typeof result.then === 'function') {
           return result.catch(error => {
-            console.error(`[${engineLabel}] ${eventLabel}事件处理失败`, error);
+            console.error(`[${engineLabel}] ${eventLabel} event handling failed`, error);
           });
         }
         return result;
       } catch (error) {
-        console.error(`[${engineLabel}] ${eventLabel}事件处理失败`, error);
+        console.error(`[${engineLabel}] ${eventLabel} event handling failed`, error);
       }
     };
   };
@@ -51,7 +51,7 @@
   // 引擎地位并列，按注册顺序加载；世界引擎只是在发生取舍时拥有最高启动优先级。
   const ENGINE_MODULE_GROUPS = [
     {
-      id: 'world', label: '世界引擎', modules: [
+      id: 'world', label: 'World Engine', modules: [
         'world-engine-preset.js',
         'world-engine-rules-loader.js',
         'world-engine-ledger.js',
@@ -67,7 +67,7 @@
       }
     },
     {
-      id: 'memory', label: '记忆引擎', modules: [
+      id: 'memory', label: 'Memory Engine', modules: [
         'memory-engine-settings.js',
         'memory-engine-data.js',
         'memory-engine-timeline.js',
@@ -110,7 +110,7 @@
       const s = document.createElement('script');
       s.src = src;
       s.onload = resolve;
-      s.onerror = () => reject(new Error('加载失败: ' + src));
+      s.onerror = () => reject(new Error('Failed to load: ' + src));
       document.head.appendChild(s);
     });
   }
@@ -127,19 +127,19 @@
         if (typeof api[method] !== 'function') missing.push(`${globalName}.${method}()`);
       }
     }
-    if (missing.length) throw new Error(`${label}接口契约不完整: ${missing.join(', ')}`);
+    if (missing.length) throw new Error(`${label} interface contract incomplete: ${missing.join(', ')}`);
   }
 
   async function loadEngineGroup(baseUrl, group) {
     try {
       for (const mod of group.modules) {
         await loadScript(baseUrl + '/' + mod);
-        console.log(`[${group.label}] 已加载:`, mod);
+        console.log(`[${group.label}] loaded:`, mod);
       }
       validateContracts(group.label, group.contracts);
       return true;
     } catch (error) {
-      console.error(`[${group.label}] 模块加载失败`, error);
+      console.error(`[${group.label}] module failed to load`, error);
       return false;
     }
   }
@@ -147,7 +147,7 @@
   async function loadRequiredModules(baseUrl, modules, label) {
     for (const mod of modules) {
       await loadScript(baseUrl + '/' + mod);
-      console.log(`[${label}] 已加载:`, mod);
+      console.log(`[${label}] loaded:`, mod);
     }
   }
 
@@ -155,16 +155,16 @@
     const baseUrl = getBaseUrl();
     const loadedEngines = new Map();
     let sharedRuntimeReady = false;
-    console.log('[世界引擎] 加载中...');
+    console.log('[World Engine] Loading...');
 
     try {
-      await loadRequiredModules(baseUrl, SHARED_MODULES, '共用底座');
-      validateContracts('共用底座', SHARED_CONTRACTS);
+      await loadRequiredModules(baseUrl, SHARED_MODULES, 'Shared base');
+      validateContracts('Shared base', SHARED_CONTRACTS);
       for (const group of ENGINE_MODULE_GROUPS) {
         loadedEngines.set(group.id, await loadEngineGroup(baseUrl, group));
       }
-      await loadRequiredModules(baseUrl, SHARED_UI_MODULES, '共用界面');
-      validateContracts('共用界面', SHARED_UI_CONTRACTS);
+      await loadRequiredModules(baseUrl, SHARED_UI_MODULES, 'Shared UI');
+      validateContracts('Shared UI', SHARED_UI_CONTRACTS);
 
       // 读取扩展版本号（来自 manifest.json，单一真相源）供 UI 显示；失败不阻断启动
       try {
@@ -188,7 +188,7 @@
 
       // 注入自检查看器：只读订阅 ST prompt-ready 事件，核对世界状态是否真进了最终 prompt（解耦，订阅失败不阻断启动）
       if (window.WORLD_ENGINE_INJECT_INSPECTOR) {
-        try { window.WORLD_ENGINE_INJECT_INSPECTOR.init(); } catch (e) { console.warn('[世界引擎] 注入自检初始化失败（非致命）', e); }
+        try { window.WORLD_ENGINE_INJECT_INSPECTOR.init(); } catch (e) { console.warn('[World Engine] Injection self-check failed to initialize (non-fatal)', e); }
       }
 
       const core = window.WORLD_ENGINE_CORE;
@@ -202,11 +202,11 @@
       // 世界组自身失败时，共用底座与其他已加载引擎仍可独立工作。
       // 世界排第一是优先级，不是其他引擎对它的运行依赖。
       if (!loadedEngines.get('world')) {
-        console.error('[世界引擎] 引擎模块不可用；继续启动其他已加载引擎');
+        console.error('[World Engine] Engine module unavailable; continuing to start the other loaded engines');
         try {
           ui?.buildPanel?.();
           ui?.buildInputButton?.();
-        } catch (e) { console.warn('[共用界面] 初始化失败', e); }
+        } catch (e) { console.warn('[Shared UI] Initialization failed', e); }
         return;
       }
 
@@ -215,9 +215,9 @@
       try {
         const result = await rulesLoader.loadRules();
         rulesCount = result.count || 0;
-        console.log('[世界引擎] 📜 活体引擎规则就绪，共', rulesCount, '条');
+        console.log('[World Engine] 📜 Living engine rules ready; total:', rulesCount, 'rules');
       } catch(e) {
-        console.warn('[世界引擎] 规则加载异常（非致命）:', e.message);
+        console.warn('[World Engine] Rule loading error (non-fatal):', e.message);
       }
 
       let isEvolving = false;
@@ -255,10 +255,10 @@
             });
             return true;
           }
-          console.warn('[世界引擎] 所有注入方式均不可用');
+          console.warn('[World Engine] No injection method is available');
           return false;
         } catch(e) {
-          console.error('[世界引擎] 注入失败', e);
+          console.error('[World Engine] Injection failed', e);
           return false;
         }
       }
@@ -282,7 +282,7 @@
         try {
           if (api.getSettings(true).injectIntoPrompt === false) {
             unregisterInjection();
-            console.log('[世界引擎] 正文注入已在设置中关闭');
+            console.log('[World Engine] Story injection is turned off in settings');
             return;
           }
           const ctx = SillyTavern.getContext();
@@ -302,6 +302,13 @@
               tags.push(m[1]);
             }
           }
+          // [English port] English speaker tags: "Mara said", "asked Ivo", "Captain Hale replied"
+          const enSpeaker = /\b([A-Z][a-z]+(?: [A-Z][a-z]+)?) (?:said|says|asked|asks|replied|replies|answered|answers|whispered|whispers|shouted|shouts|muttered|mutters|called|added|continued)\b|\b(?:said|asked|replied|answered|whispered|shouted|muttered|called|added) ([A-Z][a-z]+(?: [A-Z][a-z]+)?)\b/g;
+          const enStop = new Set(['He', 'She', 'They', 'It', 'I', 'We', 'You', 'Someone', 'Everyone', 'Nobody', 'Somebody', 'Then', 'But', 'And', 'The', 'A', 'An', 'This', 'That', 'Who', 'What', 'His', 'Her', 'Their']);
+          while ((m = enSpeaker.exec(recent)) !== null) {
+            const name = m[1] || m[2];
+            if (name && !enStop.has(name.split(' ')[0])) tags.push(name);
+          }
           for (const ev of state.events || []) tags.push(ev.name);
           for (const f of state.factions || []) tags.push(f.name);
 
@@ -314,9 +321,9 @@
           }
 
           registerInjection(context);
-          console.log(`[世界引擎] 注入完成 (round ${currentRound}, ${context.length} chars)${stateOverride ? ' [存档点]' : ''}`);
+          console.log(`[World Engine] Injection complete (round ${currentRound}, ${context.length} chars)${stateOverride ? ' [checkpoint]' : ''}`);
         } catch(e) {
-          console.error('[世界引擎] 注入处理失败', e);
+          console.error('[World Engine] Injection handling failed', e);
         }
       }
 
@@ -340,11 +347,11 @@
         if (isReroll) {
           const checkpoint = core.restoreCheckpoint();
           if (checkpoint) {
-            console.log('[世界引擎] 正文注入判定：重 roll（type=swipe/regenerate），注入存档点');
+            console.log('[World Engine] Story injection decision: reroll (type=swipe/regenerate), injecting the checkpoint');
             applyInjection(checkpoint);
             if (ui && ui.setInjectedScope) ui.setInjectedScope('checkpoint');
           } else {
-            console.log('[世界引擎] 正文注入判定：重 roll（type=swipe/regenerate），无存档点，不注入');
+            console.log('[World Engine] Story injection decision: reroll (type=swipe/regenerate), no checkpoint, not injecting');
             unregisterInjection();
           }
           if (ui && ui.refresh) ui.refresh(true);
@@ -357,14 +364,14 @@
           const checkpoint = core.restoreCheckpoint();
           if (checkpoint) {
             injectedScope = 'checkpoint';
-            console.log(`[世界引擎] 正文注入判定：对话层数 ${chatLayer} < 当前状态层数 ${stateLayer}，注入存档点`);
+            console.log(`[World Engine] Story injection decision: chat messages ${chatLayer} < current state messages ${stateLayer}, injecting the checkpoint`);
             applyInjection(checkpoint);
           } else {
-            console.warn(`[世界引擎] 正文注入判定：对话层数 ${chatLayer} < 当前状态层数 ${stateLayer}，但无存档点，回退到当前状态`);
+            console.warn(`[World Engine] Story injection decision: chat messages ${chatLayer} < current state messages ${stateLayer}, but no checkpoint; falling back to the current state`);
             applyInjection();
           }
         } else {
-          console.log(`[世界引擎] 正文注入判定：对话层数 ${chatLayer} >= 当前状态层数 ${stateLayer}，注入当前状态`);
+          console.log(`[World Engine] Story injection decision: chat messages ${chatLayer} >= current state messages ${stateLayer}, injecting the current state`);
           applyInjection();
         }
         // 注入正文后刷新面板，让「当前状态」跟随实际注入的那份：
@@ -440,7 +447,7 @@
           const cp = core.restoreCheckpoint();
           if (!st || st.time == null || !cp || cp.time == null) {
             lastProcessedMessageKey = currentKey;
-            setStatus('存档点与当前状态时间为空，请在设置填写', false);
+            setStatus('Checkpoint and current state times are empty; fill them in under settings', false);
             if (ui) ui.refresh(true);
             return;
           }
@@ -448,7 +455,7 @@
           if (currentDay == null) {
             core.setLastStoryDay(null);
             lastProcessedMessageKey = currentKey;
-            setStatus('未获取时间', false);
+            setStatus('No time found', false);
             if (ui) ui.refresh(true);
             return;
           }
@@ -459,7 +466,7 @@
           const delta = currentDay - base;
           if (delta < threshold) {
             lastProcessedMessageKey = currentKey;
-            setStatus(`第 ${Math.max(0, delta)}/${threshold} 天，未到推演`);
+            setStatus(`Day ${Math.max(0, delta)}/${threshold}, not time to evolve yet`);
             if (ui) ui.refresh(true);
             return;
           }
@@ -494,7 +501,7 @@
           if (!doEvolve) {
             lastProcessedMessageKey = currentKey;
             const pos = c % everyX || (c === 0 ? 0 : everyX);
-            setStatus(`第 ${pos}/${everyX} 轮，未到推演`);
+            setStatus(`Round ${pos}/${everyX}, not time to evolve yet`);
             if (ui) ui.refresh(true);
             return;
           }
@@ -520,8 +527,8 @@
       function buildDialogueText(chat, readRounds, settings) {
         const start = Math.max(settings.firstLayerIsAiOpening !== false ? 1 : 0, chat.length - readRounds * 2);
         return chat.slice(start)
-          .map(m => (m.is_user ? '用户' : 'AI') + '：' + core.filterDialogue((m.mes || '').trim(), settings))
-          .filter(line => line.length > 3)
+          .map(m => (m.is_user ? 'User' : 'AI') + ': ' + core.filterDialogue((m.mes || '').trim(), settings))
+          .filter(line => /:\s*\S/.test(line))
           .join('\n');
       }
 
@@ -534,7 +541,7 @@
         try {
           const state = core.loadState();
           const isNewRound = core.isNewRound();
-          setStatus('推演中...');
+          setStatus('Evolving...');
           // 显示基底：手动按钮显式传入；自动路径跟随 isNewRound。
           const displayScope = opts.displayScope || (isNewRound ? 'state' : 'checkpoint');
           if (ui && ui.setEvolvingUI) ui.setEvolvingUI(true, displayScope);
@@ -563,7 +570,7 @@
             // isEvolving 继续作为内部互斥锁保持 true，防止联动期间再次启动世界推演；
             // UI 运行态则在这里结束，让两个引擎的动画严格按先后阶段显示。
             if (isNewRound || opts.forceApplyInjection) applyInjection();
-            setStatus('世界推演完成');
+            setStatus('World evolution complete');
             if (ui) { ui.setEvolvingUI(false); ui.refresh(true); }
             worldUiPhaseFinished = true;
             if (settings.memoryLinkEnabled === true) {
@@ -576,20 +583,20 @@
                   replace: !isNewRound
                 });
               } catch (linkError) {
-                console.error('[世界引擎] 世界→记忆联动失败（世界推演结果已保留）', linkError);
-                setStatus('世界推演完成，但记忆联动失败：' + (linkError?.message || linkError), true);
+                console.error('[World Engine] World → memory link failed (world evolution results were kept)', linkError);
+                setStatus('World evolution complete, but the memory link failed: ' + (linkError?.message || linkError), true);
               }
             }
-            console.log('[世界引擎] ✅ 推演完成，当前第', state.round, '轮');
+            console.log('[World Engine] ✅ Evolution complete, current round', state.round, '.');
           } else {
-            console.warn('[世界引擎] ⚠️ 推演失败或已中止');
+            console.warn('[World Engine] ⚠️ Evolution failed or aborted');
           }
           const reason = !success && evolution.getLastError ? evolution.getLastError() : '';
-          if (!success) setStatus(reason ? '推演失败：' + reason : '推演失败或已中止', true);
+          if (!success) setStatus(reason ? 'Evolution failed: ' + reason : 'Evolution failed or aborted', true);
           return success;
         } catch(e) {
-          console.error('[世界引擎] 处理失败', e);
-          setStatus('推演异常: ' + e.message, true);
+          console.error('[World Engine] Handling failed', e);
+          setStatus('Evolution error: ' + e.message, true);
           return false;
         } finally {
           isEvolving = false;
@@ -601,9 +608,9 @@
       }
 
       async function manualEvolve(mode, scope) {
-        if (api.getSettings(true).engineEnabled === false) { setStatus('世界引擎已关闭'); return false; }
+        if (api.getSettings(true).engineEnabled === false) { setStatus('World Engine is off'); return false; }
         if (isEvolving) return false;
-        if (evolution.isRunning && evolution.isRunning()) { setStatus('已有推演进行中...'); return false; }
+        if (evolution.isRunning && evolution.isRunning()) { setStatus('An evolution is already in progress...'); return false; }
         const ctx = SillyTavern.getContext();
         const chat = ctx?.chat || [];
         const lastMsg = chat[chat.length - 1];
@@ -624,14 +631,14 @@
       }
 
       async function manualMemoryLink() {
-        if (isEvolving) { setStatus('世界引擎或联动任务正在运行...'); return false; }
-        if (window.MEMORY_ENGINE?.isRunning?.()) { setStatus('记忆引擎已有任务正在运行...'); return false; }
+        if (isEvolving) { setStatus('World Engine or a link task is running...'); return false; }
+        if (window.MEMORY_ENGINE?.isRunning?.()) { setStatus('Memory Engine already has a task running...'); return false; }
         const state = core.loadState();
         const digest = String(state?.worldDigest || '').trim();
-        if (!digest) { setStatus('当前没有可联动的世界摘要', true); return false; }
+        if (!digest) { setStatus('There is no world digest to link right now', true); return false; }
         isEvolving = true;
         try {
-          setStatus('正在手动联动记忆引擎...');
+          setStatus('Linking the Memory Engine manually...');
           const result = await window.MEMORY_ENGINE?.ingestWorldEvolution?.({
             layer: core.getChatLayer(),
             worldRound: state.round,
@@ -640,13 +647,13 @@
             replace: true,
             force: true
           });
-          if (!result || result.skipped) throw new Error('记忆引擎未执行联动');
-          setStatus('手动联动完成，世界摘要已新增为纪要');
+          if (!result || result.skipped) throw new Error('Memory Engine did not run the link');
+          setStatus('Manual link complete; the world digest was added as a note');
           if (ui?.refresh) ui.refresh(true);
           return true;
         } catch (error) {
-          console.error('[世界引擎] 手动联动记忆引擎失败', error);
-          setStatus('手动联动失败：' + (error?.message || error), true);
+          console.error('[World Engine] Manual Memory Engine link failed', error);
+          setStatus('Manual link failed: ' + (error?.message || error), true);
           return false;
         } finally {
           isEvolving = false;
@@ -655,14 +662,14 @@
 
       // 设置页「本轮对话时间」手填保存后：判断是否够时间，够则推演。
       async function manualTimeEvolve(currentDay) {
-        if (api.getSettings(true).engineEnabled === false) { setStatus('世界引擎已关闭'); return; }
+        if (api.getSettings(true).engineEnabled === false) { setStatus('World Engine is off'); return; }
         if (currentDay == null || isEvolving) return;
-        if (evolution.isRunning && evolution.isRunning()) { setStatus('已有推演进行中...'); return; }
+        if (evolution.isRunning && evolution.isRunning()) { setStatus('An evolution is already in progress...'); return; }
         const settings = api.getSettings(true);
         const st = core.hasState() ? core.loadState() : null;
         const cp = core.restoreCheckpoint();
         if (!st || st.time == null || !cp || cp.time == null) {
-          setStatus('存档点与当前状态时间为空，请在设置填写', false);
+          setStatus('Checkpoint and current state times are empty; fill them in under settings', false);
           return;
         }
         core.setLastStoryDay(currentDay);
@@ -671,7 +678,7 @@
         const threshold = Math.max(1, parseInt(settings.evolveTimeThreshold) || 1);
         const delta = Number(currentDay) - base;
         if (delta < threshold) {
-          setStatus(`第 ${Math.max(0, delta)}/${threshold} 天，未到推演`);
+          setStatus(`Day ${Math.max(0, delta)}/${threshold}, not time to evolve yet`);
           if (ui) ui.refresh(true);
           return;
         }
@@ -689,7 +696,7 @@
         // 切聊天时，若仍有进行中的推演/批量回填，立即中止——
         // 回填捕获的是旧聊天的对话数组引用，继续跑会把旧聊天内容写进新聊天（跨聊天污染 + 旧存档已 clearState 丢失）。
         if (evolution && evolution.isRunning && evolution.isRunning()) {
-          try { evolution.abort(); console.log('[世界引擎] 切聊天，中止进行中的推演/回填'); } catch (e) { console.warn('[世界引擎] 中止推演失败', e); }
+          try { evolution.abort(); console.log('[World Engine] Chat switched; aborting the evolution/backfill in progress'); } catch (e) { console.warn('[World Engine] Failed to abort evolution', e); }
         }
         // 共用 ChatCache 独立监听 CHAT_LOADED，并在各引擎回调之前完成 scope 恢复。
         const ctx = SillyTavern.getContext();
@@ -733,7 +740,7 @@
           core.saveFingerprint(String(currentLayer));
         }
         applyInjectionForCurrentRound();
-        console.log('[世界引擎] 聊天已加载，注入已更新');
+        console.log('[World Engine] Chat loaded, injection updated');
       }
 
       function onMessageSwiped() {
@@ -758,13 +765,13 @@
       if (ctx && ctx.eventSource) {
         const guard = window.WORLD_ENGINE_GUARD_EVENT;
         const autoEvolveEvent = ctx.event_types?.GENERATION_ENDED || ctx.event_types?.MESSAGE_RECEIVED || 'message_received';
-        ctx.eventSource.on(autoEvolveEvent, guard('世界引擎', '生成完成', onMessageReceived));
-        ctx.eventSource.on(ctx.event_types?.CHAT_LOADED || 'chat_loaded', guard('世界引擎', '聊天加载', onChatLoaded));
-        ctx.eventSource.on(ctx.event_types?.MESSAGE_SWIPED || 'message_swiped', guard('世界引擎', '滑动重生成', onMessageSwiped));
-        ctx.eventSource.on(ctx.event_types?.GENERATION_STARTED || 'generation_started', guard('世界引擎', '生成开始', onGenerationStarted));
-        console.log('[世界引擎] 事件绑定成功，自动推演事件:', autoEvolveEvent);
+        ctx.eventSource.on(autoEvolveEvent, guard('World Engine', 'generation finished', onMessageReceived));
+        ctx.eventSource.on(ctx.event_types?.CHAT_LOADED || 'chat_loaded', guard('World Engine', 'chat loaded', onChatLoaded));
+        ctx.eventSource.on(ctx.event_types?.MESSAGE_SWIPED || 'message_swiped', guard('World Engine', 'swipe regenerate', onMessageSwiped));
+        ctx.eventSource.on(ctx.event_types?.GENERATION_STARTED || 'generation_started', guard('World Engine', 'generation started', onGenerationStarted));
+        console.log('[World Engine] Events bound; automatic evolution event:', autoEvolveEvent);
       } else {
-        console.warn('[世界引擎] 无法绑定事件');
+        console.warn('[World Engine] Could not bind events');
       }
 
       // 初始化时立即按对话层数选择注入状态
@@ -784,16 +791,16 @@
       // 每隔 30 秒自动刷新面板（如果可见）
       setInterval(() => { if (ui) ui.refresh(true); }, 30000);
 
-      console.log('[世界引擎] 初始化完成 ✅');
+      console.log('[World Engine] Initialization complete ✅');
 
     } catch(err) {
-      console.error('[世界引擎] 初始化失败', err);
+      console.error('[World Engine] Initialization failed', err);
     } finally {
       // 记忆初始化拥有独立收尾边界：世界运行主体或共用 UI 后半段报错，
       // 也不能阻止已经通过接口契约校验的记忆引擎启动。
       if (sharedRuntimeReady && loadedEngines.get('memory') && window.MEMORY_ENGINE) {
         try { window.MEMORY_ENGINE.init(); }
-        catch (e) { console.warn('[记忆引擎] 初始化失败（非致命）', e); }
+        catch (e) { console.warn('[Memory Engine] Initialization failed (non-fatal)', e); }
       }
     }
   }

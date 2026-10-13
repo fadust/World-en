@@ -9,8 +9,8 @@ window.WORLD_ENGINE_LEDGER = (function() {
     return Math.max(1, Math.round(Number.isFinite(n) ? n : MAX_LEDGER_ROUNDS));
   }
 
-  const EVENT_TYPE_NAMES = { conflict: '冲突型', progress: '推进型' };
-  const TERMINAL_STAGES = new Set(['已完成', '已失败', '已消散', '已爆发']);
+  const EVENT_TYPE_NAMES = { conflict: 'conflict', progress: 'progress' };
+  const TERMINAL_STAGES = new Set(['Completed', 'Failed', 'Dissipated', 'Erupted']);
 
   /**
    * 对比存档点（推演前）与当前状态（推演后），记录 Lv3/4 变化。
@@ -95,26 +95,26 @@ window.WORLD_ENGINE_LEDGER = (function() {
     }
 
     core.saveState(state);
-    console.log(`[世界引擎] 账本: 第${state.round}轮记录${changes.length}条变化`);
+    console.log(`[World Engine] Ledger: round ${state.round} recorded ${changes.length} changes`);
   }
 
   /** 构建注入用的账本文本 */
   function buildLedgerText(state) {
     const entries = (state.memories || []).filter(m => m.type === 'ledger').reverse();
-    if (!entries.length) return '暂无重大事件记录';
+    if (!entries.length) return 'No major events recorded yet';
 
     return entries.map(entry => {
-      const lines = [`第${entry.round}轮（${entry.changes.length}条变化）：`];
+      const lines = [`Round ${entry.round} (${entry.changes.length} changes):`];
       for (const c of entry.changes) {
         if (c.type === 'event_new') {
           const tn = EVENT_TYPE_NAMES[c.eventType] || c.eventType;
-          lines.push(`  [新增Lv${c.level}${tn}事件链] ${c.name} - ${c.stage} - ${c.desc}`);
+          lines.push(`  [New Lv${c.level} ${tn} event chain] ${c.name} - ${c.stage} - ${c.desc}`);
         } else if (c.type === 'event_advance') {
-          lines.push(`  [事件链推进] ${c.name}(Lv${c.level}) ${c.fromStage}->${c.toStage} - ${c.desc}`);
+          lines.push(`  [Event chain advanced] ${c.name}(Lv${c.level}) ${c.fromStage}->${c.toStage} - ${c.desc}`);
         } else if (c.type === 'event_terminal') {
-          lines.push(`  [事件链终局] ${c.name}(Lv${c.level}) ${c.fromStage ? c.fromStage + '->' : ''}${c.stage || c.toStage} - ${c.desc}`);
+          lines.push(`  [Event chain ended] ${c.name}(Lv${c.level}) ${c.fromStage ? c.fromStage + '->' : ''}${c.stage || c.toStage} - ${c.desc}`);
         } else if (c.type === 'wind_new') {
-          lines.push(`  [新增Lv${c.level}风声] ${c.topic} - ${c.content}`);
+          lines.push(`  [New Lv${c.level} news] ${c.topic} - ${c.content}`);
         }
       }
       return lines.join('\n');

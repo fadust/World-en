@@ -93,7 +93,7 @@ window.MEMORY_ENGINE_SETTINGS = (function() {
       const parsed = raw ? JSON.parse(raw) : {};
       return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
     } catch (error) {
-      console.warn('[记忆引擎] 读取设置失败，使用默认值', error);
+      console.warn('[Memory Engine] Failed to read settings, using defaults', error);
       return {};
     }
   }

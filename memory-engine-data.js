@@ -367,7 +367,7 @@ window.MEMORY_ENGINE_DATA = (function() {
       || (state?.world_memory && typeof state.world_memory === 'object' && !Array.isArray(state.world_memory));
     if (!state || typeof state !== 'object' || Array.isArray(state)
       || (!hasPersonal && !hasWorld)) {
-      throw new Error('缺少合法的记忆数据');
+      throw new Error('Missing valid memory data');
     }
     const sourceChatId = clean(payload?.chatId || state?.timeline?.originChatId);
     const sameChat = sourceChatId && sourceChatId === clean(getChatId());

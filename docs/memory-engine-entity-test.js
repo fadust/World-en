@@ -78,11 +78,11 @@ async function run() {
   assert(state.entity_memory.location[0].id === 'location_000001', '地点 ID 应由本地生成');
   assert(state.entity_memory.location[0].history[0].time === '', '无法换算的相对时间应清空');
   assert(state.entity_memory.organization[0].history.length === 0, '空 event 不得写入本地历史');
-  assert(injection.includes('【物件：断潮剑】'), '命中名称后应注入物件记忆');
-  assert(injection.includes('【地点：黑礁湾】'), '命中名称后应注入地点记忆');
-  assert(injection.includes('【组织：听潮阁】'), '命中名称后应注入组织记忆');
-  assert(injection.includes('【能力：听潮】'), '命中名称后应注入能力记忆');
-  assert(MEMORY_ENGINE.buildWorldEngineContext({ current: '断潮' }).includes('【物件：断潮剑】'), '世界状态命中实体别名时应注入该实体');
+  assert(injection.includes('[Object: 断潮剑]'), '命中名称后应注入物件记忆');
+  assert(injection.includes('[Location: 黑礁湾]'), '命中名称后应注入地点记忆');
+  assert(injection.includes('[Organization: 听潮阁]'), '命中名称后应注入组织记忆');
+  assert(injection.includes('[Ability: 听潮]'), '命中名称后应注入能力记忆');
+  assert(MEMORY_ENGINE.buildWorldEngineContext({ current: '断潮' }).includes('[Object: 断潮剑]'), '世界状态命中实体别名时应注入该实体');
 
   chat.push(
     { is_user: true, name: '玩家', mes: '嘉宁三十年正月十六，沈鹤亭使用玄铁修复断潮剑。' },

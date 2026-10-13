@@ -13,7 +13,7 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
   function normalizeScope(scope) {
     if (scope == null || scope === '' || scope === 'world') return 'world';
     if (scope === 'memory') return 'memory';
-    throw new Error(`未知世界书 scope: ${scope}`);
+    throw new Error(`Unknown World Info scope: ${scope}`);
   }
 
   function getSelectionKey(scope) {
@@ -118,16 +118,16 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
   }
 
   function getEntryId(entry) {
-    return `${entry.world || '未知世界书'}::${entry.uid}`;
+    return `${entry.world || 'Unknown World Info'}::${entry.uid}`;
   }
 
   function getEntryTitle(entry) {
     const comment = String(entry.comment || '').trim();
     if (comment) return comment;
-    const keys = Array.isArray(entry.key) ? entry.key.filter(Boolean).join('、') : '';
+    const keys = Array.isArray(entry.key) ? entry.key.filter(Boolean).join(', ') : '';
     if (keys) return keys;
     const content = String(entry.content || '').trim();
-    return content ? content.substring(0, 40) : `条目 ${entry.uid}`;
+    return content ? content.substring(0, 40) : `Entry ${entry.uid}`;
   }
 
   async function getWorldInfoModule() {
@@ -143,7 +143,7 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
   async function loadCurrentEntries() {
     const module = await getWorldInfoModule();
     if (typeof module.getSortedEntries !== 'function') {
-      throw new Error('当前 SillyTavern 版本不支持读取世界书条目');
+      throw new Error('This SillyTavern version cannot read World Info entries');
     }
     const entries = await module.getSortedEntries();
     return (Array.isArray(entries) ? entries : [])
@@ -153,7 +153,7 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
       .map(entry => ({
         id: getEntryId(entry),
         uid: entry.uid,
-        world: entry.world || '未知世界书',
+        world: entry.world || 'Unknown World Info',
         title: getEntryTitle(entry),
         content: String(entry.content || '').trim(),
         disabled: entry.disable === true || entry.enabled === false,
@@ -210,17 +210,17 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
   // mode：auto(跟随酒馆) / const(强制常驻) / key(强制关键词) / off(关闭)。
   function activationOf(entry, scanText, mode) {
     const m = mode || 'auto';
-    if (m === 'off') return { active: false, reason: '关闭(覆写)' };
-    if (m === 'const') return { active: true, reason: '强制常驻(覆写)' };
-    if (m === 'auto' && entry.constant) return { active: true, reason: '🔵常驻' };
+    if (m === 'off') return { active: false, reason: 'Off (override)' };
+    if (m === 'const') return { active: true, reason: 'Force constant (override)' };
+    if (m === 'auto' && entry.constant) return { active: true, reason: '🔵 Constant' };
     // 🟢 关键词路径（m==='key' 强制走关键词；m==='auto' 且非常驻条目）
     const primary = entry.keys || [];
-    if (!primary.length) return { active: false, reason: entry.vectorized ? '🔗向量条目(不触发)' : '无主关键词' };
+    if (!primary.length) return { active: false, reason: entry.vectorized ? '🔗 Vectorized entry (not triggered)' : 'No primary keywords' };
     const cs = entry.caseSensitive, mw = entry.matchWholeWords;
     const hitKey = primary.find(k => matchKey(scanText, k, cs, mw));
-    if (!hitKey) return { active: false, reason: '🟢未命中' };
+    if (!hitKey) return { active: false, reason: '🟢 No match' };
     const sec = entry.secondaryKeys || [];
-    if (!entry.selective || !sec.length) return { active: true, reason: '🟢命中「' + hitKey + '」' };
+    if (!entry.selective || !sec.length) return { active: true, reason: '🟢 Matched "' + hitKey + '"' };
     const anySec = sec.some(k => matchKey(scanText, k, cs, mw));
     const allSec = sec.every(k => matchKey(scanText, k, cs, mw));
     let ok;
@@ -230,7 +230,7 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
       case LOGIC.NOT_ANY: ok = !anySec; break;
       default: ok = anySec; // AND_ANY
     }
-    return { active: ok, reason: ok ? ('🟢命中「' + hitKey + '」+次键') : '🟢主命中但次键逻辑不满足' };
+    return { active: ok, reason: ok ? ('🟢 Matched "' + hitKey + '" + secondary keys') : '🟢 Primary matched, but secondary key logic not satisfied' };
   }
 
   function isEntryActive(entry, scanText, mode) {
@@ -262,8 +262,8 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
         selectedEntries = decided.filter(d => d.active).map(d => d.entry);
         // 控制台命中明细：每轮推演打印哪些条目注入/跳过及原因（折叠分组，不刷屏）
         try {
-          console.groupCollapsed(`[世界引擎] 世界书蓝绿灯：${selectedEntries.length}/${pool.length} 注入${text ? '' : '（扫描文本为空，仅常驻）'}`);
-          decided.forEach(d => console.log(`${d.active ? '✓ 注入' : '· 跳过'} | ${d.reason} | ${d.entry.world} / ${d.entry.title}`));
+          console.groupCollapsed(`[World Engine] World Info blue/green: ${selectedEntries.length}/${pool.length} injected${text ? '' : ' (scan text empty, constant only)'}`);
+          decided.forEach(d => console.log(`${d.active ? '✓ inject' : '· skip'} | ${d.reason} | ${d.entry.world} / ${d.entry.title}`));
           console.groupEnd();
         } catch (e) {}
       } else {
@@ -273,19 +273,20 @@ window.WORLD_ENGINE_WORLDBOOK = (function() {
       if (!selectedEntries.length) return '';
 
       const content = selectedEntries.map(entry =>
-        `【${entry.world} / ${entry.title}】\n${entry.content}`
+        `[${entry.world} / ${entry.title}]
+${entry.content}`
       ).join('\n\n');
 
       const instruction = normalizedScope === 'memory'
-        ? '以下内容仅用于辨认人物、别名与背景。不得把世界书内容直接当作人物新形成的记忆。'
-        : '以下内容是当前聊天的世界观事实与约束。后台推演必须遵守；不得擅自改写其既定设定。';
+        ? 'The following is only for identifying characters, aliases and background. Never treat World Info content directly as memories a character has newly formed.'
+        : 'The following are the setting\'s facts and constraints for the current chat. Background evolution must follow them and must not rewrite their established canon on its own.';
 
-      return `========== 已选世界书条目 ==========
+      return `========== Selected World Info entries ==========
 ${instruction}
 
 ${content}`;
     } catch(error) {
-      console.warn('[世界引擎] 读取已选世界书失败:', error);
+      console.warn('[World Engine] Failed to read the selected World Info:', error);
       return '';
     }
   }

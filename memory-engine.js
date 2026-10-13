@@ -1,10 +1,10 @@
 // 记忆引擎运行链：复用世界引擎的 API、过滤、世界书、存档和注入机制。
 window.MEMORY_ENGINE = (function() {
   const INJECTION_NAME = 'memory-engine-memory';
-  const SENTINEL = '【记忆信息】';
+  const SENTINEL = '[Memory info]';
   const DEFAULT_INJECTION_DICE_SIDES = 10000;
   const ENTITY_TYPES = ['organization', 'object', 'ability', 'location'];
-  const ENTITY_LABELS = { organization: '组织', object: '物件', ability: '能力', location: '地点' };
+  const ENTITY_LABELS = { organization: 'Organization', object: 'Object', ability: 'Ability', location: 'Location' };
   let initialized = false, running = false, backfillRunning = false, reconciling = false;
   let runningLabel = '';
   let abortController = null, autoTimer = null, lastEventKey = '';
@@ -75,8 +75,9 @@ window.MEMORY_ENGINE = (function() {
   function formatMessages(messages, startLayer) {
     const ctx = context();
     return (messages || []).map((message, i) => {
-      const fallback = message?.is_user ? (ctx?.name1 || '用户') : (ctx?.name2 || '角色');
-      return `[楼层 ${Number(startLayer || 0) + i}]【${clean(message?.name) || fallback}】\n${clean(message?.mes)}`;
+      const fallback = message?.is_user ? (ctx?.name1 || 'User') : (ctx?.name2 || 'Character');
+      return `[Message ${Number(startLayer || 0) + i}][${clean(message?.name) || fallback}]
+${clean(message?.mes)}`;
     }).filter(Boolean).join('\n\n');
   }
 
@@ -97,8 +98,12 @@ window.MEMORY_ENGINE = (function() {
   }
 
   function extractStoryTime(text) {
-    const found = Array.from(String(text || '').matchAll(/『([^』]*(?:年|月|日|时|刻)[^』]*)』/g));
-    return found.length ? clean(found.at(-1)[1].split('丨').slice(0, 3).join(' ')) : '';
+    const src = String(text || '');
+    const found = Array.from(src.matchAll(/『([^』]*(?:年|月|日|时|刻)[^』]*)』/g));
+    if (found.length) return clean(found.at(-1)[1].split('丨').slice(0, 3).join(' '));
+    // [English port] English time markers in 『』 or 【】, e.g. 『Day 3 | Evening』 or 【Spring, Year 2 | 14:30】
+    const en = Array.from(src.matchAll(/[『【]([^』】]*?(?:\b(?:year|month|day|week|morning|noon|afternoon|evening|night|midnight|dawn|dusk|hour|o'clock|am|pm|january|february|april|june|july|august|september|october|november|december|spring|summer|autumn|fall|winter)\b|\d{1,2}:\d{2})[^』】]*)[』】]/gi));
+    return en.length ? clean(en.at(-1)[1].split(/\s*[|丨]\s*/).slice(0, 3).join(' ')) : '';
   }
 
   function filterConversation(conversation, st) {
@@ -160,13 +165,16 @@ window.MEMORY_ENGINE = (function() {
       .filter(item => valid(item) && beforeLayer(item, bigBoundary));
     const historyBigSummaries = bigCount ? eligibleBig.slice(-bigCount) : [];
     const parts = [];
-    if (historyBigSummaries.length) parts.push(`【更早总述】\n${historyBigSummaries.map((item, index) =>
-      `${index + 1}. [楼层 ${Number(item?.startLayer) || 0}-${Number(item?.endLayer) || 0}] ${clean(item?.content)}`
+    if (historyBigSummaries.length) parts.push(`[Earlier overview]
+${historyBigSummaries.map((item, index) =>
+      `${index + 1}. [Messages ${Number(item?.startLayer) || 0}-${Number(item?.endLayer) || 0}] ${clean(item?.content)}`
     ).join('\n')}`);
-    if (historySmallSummaries.length) parts.push(`【前置纪要】\n${historySmallSummaries.map((item, index) =>
-      `${index + 1}. [楼层 ${Number(item?.startLayer) || 0}-${Number(item?.endLayer) || 0}] ${clean(item?.content)}`
+    if (historySmallSummaries.length) parts.push(`[Preceding notes]
+${historySmallSummaries.map((item, index) =>
+      `${index + 1}. [Messages ${Number(item?.startLayer) || 0}-${Number(item?.endLayer) || 0}] ${clean(item?.content)}`
     ).join('\n')}`);
-    if (raw.conversation) parts.push(`【近期正文】\n${filterConversation(raw.conversation, st)}`);
+    if (raw.conversation) parts.push(`[Recent story text]
+${filterConversation(raw.conversation, st)}`);
     return { historyBigSummaries, historySmallSummaries, raw, text: parts.join('\n\n') };
   }
 
@@ -203,48 +211,66 @@ window.MEMORY_ENGINE = (function() {
         referenceContext: memoryReference?.text || '',
         conversation: filtered
       });
-      segments.push(`【任务说明】\n${window.MEMORY_ENGINE_PROMPT.TASK_PROMPT || window.MEMORY_ENGINE_PROMPT.SYSTEM_PROMPT}\n\n${user}`);
+      segments.push(`[Task instructions]
+${window.MEMORY_ENGINE_PROMPT.TASK_PROMPT || window.MEMORY_ENGINE_PROMPT.SYSTEM_PROMPT}
+
+${user}`);
     }
     if (tasks.small) {
-      segments.push(`【任务说明】\n${window.MEMORY_ENGINE_SMALL_SUMMARY_PROMPT.SYSTEM_PROMPT}\n\n${window.MEMORY_ENGINE_SMALL_SUMMARY_PROMPT.buildUserPrompt({
+      segments.push(`[Task instructions]
+${window.MEMORY_ENGINE_SMALL_SUMMARY_PROMPT.SYSTEM_PROMPT}
+
+${window.MEMORY_ENGINE_SMALL_SUMMARY_PROMPT.buildUserPrompt({
         ...tasks.small,
         reuseConversation: sharesReference,
         referenceContext: sharesReference && memoryReference?.text
-          ? '沿用同一请求前文人物/实体任务中的【只读辅助参考】，不得把其中旧内容写成本段新增事件。'
+          ? 'Reuse the [Read-only reference] from the character/entity task earlier in the same request; do not write its old content as new events of this stretch.'
           : (smallReference?.text || ''),
         conversation: filterConversation(tasks.small.conversation, st)
       })}`);
     }
     if (tasks.big) {
-      segments.push(`【任务说明】\n${window.MEMORY_ENGINE_BIG_SUMMARY_PROMPT.SYSTEM_PROMPT}\n\n${window.MEMORY_ENGINE_BIG_SUMMARY_PROMPT.buildUserPrompt({
+      segments.push(`[Task instructions]
+${window.MEMORY_ENGINE_BIG_SUMMARY_PROMPT.SYSTEM_PROMPT}
+
+${window.MEMORY_ENGINE_BIG_SUMMARY_PROMPT.buildUserPrompt({
         ...tasks.big
       })}`);
     }
     const fields = [];
     if (tasks.memory) fields.push(`"personal_memory": [
     {
-      "name": ["人物名或别名"],
-      "known_by": ["其他知情人物名"],
-      "memory": "一条独立的人物主观记忆",
-      "time": "这条记忆对应的绝对故事时间或空字符串"
+      "name": ["character name or alias"],
+      "known_by": ["names of other characters who know"],
+      "memory": "one independent subjective memory of a character",
+      "time": "absolute story time of this memory or an empty string"
     }
   ]`, `"entity_updates": [
     {
-      "type": "organization、object、ability、location 四者之一",
-      "name": "实体名称",
-      "aliases": ["实体别名"],
-      "description": "当前描述或空字符串",
-      "event": "一条独立的本批新增重要事件或空字符串",
-      "time": "这条事件对应的绝对故事时间或空字符串"
+      "type": "one of organization, object, ability, location",
+      "name": "entity name",
+      "aliases": ["entity alias"],
+      "description": "current description or an empty string",
+      "event": "one independent important new event from this batch or an empty string",
+      "time": "absolute story time of this event or an empty string"
     }
   ]`);
     if (tasks.small) fields.push('"small_summary": ""');
     if (tasks.big) fields.push('"big_summary": ""');
     const tone = clean(st.tonePrompt);
     const emptyMemory = tasks.memory
-      ? '\n\n没有对应内容时分别使用 "personal_memory": [] 和 "entity_updates": []；不得省略字段。'
+      ? '\n\nWhen there is no matching content, use "personal_memory": [] and "entity_updates": [] respectively; do not omit the fields.'
       : '';
-    return `${segments.join('\n\n=====\n\n')}\n\n【统一输出要求】\n只输出一个合法 JSON 对象，不要输出 Markdown、代码围栏或解释。严格按照以下完整结构返回；模板文字替换为实际内容：\n{\n  ${fields.join(',\n  ')}\n}${emptyMemory}${tone ? `\n\n【附加要求】\n${tone}` : ''}`;
+    return `${segments.join('\n\n=====\n\n')}
+
+[Unified output requirements]
+Output only one valid JSON object, with no Markdown, code fences or explanations. Return exactly this complete structure, replacing the template text with actual content:
+{
+  ${fields.join(',\n  ')}
+}${emptyMemory}${tone ? `
+
+[Additional requirements]
+${tone}` : ''}`;
   }
 
   function parseResponse(raw, tasks) {
@@ -257,7 +283,7 @@ window.MEMORY_ENGINE = (function() {
       if (arrayStart >= 0 && arrayStart < objectStart && arrayEnd > arrayStart) value = JSON.parse(text.slice(arrayStart, arrayEnd + 1));
       else if (objectStart >= 0 && objectEnd > objectStart) value = JSON.parse(text.slice(objectStart, objectEnd + 1));
       else if (arrayStart >= 0 && arrayEnd > arrayStart) value = JSON.parse(text.slice(arrayStart, arrayEnd + 1));
-      else throw new Error('API 返回中没有合法 JSON 对象或数组');
+      else throw new Error('The API response contains no valid JSON object or array');
     }
     const nameBlacklist = configuredNameBlacklist(settings());
     // 兼容 0.1.x：旧 API 只返回人物记忆数组。
@@ -277,7 +303,7 @@ window.MEMORY_ENGINE = (function() {
       if (count >= 3) continue;
       counts.set(holder, count + 1);
       let time = clean(item.time);
-      if (/^(昨晚|昨天|三天前|刚才|不久前|宴会之后)$/.test(time)) time = '';
+      if (/^(?:昨晚|昨天|三天前|刚才|不久前|宴会之后|last night|yesterday|today|tonight|this morning|this evening|earlier|just now|recently|not long ago|a while ago|moments? ago|(?:a few|several|some|\w+) (?:minutes|hours|days|weeks|months|years) ago|after the (?:banquet|feast|party))$/i.test(time)) time = '';
       personal.push({
         name: names,
         known_by: unique(Array.isArray(item.known_by) ? item.known_by : [item.known_by])
@@ -323,7 +349,7 @@ window.MEMORY_ENGINE = (function() {
 
   function sanitizeTime(value) {
     const time = clean(value);
-    return /^(昨晚|昨天|三天前|刚才|不久前|宴会之后)$/.test(time) ? '' : time;
+    return /^(?:昨晚|昨天|三天前|刚才|不久前|宴会之后|last night|yesterday|today|tonight|this morning|this evening|earlier|just now|recently|not long ago|a while ago|moments? ago|(?:a few|several|some|\w+) (?:minutes|hours|days|weeks|months|years) ago|after the (?:banquet|feast|party))$/i.test(time) ? '' : time;
   }
 
   function nextCharacterId(state) {
@@ -819,19 +845,19 @@ window.MEMORY_ENGINE = (function() {
         if (abortController?.signal?.aborted || attempt >= retries) throw error;
       }
     }
-    throw new Error('记忆 API 请求失败');
+    throw new Error('Memory API request failed');
   }
 
   async function runTasks(tasks, options) {
     if (running && !options?.allowWhileBackfill) return { skipped: true, reason: 'running' };
     if (!tasks?.memory && !tasks?.small && !tasks?.big) return { skipped: true, reason: 'no_tasks' };
-    if (tasks.small && tasks.big) throw new Error('总述必须在纪要落库后独立运行');
+    if (tasks.small && tasks.big) throw new Error('The overview must run on its own after the notes are saved');
     running = true;
-    runningLabel = tasks.memory && tasks.small ? '人物、实体与纪要'
-      : (tasks.memory ? '人物与实体提取' : (tasks.small ? '纪要' : '总述'));
+    runningLabel = tasks.memory && tasks.small ? 'characters, entities and notes'
+      : (tasks.memory ? 'character and entity extraction' : (tasks.small ? 'Notes' : 'Overview'));
     const taskLabel = runningLabel;
     abortController = new AbortController();
-    setExternalStatus(`正在进行${taskLabel}…`);
+    setExternalStatus(`Running ${taskLabel}…`);
     // 顶部状态机会先清理悬浮球运行类，因此最后再按当前引擎面刷新动画状态。
     window.WORLD_ENGINE_UI?.setMemoryEvolvingUI?.(true, runningLabel);
     try {
@@ -880,7 +906,7 @@ window.MEMORY_ENGINE = (function() {
           id: nextSmallSummaryId(eventMemory),
           startLayer: Number(linked.layer) || 0,
           endLayer: Number(linked.layer) || 0,
-          content: Array.from(clean(linked.content)).slice(0, 200).join(''),
+          content: Array.from(clean(linked.content)).slice(0, 1000).join(''),
           source: 'world_engine',
           sourceKey: clean(linked.sourceKey),
           status: 'valid',
@@ -916,7 +942,7 @@ window.MEMORY_ENGINE = (function() {
       window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.afterEvolution?.();
       applyInjection();
       refreshMemoryPanel();
-      setExternalStatus(`${taskLabel}完成`);
+      setExternalStatus(`${taskLabel} complete`);
       return {
         added: added + addedSmall + updatedBig,
         extracted: extracted.personal.length + ENTITY_TYPES.reduce((sum, type) => sum + extracted.entities[type].length, 0),
@@ -928,7 +954,7 @@ window.MEMORY_ENGINE = (function() {
       };
     } catch (error) {
       const stopped = abortController?.signal?.aborted || error?.name === 'AbortError';
-      setExternalStatus(stopped ? `${taskLabel}已停止` : `${taskLabel}失败：${error?.message || error}`, !stopped);
+      setExternalStatus(stopped ? `${taskLabel} stopped` : `${taskLabel} failed: ${error?.message || error}`, !stopped);
       throw error;
     } finally {
       running = false;
@@ -1048,7 +1074,7 @@ window.MEMORY_ENGINE = (function() {
       const result = await runTasks({ big: bigTask }, { baseState: state });
       if (buildBigTask(data().loadState(), false)) {
         clearTimeout(autoTimer);
-        autoTimer = setTimeout(() => autoExtract().catch(error => console.error('[记忆引擎] 自动总述补进度失败', error)), 0);
+        autoTimer = setTimeout(() => autoExtract().catch(error => console.error('[Memory Engine] Automatic overview catch-up failed', error)), 0);
       }
       return result;
     }
@@ -1056,14 +1082,14 @@ window.MEMORY_ENGINE = (function() {
     const after = data().loadState(), afterEvent = ensureEventState(after);
     if (countAiSince(afterEvent.small_summary_layer) >= smallEvery || buildBigTask(after, false)) {
       clearTimeout(autoTimer);
-      autoTimer = setTimeout(() => autoExtract().catch(error => console.error('[记忆引擎] 自动纪要补进度失败', error)), 0);
+      autoTimer = setTimeout(() => autoExtract().catch(error => console.error('[Memory Engine] Automatic notes catch-up failed', error)), 0);
     }
     return result;
   }
 
   async function manualExtract() {
     const st = settings();
-    if (st.engineEnabled === false) throw new Error('记忆引擎已关闭');
+    if (st.engineEnabled === false) throw new Error('Memory Engine is off');
     const state = data().loadState();
     const timeline = ensureTimelineState(state), eventMemory = ensureEventState(state);
     const memoryLayer = state.chatLayer !== null && state.chatLayer !== '' && Number.isFinite(Number(state.chatLayer))
@@ -1095,7 +1121,7 @@ window.MEMORY_ENGINE = (function() {
       batch = candidate;
       break;
     }
-    if (!batch) throw new Error('当前没有尚未提取的新一轮正文');
+    if (!batch) throw new Error('There is no new round of story text left to extract');
     return runTasksThenDueBig({ memory: batch, small: batch }, {
       ...batch, layer: batch.endLayer, baseState: state
     });
@@ -1103,8 +1129,8 @@ window.MEMORY_ENGINE = (function() {
 
   async function manualReextract() {
     const st = settings();
-    if (st.engineEnabled === false) throw new Error('记忆引擎已关闭');
-    if (running || backfillRunning || reconciling) throw new Error('已有记忆任务正在运行');
+    if (st.engineEnabled === false) throw new Error('Memory Engine is off');
+    if (running || backfillRunning || reconciling) throw new Error('A memory task is already running');
     const current = data().loadState();
     const timeline = ensureTimelineState(current);
     const latestNode = timeline.nodes.slice().reverse().find(node => node.kind === 'memory' && node.status === 'valid');
@@ -1117,11 +1143,11 @@ window.MEMORY_ENGINE = (function() {
           || timelineApi()?.digestRefs?.(summary.sourceRefs || []) || '';
         return summary.status === 'valid' && digest === sourceDigest;
       }) : null;
-      const taskLabel = '人物、实体与纪要重新推演';
+      const taskLabel = 'characters, entities and notes re-run';
       running = true;
       runningLabel = taskLabel;
       abortController = new AbortController();
-      setExternalStatus(`正在进行${taskLabel}…`);
+      setExternalStatus(`Running ${taskLabel}…`);
       window.WORLD_ENGINE_UI?.setMemoryEvolvingUI?.(true, runningLabel);
       let repaired;
       try {
@@ -1129,8 +1155,8 @@ window.MEMORY_ENGINE = (function() {
         if (pairedSummary) pairedSummary.status = 'stale';
         data().saveState(current);
         repaired = await repairMemoryAndSmall(latestNode.id, pairedSummary?.id);
-        if (!repaired) throw new Error('最新一轮人物、实体与纪要未能重新提取');
-        setExternalStatus(`${taskLabel}完成`);
+        if (!repaired) throw new Error('The latest round\'s characters, entities and notes could not be re-extracted');
+        setExternalStatus(`${taskLabel} complete`);
       } catch (error) {
         // 请求失败或用户停止时恢复旧节点，不能把一次未完成的重新推演留成 stale。
         const rollback = data().loadState();
@@ -1143,7 +1169,7 @@ window.MEMORY_ENGINE = (function() {
         data().saveState(rollback);
         applyInjection();
         const stopped = abortController?.signal?.aborted || error?.name === 'AbortError';
-        setExternalStatus(stopped ? `${taskLabel}已停止` : `${taskLabel}失败：${error?.message || error}`, !stopped);
+        setExternalStatus(stopped ? `${taskLabel} stopped` : `${taskLabel} failed: ${error?.message || error}`, !stopped);
         throw error;
       } finally {
         running = false;
@@ -1171,7 +1197,7 @@ window.MEMORY_ENGINE = (function() {
     }
     // 旧数据尚未产生时间链节点时，保留一次兼容回退；新节点产生后不再依赖 checkpoint。
     const checkpoint = data().loadCheckpoint();
-    if (!checkpoint) throw new Error('没有可用于重新推演的记忆存档点');
+    if (!checkpoint) throw new Error('No memory checkpoint available for a re-run');
     const readRounds = getElapsedReadRounds(checkpoint, st.manualReadRounds);
     const batch = recentConversationBatch(readRounds);
     return runTasksThenDueBig({ memory: batch, small: batch }, {
@@ -1181,18 +1207,18 @@ window.MEMORY_ENGINE = (function() {
 
   async function manualSmallSummary() {
     const st = settings();
-    if (st.engineEnabled === false) throw new Error('记忆引擎已关闭');
+    if (st.engineEnabled === false) throw new Error('Memory Engine is off');
     const state = data().loadState(), eventMemory = ensureEventState(state);
     const batch = getAiBatchAfter(eventMemory.small_summary_layer, Math.max(1, parseInt(st.smallSummaryEveryX) || 5));
-    if (!batch) throw new Error('当前状态之后没有可总结的新对话');
+    if (!batch) throw new Error('No new conversation to summarize after the current state');
     return runTasksThenDueBig({ small: batch }, { baseState: state });
   }
 
   async function manualBigSummary() {
     const st = settings();
-    if (st.engineEnabled === false) throw new Error('记忆引擎已关闭');
+    if (st.engineEnabled === false) throw new Error('Memory Engine is off');
     const state = data().loadState(), bigTask = buildBigTask(state, true);
-    if (!bigTask) throw new Error('当前没有尚未并入总述的纪要');
+    if (!bigTask) throw new Error('There are no notes waiting to be merged into an overview');
     return runTasks({ big: bigTask }, { baseState: state });
   }
 
@@ -1230,21 +1256,21 @@ window.MEMORY_ENGINE = (function() {
 
   function formatHistoryLayers(layers) {
     const values = [...(layers || [])].filter(Number.isFinite).sort((a, b) => a - b);
-    return values.length ? `第 ${values.join('、')} 楼` : '';
+    return values.length ? `message ${values.join(', ')}` : '';
   }
 
   function historyAuditMessage(report, phase, error) {
     const changed = formatHistoryLayers(report?.changedLayers);
     const deleted = formatHistoryLayers(report?.deletedLayers);
-    const subjects = [changed ? `${changed}正文已修改` : '', deleted ? `${deleted}已删除` : ''].filter(Boolean);
+    const subjects = [changed ? `${changed} text edited` : '', deleted ? `${deleted} deleted` : ''].filter(Boolean);
     if (!subjects.length) {
-      if (phase === 'failed') return `历史记忆修复失败：旧记忆已停止注入，本次使用原始正文。原因：${error?.message || error}`;
-      return phase === 'success' ? '历史记忆对账完成' : '正在核对历史楼层与记忆链…';
+      if (phase === 'failed') return `History memory repair failed: old memories are no longer injected, and the original text is used this time. Reason: ${error?.message || error}`;
+      return phase === 'success' ? 'History memory reconciliation complete' : 'Checking past messages against the memory chain…';
     }
-    const subject = subjects.join('；');
-    if (phase === 'detected') return `检测到${subject}，正在重建相关记忆、纪要与总述…`;
-    if (phase === 'success') return `${subject}：相关记忆、纪要与总述已更新，本次注入采用新正文。`;
-    return `${subject}：历史记忆修复失败，旧记忆已停止注入，本次使用原始正文。原因：${error?.message || error}`;
+    const subject = subjects.join('; ');
+    if (phase === 'detected') return `Detected ${subject}; rebuilding the related memories, notes and overview…`;
+    if (phase === 'success') return `${subject}: related memories, notes and overview were updated; this injection uses the new text.`;
+    return `${subject}: history memory repair failed; old memories are no longer injected, and the original text is used this time. Reason: ${error?.message || error}`;
   }
 
   function auditStoredSources(state, report) {
@@ -1362,7 +1388,7 @@ window.MEMORY_ENGINE = (function() {
       }
     }, { baseState: base });
     if (!clean(extracted.smallSummary)) {
-      throw new Error('API 未返回纪要，已保留重新推演前的记录');
+      throw new Error('The API returned no notes; the records from before the re-run were kept');
     }
 
     state = data().loadState();
@@ -1506,7 +1532,7 @@ window.MEMORY_ENGINE = (function() {
         applyInjection();
         return { repaired: false };
       }
-      runningLabel = '历史记忆对账';
+      runningLabel = 'history memory reconciliation';
       abortController = new AbortController();
       setExternalStatus(historyAuditMessage(auditReport, 'detected'));
       window.WORLD_ENGINE_UI?.setMemoryEvolvingUI?.(true, runningLabel);
@@ -1552,7 +1578,7 @@ window.MEMORY_ENGINE = (function() {
       const unresolved = finalTimeline.nodes.some(node => node.status === 'stale')
         || finalEventMemory.small_summaries.some(item => item.status === 'stale')
         || finalEventMemory.big_summaries.some(item => item.status === 'stale');
-      if (unresolved) throw new Error('仍有相关记忆或纪要未能重建');
+      if (unresolved) throw new Error('Some related memories or notes could not be rebuilt');
       applyInjection();
       setExternalStatus(historyAuditMessage(auditReport, 'success'));
       return { repaired: true, repairedCount, updatedBig };
@@ -1632,9 +1658,9 @@ window.MEMORY_ENGINE = (function() {
   function syncHiddenMessages(messageIds, label) {
     try {
       hiddenSyncPromise = Promise.resolve(timelineApi()?.syncHidden?.(messageIds))
-        .catch(error => console.warn(`[记忆引擎] ${label}`, error));
+        .catch(error => console.warn(`[Memory Engine] ${label}`, error));
     } catch (error) {
-      console.warn(`[记忆引擎] ${label}`, error);
+      console.warn(`[Memory Engine] ${label}`, error);
       hiddenSyncPromise = Promise.resolve();
     }
     return hiddenSyncPromise;
@@ -1644,7 +1670,7 @@ window.MEMORY_ENGINE = (function() {
     const st = settings();
     if (st.engineEnabled === false || st.injectIntoPrompt === false) {
       clearInjection();
-      syncHiddenMessages(new Set(), '恢复正文失败');
+      syncHiddenMessages(new Set(), 'Failed to restore the text');
       return '';
     }
     const state = (options?.isReroll && data().loadCheckpoint()) || data().loadState();
@@ -1655,7 +1681,7 @@ window.MEMORY_ENGINE = (function() {
     const hasEvents = Boolean(eventMemory.big_summaries.length || eventMemory.small_summaries.length);
     if (!hasPeople && !hasEntities && !hasEvents) {
       clearInjection();
-      syncHiddenMessages(new Set(), '恢复正文失败');
+      syncHiddenMessages(new Set(), 'Failed to restore the text');
       return '';
     }
     if (!state.knowledge_index || !Object.keys(state.knowledge_index).length) rebuildKnowledgeIndex(state);
@@ -1673,8 +1699,9 @@ window.MEMORY_ENGINE = (function() {
     const validBig = eventMemory.big_summaries.filter(item => item.status !== 'stale' && item.status !== 'failed');
     const recentBig = validBig.slice(-bigLimit);
     if (recentBig.length) {
-      sections.push(`【故事总述】\n${recentBig.map(item =>
-        `- [楼层 ${item.startLayer}-${item.endLayer}] ${item.content}`
+      sections.push(`[Story overview]
+${recentBig.map(item =>
+        `- [Messages ${item.startLayer}-${item.endLayer}] ${item.content}`
       ).join('\n')}`);
     }
     // 总述注入上限只控制进入 prompt 的总述数量；判断纪要是否已经整理时，
@@ -1688,8 +1715,9 @@ window.MEMORY_ENGINE = (function() {
       return index >= eventMemory.big_summary_cursor;
     });
     if (pendingSmall.length) {
-      sections.push(`【近期事件纪要】\n${pendingSmall.map(item =>
-        `- [楼层 ${item.startLayer}-${item.endLayer}] ${item.content}`
+      sections.push(`[Recent event notes]
+${pendingSmall.map(item =>
+        `- [Messages ${item.startLayer}-${item.endLayer}] ${item.content}`
       ).join('\n')}`);
     }
     for (const character of matched) {
@@ -1703,19 +1731,21 @@ window.MEMORY_ENGINE = (function() {
       ) === index);
       const selected = exponentialMemorySample(candidates, limit, Math.random, st.injectionDiceSides);
       selected.forEach(record => globalSeen.add(`${record.ownerId}\u0000${record.time}\u0000${record.memory}`));
-      if (selected.length) sections.push(`【${character.names?.[0] || character.id}】\n` +
-        selected.map(record => `- [${record.time || '时间未明'}] ${record.memory}`).join('\n'));
+      if (selected.length) sections.push(`[${character.names?.[0] || character.id}]
+` +
+        selected.map(record => `- [${record.time || 'Time unknown'}] ${record.memory}`).join('\n'));
     }
     if (matchedEntities.length) {
       const entitySections = matchedEntities.map(({ type, entity }) => {
-        const lines = [`【${ENTITY_LABELS[type]}：${entity.name}】`, entity.description];
+        const lines = [`[${ENTITY_LABELS[type]}: ${entity.name}]`, entity.description];
         const history = exponentialMemorySample(
           Array.isArray(entity.history) ? entity.history : [], limit, Math.random, st.injectionDiceSides
         );
-        if (history.length) lines.push(...history.map(entry => `- [${entry.time || '时间未明'}] ${entry.event}`));
+        if (history.length) lines.push(...history.map(entry => `- [${entry.time || 'Time unknown'}] ${entry.event}`));
         return lines.filter(Boolean).join('\n');
       });
-      sections.push(`【相关世界实体】\n${entitySections.join('\n\n')}`);
+      sections.push(`[Related world entities]
+${entitySections.join('\n\n')}`);
     }
     const coveredRefs = timelineApi()?.unionRefs?.([
       ...recentBig.map(item => item.sourceRefs || []),
@@ -1729,9 +1759,12 @@ window.MEMORY_ENGINE = (function() {
       const recentMessageIds = recentRawRoundMessageIds(chat(), keepRawRounds, st, api);
       return selectHiddenMessageIds(coveredRefs, data()?.getChatId?.(), recentMessageIds);
     })();
-    syncHiddenMessages(coveredMessageIds, '同步正文覆盖失败');
+    syncHiddenMessages(coveredMessageIds, 'Failed to overwrite the synced text');
     if (!sections.length) { clearInjection(); return ''; }
-    const content = `${SENTINEL}\n事件总结记录对话中已经发生的剧情；人物条目是当前场景人物持有或明确知晓的主观记忆，允许彼此矛盾；实体条目记录相关组织、物件、能力与地点的当前描述和本地历史。\n\n${sections.join('\n\n')}`;
+    const content = `${SENTINEL}
+Event summaries record plot that has already happened in the conversation; character entries are subjective memories held or clearly known by characters in the current scene and may contradict each other; entity entries record the current descriptions and local history of related organizations, objects, abilities and locations.
+
+${sections.join('\n\n')}`;
     registerInjection(content);
     return content;
   }
@@ -1759,36 +1792,40 @@ window.MEMORY_ENGINE = (function() {
       ) === index);
       const selected = exponentialMemorySample(candidates, limit, Math.random, st.injectionDiceSides);
       selected.forEach(record => seenRecords.add(`${record.ownerId}\u0000${record.time}\u0000${record.memory}`));
-      if (selected.length) sections.push(`【人物：${character.names?.[0] || character.id}】\n` +
-        selected.map(record => `- [${record.time || '时间未明'}] ${record.memory}`).join('\n'));
+      if (selected.length) sections.push(`[Character: ${character.names?.[0] || character.id}]
+` +
+        selected.map(record => `- [${record.time || 'Time unknown'}] ${record.memory}`).join('\n'));
     }
     for (const type of ENTITY_TYPES) {
       for (const entity of state.entity_memory[type] || []) {
         if (!unique([entity.name, ...(entity.aliases || [])]).some(appears)) continue;
-        const lines = [`【${ENTITY_LABELS[type]}：${entity.name}】`];
+        const lines = [`[${ENTITY_LABELS[type]}: ${entity.name}]`];
         if (entity.description) lines.push(entity.description);
         lines.push(...exponentialMemorySample(
           Array.isArray(entity.history) ? entity.history : [], limit, Math.random, st.injectionDiceSides
         )
-          .map(entry => `- [${entry.time || '时间未明'}] ${entry.event}`));
+          .map(entry => `- [${entry.time || 'Time unknown'}] ${entry.event}`));
         sections.push(lines.join('\n'));
       }
     }
     if (!sections.length) return '';
-    return `【记忆引擎提供的相关人物与实体信息】\n以下信息只用于辅助世界推演；不包含纪要或总述。\n\n${sections.join('\n\n')}`;
+    return `[Related characters and entities from the Memory Engine]
+The following is only to assist world evolution; it contains no notes or overviews.
+
+${sections.join('\n\n')}`;
   }
 
   async function ingestWorldEvolution(payload) {
     const worldSettings = window.WORLD_ENGINE_API?.getSettings?.(true) || {};
     if (worldSettings.memoryLinkEnabled !== true && payload?.force !== true) return { skipped: true, reason: 'disabled' };
     const st = settings();
-    if (st.engineEnabled === false) throw new Error('记忆引擎已关闭，无法执行世界联动');
-    if (backfillRunning) throw new Error('记忆引擎正在批量重填，暂不能执行世界联动');
+    if (st.engineEnabled === false) throw new Error('Memory Engine is off; cannot run the world link');
+    if (backfillRunning) throw new Error('Memory Engine is batch refilling; the world link cannot run right now');
     const layer = Number.isFinite(Number(payload?.layer)) ? Number(payload.layer) : currentLayer();
     // 普通记忆提取先开始时，等待它完整落库；不得并发读取同一基底后互相覆盖。
     const deadline = Date.now() + Math.max(10000, Number(st.apiTimeoutMs) || 120000);
     while (running && Date.now() < deadline) await delay(100);
-    if (running) throw new Error('等待当前记忆任务结束超时');
+    if (running) throw new Error('Timed out waiting for the current memory task to finish');
     if (payload?.replace === true) rollbackLinkedLayer(layer);
 
     const digest = clean(payload?.worldDigest);
@@ -1801,7 +1838,10 @@ window.MEMORY_ENGINE = (function() {
     try {
       const result = await runTasksThenDueBig({
         memory: {
-          conversation: `【世界引擎本轮返回】\n${worldInfo}\n\n以上是客观世界信息。只更新其中明确支持的人物认知与世界实体，不得猜测任何人物知晓未公开信息。`,
+          conversation: `[World Engine output for this round]
+${worldInfo}
+
+The above is objective world information. Update only the character perceptions and world entities it clearly supports; never assume any character knows unpublicized information.`,
           sourceKey,
           startLayer: layer,
           endLayer: layer,
@@ -1837,16 +1877,16 @@ window.MEMORY_ENGINE = (function() {
   async function backfill() {
     if (backfillRunning || running) return;
     const st = settings(), all = chat();
-    if (st.engineEnabled === false) throw new Error('记忆引擎已关闭');
+    if (st.engineEnabled === false) throw new Error('Memory Engine is off');
     const configuredEnd = Math.max(0, parseInt(st.backfillEndLayer) || 0);
     const end = Math.min(all.length - 1, configuredEnd || all.length - 1);
     const opening = ignoreFirstLayer(st);
     const aiLayers = all.map((message, index) => (!message?.is_user && index <= end && !(opening && index === 0) ? index : -1)).filter(i => i >= 0);
     const size = Math.max(1, parseInt(st.backfillBatchSize) || 5), batches = [];
     for (let i = 0; i < aiLayers.length; i += size) batches.push(aiLayers.slice(i, i + size));
-    if (!batches.length) { setBackfillStatus(0, 0, '没有可重填的 AI 楼层'); return; }
+    if (!batches.length) { setBackfillStatus(0, 0, 'No AI messages to refill'); return; }
     backfillRunning = true;
-    window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.createSnapshot?.('记忆重填前自动备份');
+    window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.createSnapshot?.('Automatic backup before memory refill');
     const original = data().loadState();
     data().saveCheckpoint(original);
     data().saveState({
@@ -1862,7 +1902,7 @@ window.MEMORY_ENGINE = (function() {
     try {
       for (let i = 0; i < batches.length && backfillRunning; i++) {
         const layers = batches[i], start = Math.max(0, layers[0] - 1), finish = layers.at(-1);
-        setBackfillStatus(i, batches.length, `正在重填 ${i + 1} / ${batches.length}`);
+        setBackfillStatus(i, batches.length, `Refilling ${i + 1} / ${batches.length}`);
         await extractConversation(formatMessages(all.slice(start, finish + 1), start), {
           startLayer: start,
           endLayer: finish,
@@ -1870,9 +1910,9 @@ window.MEMORY_ENGINE = (function() {
           layer: finish, retries: st.backfillRetries, saveCheckpoint: true, allowWhileBackfill: true
         });
       }
-      setBackfillStatus(batches.length, batches.length, backfillRunning ? '记忆重填完成' : '记忆重填已停止');
+      setBackfillStatus(batches.length, batches.length, backfillRunning ? 'Memory refill complete' : 'Memory refill stopped');
     } catch (error) {
-      setBackfillStatus(backfillStatus.current, batches.length, `重填失败：${error?.message || error}`);
+      setBackfillStatus(backfillStatus.current, batches.length, `Refill failed: ${error?.message || error}`);
       throw error;
     } finally { backfillRunning = false; backfillStatus.running = false; applyInjection(); }
   }
@@ -1880,16 +1920,16 @@ window.MEMORY_ENGINE = (function() {
   async function backfillSummaries() {
     if (backfillRunning || running) return;
     const st = settings(), all = chat();
-    if (st.engineEnabled === false) throw new Error('记忆引擎已关闭');
+    if (st.engineEnabled === false) throw new Error('Memory Engine is off');
     const configuredEnd = Math.max(0, parseInt(st.backfillEndLayer) || 0);
     const end = Math.min(all.length - 1, configuredEnd || all.length - 1);
     const opening = ignoreFirstLayer(st);
     const aiLayers = all.map((message, index) => (!message?.is_user && index <= end && !(opening && index === 0) ? index : -1)).filter(index => index >= 0);
     const size = Math.max(1, parseInt(st.summaryBackfillSmallEveryX) || 5), batches = [];
     for (let i = 0; i < aiLayers.length; i += size) batches.push(aiLayers.slice(i, i + size));
-    if (!batches.length) { setSummaryBackfillStatus(0, 0, '没有可重填的 AI 楼层'); return; }
+    if (!batches.length) { setSummaryBackfillStatus(0, 0, 'No AI messages to refill'); return; }
     backfillRunning = true;
-    window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.createSnapshot?.('纪要与总述重填前自动备份');
+    window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.createSnapshot?.('Automatic backup before notes and overview refill');
     const original = data().loadState();
     data().saveCheckpoint(original);
     data().saveState({
@@ -1907,14 +1947,14 @@ window.MEMORY_ENGINE = (function() {
           sourceRefs: timelineApi()?.captureRange?.(start, finish) || []
         };
         const state = data().loadState();
-        setSummaryBackfillStatus(i, batches.length, `正在重填纪要与总述 ${i + 1} / ${batches.length}`);
+        setSummaryBackfillStatus(i, batches.length, `Refilling notes and overviews ${i + 1} / ${batches.length}`);
         await runTasksThenDueBig({ small: smallTask }, {
           baseState: state, retries: st.backfillRetries, saveCheckpoint: true, allowWhileBackfill: true
         }, st.summaryBackfillBigEveryX);
       }
-      setSummaryBackfillStatus(batches.length, batches.length, backfillRunning ? '纪要与总述重填完成' : '纪要与总述重填已停止');
+      setSummaryBackfillStatus(batches.length, batches.length, backfillRunning ? 'Notes and overview refill complete' : 'Notes and overview refill stopped');
     } catch (error) {
-      setSummaryBackfillStatus(summaryBackfillStatus.current, batches.length, `纪要与总述重填失败：${error?.message || error}`);
+      setSummaryBackfillStatus(summaryBackfillStatus.current, batches.length, `Notes and overview refill failed: ${error?.message || error}`);
       throw error;
     } finally { backfillRunning = false; summaryBackfillStatus.running = false; applyInjection(); }
   }
@@ -1922,8 +1962,8 @@ window.MEMORY_ENGINE = (function() {
   function stopBackfill() {
     backfillRunning = false;
     abortController?.abort();
-    setBackfillStatus(backfillStatus.current, backfillStatus.total, '正在停止…');
-    setSummaryBackfillStatus(summaryBackfillStatus.current, summaryBackfillStatus.total, '正在停止…');
+    setBackfillStatus(backfillStatus.current, backfillStatus.total, 'Stopping…');
+    setSummaryBackfillStatus(summaryBackfillStatus.current, summaryBackfillStatus.total, 'Stopping…');
   }
 
   function onMessageReceived() {
@@ -1931,28 +1971,28 @@ window.MEMORY_ENGINE = (function() {
     if (key === lastEventKey) return;
     lastEventKey = key;
     clearTimeout(autoTimer);
-    autoTimer = setTimeout(() => autoExtract().catch(error => console.error('[记忆引擎] 自动提取失败', error)), 1500);
+    autoTimer = setTimeout(() => autoExtract().catch(error => console.error('[Memory Engine] Automatic extraction failed', error)), 1500);
   }
 
   function schedulePreparation(delayMs = 50) {
     clearTimeout(autoTimer);
     autoTimer = setTimeout(() => prepareHistoryForGeneration()
-      .catch(error => console.error('[记忆引擎] 历史摘要撤旧失败', error)), delayMs);
+      .catch(error => console.error('[Memory Engine] Failed to retire old history summaries', error)), delayMs);
   }
 
   function guardEvent(label, handler) {
     if (typeof window.WORLD_ENGINE_GUARD_EVENT === 'function') {
-      return window.WORLD_ENGINE_GUARD_EVENT('记忆引擎', label, handler);
+      return window.WORLD_ENGINE_GUARD_EVENT('Memory Engine', label, handler);
     }
     return function(...args) {
       try {
         const result = handler(...args);
         if (result && typeof result.then === 'function') {
-          return result.catch(error => console.error(`[记忆引擎] ${label}事件处理失败`, error));
+          return result.catch(error => console.error(`[Memory Engine] ${label} event handling failed`, error));
         }
         return result;
       }
-      catch (error) { console.error(`[记忆引擎] ${label}事件处理失败`, error); }
+      catch (error) { console.error(`[Memory Engine] ${label} event handling failed`, error); }
     };
   }
 
@@ -1962,32 +2002,32 @@ window.MEMORY_ENGINE = (function() {
     initializeSummaryBaseline();
     const ctx = context(), types = ctx?.event_types || {};
     if (ctx?.eventSource) {
-      ctx.eventSource.on(types.GENERATION_ENDED || types.MESSAGE_RECEIVED || 'message_received', guardEvent('生成完成', onMessageReceived));
-      ctx.eventSource.on(types.CHAT_LOADED || 'chat_loaded', guardEvent('聊天加载', () => {
+      ctx.eventSource.on(types.GENERATION_ENDED || types.MESSAGE_RECEIVED || 'message_received', guardEvent('generation finished', onMessageReceived));
+      ctx.eventSource.on(types.CHAT_LOADED || 'chat_loaded', guardEvent('chat loaded', () => {
         clearTimeout(autoTimer);
         abortController?.abort();
         lastEventKey = '';
         initializeSummaryBaseline();
         schedulePreparation(100);
       }));
-      ctx.eventSource.on(types.MESSAGE_SWIPED || 'message_swiped', guardEvent('滑动重生成', () => {
+      ctx.eventSource.on(types.MESSAGE_SWIPED || 'message_swiped', guardEvent('swipe regenerate', () => {
         clearTimeout(autoTimer);
         abortController?.abort();
         if (!rollbackLinkedLayer(currentLayer())) applyInjection({ isReroll: true });
         schedulePreparation(50);
       }));
-      ctx.eventSource.on(types.MESSAGE_DELETED || 'message_deleted', guardEvent('删除消息', () => {
+      ctx.eventSource.on(types.MESSAGE_DELETED || 'message_deleted', guardEvent('message deleted', () => {
         clearTimeout(autoTimer);
         abortController?.abort();
         lastEventKey = '';
         schedulePreparation(50);
       }));
-      ctx.eventSource.on(types.GENERATION_STARTED || 'generation_started', guardEvent('生成开始', (type, _opts, dryRun) => {
+      ctx.eventSource.on(types.GENERATION_STARTED || 'generation_started', guardEvent('generation started', (type, _opts, dryRun) => {
         if (!dryRun) applyInjection({ isReroll: type === 'swipe' || type === 'regenerate' });
       }));
     }
     try { applyInjection(); }
-    catch (error) { console.error('[记忆引擎] 首次注入失败', error); }
+    catch (error) { console.error('[Memory Engine] First injection failed', error); }
   }
 
   return {

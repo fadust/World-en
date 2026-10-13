@@ -51,7 +51,7 @@ window.WORLD_ENGINE_UI = (function() {
   function registerEngineFace(definition) {
     const face = definition && typeof definition === 'object' ? definition : {};
     const id = String(face.id || '').trim();
-    if (!id) throw new Error('引擎界面必须提供 id');
+    if (!id) throw new Error('An engine view must provide an id');
     const existed = _engineFaceRegistry.has(id);
     _engineFaceRegistry.set(id, { id, label: id, ...face });
     if (!existed) _engineFaceOrder.push(id);
@@ -63,7 +63,7 @@ window.WORLD_ENGINE_UI = (function() {
     try {
       return typeof face?.[hook] === 'function' ? face[hook](...args) : fallback;
     } catch (error) {
-      console.error(`[${face?.label || face?.id || '引擎'}] UI ${hook} 失败（已隔离）`, error);
+      console.error(`[${face?.label || face?.id || 'Engine'}] UI ${hook} failed (isolated)`, error);
       return fallback;
     }
   }
@@ -71,8 +71,8 @@ window.WORLD_ENGINE_UI = (function() {
   const ENGINE_ACTION_FAILED = Symbol('engine-action-failed');
   function callEngineFaceAction(face, hook, ...args) {
     const report = error => {
-      console.error(`[${face?.label || face?.id || '引擎'}] UI ${hook} 失败（已隔离）`, error);
-      showToast(`${face?.label || '引擎'}操作失败：${error?.message || error}`, true);
+      console.error(`[${face?.label || face?.id || 'Engine'}] UI ${hook} failed (isolated)`, error);
+      showToast(`${face?.label || 'Engine'} action failed: ${error?.message || error}`, true);
       return ENGINE_ACTION_FAILED;
     };
     try {
@@ -87,7 +87,7 @@ window.WORLD_ENGINE_UI = (function() {
   function ensureBuiltinEngineFaces() {
     if (_engineFaceRegistry.has('world')) return;
     registerEngineFace({
-      id: 'world', label: '世界引擎',
+      id: 'world', label: 'World Engine',
       getTheme: () => getStoredTheme(),
       getVersion: () => window.WORLD_ENGINE_VERSION,
       getSettings: () => window.WORLD_ENGINE_API?.getSettings(true) || {},
@@ -105,7 +105,7 @@ window.WORLD_ENGINE_UI = (function() {
       abort: () => evolution.abort()
     });
     registerEngineFace({
-      id: 'memory', label: '记忆引擎', ballClass: 'we-ball-memory-face', panelClass: 'we-memory-face',
+      id: 'memory', label: 'Memory Engine', ballClass: 'we-ball-memory-face', panelClass: 'we-memory-face',
       getTheme: () => getStoredMemoryTheme(),
       getVersion: () => window.MEMORY_ENGINE_SETTINGS?.VERSION,
       getSettings: () => window.MEMORY_ENGINE_SETTINGS?.getSettings(true) || {},
@@ -122,7 +122,7 @@ window.WORLD_ENGINE_UI = (function() {
       onSettingsTab: key => { _memorySettingsTab = key; },
       refreshDebug: () => refreshMemoryDebugRender(),
       showForward: true,
-      forwardTitle: '手动提取记忆',
+      forwardTitle: 'Extract memories manually',
       forward: () => runMemoryExtract(),
       redo: () => runMemoryReextract(),
       abort: () => window.MEMORY_ENGINE?.abort?.()
@@ -145,12 +145,12 @@ window.WORLD_ENGINE_UI = (function() {
   const MEMORY_THEME_KEY = 'memory-engine-theme';
   const MEMORY_THEME_NIGHT_MIGRATION_KEY = 'memory-engine-theme-night-default-v1';
   const WE_THEMES = [
-    { id: 'default', name: '墨玉 · 默认' },
-    { id: 'night', name: '夜阑 · 近黑' },
-    { id: 'deepsea', name: '深海 · 幽蓝' },
-    { id: 'plum', name: '夜合 · 暗紫' },
-    { id: 'paper', name: '云白 · 清爽' },
-    { id: 'sakura', name: '早樱 · 浅粉' }
+    { id: 'default', name: 'Jade · Default' },
+    { id: 'night', name: 'Late Night · Near Black' },
+    { id: 'deepsea', name: 'Deep Sea · Dark Blue' },
+    { id: 'plum', name: 'Night Bloom · Dark Purple' },
+    { id: 'paper', name: 'Cloud White · Fresh' },
+    { id: 'sakura', name: 'Early Cherry · Light Pink' }
   ];
   const MECHANICS_DEFAULT_FIELDS = {
     regional: {
@@ -288,17 +288,17 @@ window.WORLD_ENGINE_UI = (function() {
 
   // 各分页小标题的随附古文（去 cp- 前缀后查表；设置页等不在表中则无）
   const SECTION_MOTTOS = {
-    trends: '天下之势，以渐而成',
-    regional: '一方有警，四面皆惊',
-    ledger: '毫厘皆有来历',
-    events: '牵一发而全身动',
-    winds: '风起于青萍之末',
-    influence: '牵枝而动叶',
-    reputation: '人之有誉，如影随形',
-    factions: '大树之下，草不沾霜',
-    enemies: '仇者快，亲者痛',
-    economy: '食者民之本，货者民用之资',
-    blackbox: '墙有耳，伏寇在侧'
+    trends: 'Great tides form little by little',
+    regional: 'Alarm in one place startles all four sides',
+    ledger: 'Every trifle has its origin',
+    events: 'Pull one hair and the whole body moves',
+    winds: 'The wind rises from the tips of the duckweed',
+    influence: 'Tug the branch and the leaves stir',
+    reputation: 'A name follows you like a shadow',
+    factions: 'Under a great tree, the grass takes no frost',
+    enemies: 'Foes rejoice, friends grieve',
+    economy: 'Food is the people\'s root; goods are their means',
+    blackbox: 'Walls have ears; foes lie in wait'
   };
 
   function sectionHeader(title, sectionId) {
@@ -324,8 +324,8 @@ window.WORLD_ENGINE_UI = (function() {
       <div class="we-panel-header">
         <div class="we-header-info">
           <div class="we-header-top">
-            <button class="we-panel-title we-engine-face-toggle" type="button" title="切换到记忆引擎" aria-label="切换到记忆引擎">世界引擎</button>
-            <span class="we-panel-version" id="we-panel-version"></span><!-- [FIX] 版本号 -->
+            <button class="we-panel-title we-engine-face-toggle" type="button" title="Switch to the Memory Engine" aria-label="Switch to the Memory Engine">World Engine</button>
+            <span class="we-panel-version" id="we-panel-version"></span><!-- [FIX] version number -->
             <span class="we-header-round" id="we-header-round"></span>
           </div>
           <div class="we-header-mood" id="we-header-mood">
@@ -335,11 +335,11 @@ window.WORLD_ENGINE_UI = (function() {
         </div>
         <div class="we-panel-corner-actions">
           <button class="we-panel-close">✕</button>
-          <button class="we-panel-settings" id="we-btn-settings-open" title="设置"><i class="fa-solid fa-gear"></i></button>
+          <button class="we-panel-settings" id="we-btn-settings-open" title="Settings"><i class="fa-solid fa-gear"></i></button>
         </div>
       </div>
       <div class="we-panel-body" id="we-panel-body">
-        <div class="we-loading">加载中...</div>
+        <div class="we-loading">Loading...</div>
       </div>
     `;
     document.body.appendChild(panel);
@@ -396,24 +396,24 @@ window.WORLD_ENGINE_UI = (function() {
     const entityCount = ['organization', 'object', 'ability', 'location']
       .reduce((sum, type) => sum + (Array.isArray(state?.entity_memory?.[type]) ? state.entity_memory[type].length : 0), 0);
     const stats = [
-      ['人物', Array.isArray(state?.personal_memory) ? state.personal_memory.length : 0],
-      ['实体', entityCount],
-      ['纪要', smallSummaries.length],
-      ['总述', bigSummaries.length]
+      ['Characters', Array.isArray(state?.personal_memory) ? state.personal_memory.length : 0],
+      ['Entities', entityCount],
+      ['Notes', smallSummaries.length],
+      ['Overview', bigSummaries.length]
     ].map(([label, value]) => `<div class="we-core-stat"><div class="we-core-stat-k">${label}</div><div class="we-core-stat-v">${value}</div></div>`).join('');
-    const centerMain = bigRemaining > 0 ? bigRemaining : '待执行';
-    const centerUnit = bigRemaining > 0 ? '<span>轮</span>' : '';
+    const centerMain = bigRemaining > 0 ? bigRemaining : 'Pending';
+    const centerUnit = bigRemaining > 0 ? '<span>rounds</span>' : '';
 
     return `<div class="we-section we-core-section we-memory-core-section">
-      <div class="we-core" title="${bigRemaining > 0 ? `距离下一次总述还有 ${bigRemaining} 轮` : '总述待执行'}">
+      <div class="we-core" title="${bigRemaining > 0 ? `${bigRemaining} rounds until the next overview` : 'Overview pending'}">
         <div class="we-core-ring we-memory-core-ring">
           <svg viewBox="0 0 160 160" width="160" height="160" aria-hidden="true">
             <circle cx="80" cy="80" r="64" fill="none" stroke="color-mix(in srgb, var(--we-accent) 18%, transparent)" stroke-width="6"/>
             ${memoryProgressCircle(64, bigProgress, 'var(--we-accent)', 6, 'we-memory-big-progress')}
           </svg>
           <div class="we-core-center">
-            <div class="we-core-title">记忆脉络</div>
-            <div class="we-core-sub">下一次总述</div>
+            <div class="we-core-title">Memory thread</div>
+            <div class="we-core-sub">Next overview</div>
             <div class="we-core-pct we-memory-core-value">${centerMain}${centerUnit}</div>
           </div>
         </div>
@@ -426,10 +426,10 @@ window.WORLD_ENGINE_UI = (function() {
     const state = window.MEMORY_ENGINE_DATA?.loadState?.() || {};
     const settings = window.MEMORY_ENGINE_SETTINGS?.getSettings?.(true) || {};
     const rows = [
-      { view: 'people', label: '人物', sub: '人物记忆 · 别名 · 时间', poem: '知人者智' },
-      { view: 'entities', label: '实体', sub: '组织 · 物件 · 能力 · 地点', poem: '名者，实之宾也' },
-      { view: 'minutes', label: '纪要', sub: '阶段纪要 · 楼层范围', poem: '纪事者必提其要' },
-      { view: 'overview', label: '总述', sub: '阶段总述 · 全局脉络', poem: '壹引其纲，万目皆张' }
+      { view: 'people', label: 'Characters', sub: 'Character memories · aliases · time', poem: 'Knowing others is wisdom' },
+      { view: 'entities', label: 'Entities', sub: 'Organizations · objects · abilities · locations', poem: 'A name is the guest of reality' },
+      { view: 'minutes', label: 'Notes', sub: 'Stage notes · message ranges', poem: 'A chronicler must grasp the essentials' },
+      { view: 'overview', label: 'Overview', sub: 'Stage overviews · the big picture', poem: 'Lift the headrope and every mesh opens' }
     ];
     const nav = rows.map((row, index) => {
       const selected = _memorySelectedNavView === row.view ? ' we-nav-row--selected' : '';
@@ -449,20 +449,20 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   const MEMORY_VIEW_META = {
-    people: { title: '人物', poem: '知人者智' },
-    entities: { title: '实体', poem: '名者，实之宾也' },
-    minutes: { title: '纪要', poem: '纪事者必提其要' },
-    overview: { title: '总述', poem: '壹引其纲，万目皆张' }
+    people: { title: 'Characters', poem: 'Knowing others is wisdom' },
+    entities: { title: 'Entities', poem: 'A name is the guest of reality' },
+    minutes: { title: 'Notes', poem: 'A chronicler must grasp the essentials' },
+    overview: { title: 'Overview', poem: 'Lift the headrope and every mesh opens' }
   };
-  const MEMORY_ENTITY_LABELS = { organization: '组织', object: '物品', ability: '能力', location: '地点' };
+  const MEMORY_ENTITY_LABELS = { organization: 'Organization', object: 'Object', ability: 'Ability', location: 'Location' };
 
   function renderMemoryEntryRow(time, content, kind, knownBy) {
-    const placeholder = kind === 'history' ? '事件内容' : '人物记忆';
+    const placeholder = kind === 'history' ? 'Event content' : 'Character memories';
     return `<div class="we-memory-entry-edit" data-memory-entry-row>
-      <input class="we-memory-entry-time" type="text" value="${h(time || '')}" placeholder="时间（可留空）">
+      <input class="we-memory-entry-time" type="text" value="${h(time || '')}" placeholder="Time (optional)">
       <textarea class="we-memory-entry-content" rows="2" placeholder="${placeholder}">${h(content || '')}</textarea>
-      ${kind === 'memory' ? `<input class="we-memory-entry-known-by" type="text" value="${h((knownBy || []).join(' / '))}" placeholder="知情人（用 / 分隔；持有者本人不用填写）">` : ''}
-      <button class="we-icon-btn we-memory-remove-entry" type="button" title="移除此条"><i class="fa-solid fa-xmark"></i></button>
+      ${kind === 'memory' ? `<input class="we-memory-entry-known-by" type="text" value="${h((knownBy || []).join(' / '))}" placeholder="Who knows (separate with /; the holder need not be listed)">` : ''}
+      <button class="we-icon-btn we-memory-remove-entry" type="button" title="Remove this entry"><i class="fa-solid fa-xmark"></i></button>
     </div>`;
   }
 
@@ -477,7 +477,7 @@ window.WORLD_ENGINE_UI = (function() {
   function memoryRecordToggle(key, defaultCollapsed = true) {
     ensureMemoryRecordDefault(key, defaultCollapsed);
     const collapsed = _memoryCollapsedRecords.has(key);
-    return `<button class="we-icon-btn we-memory-toggle-record" type="button" data-memory-collapse-key="${h(key)}" title="${collapsed ? '展开' : '收起'}" aria-expanded="${collapsed ? 'false' : 'true'}"><i class="fa-solid fa-chevron-${collapsed ? 'right' : 'down'}"></i></button>`;
+    return `<button class="we-icon-btn we-memory-toggle-record" type="button" data-memory-collapse-key="${h(key)}" title="${collapsed ? 'Expand' : 'Collapse'}" aria-expanded="${collapsed ? 'false' : 'true'}"><i class="fa-solid fa-chevron-${collapsed ? 'right' : 'down'}"></i></button>`;
   }
 
   function memoryRecordClass(key, extra, defaultCollapsed = true) {
@@ -507,11 +507,11 @@ window.WORLD_ENGINE_UI = (function() {
       (Array.isArray(memories) ? memories : []).map(memory => renderMemoryEntryRow(time, memory, 'memory', memoryKnownBy(state, person, time, memory)))
     ).join('');
     return `<div class="we-memory-editor" data-person-editor data-person-id="${h(person?.id || '')}" data-new="${isNew ? 'true' : 'false'}">
-      <div class="we-input-group"><label>姓名与别名（用 / 分隔）</label><input class="we-memory-person-names" type="text" value="${h((person?.names || []).join(' / '))}" placeholder="例如：沈鹤亭 / 鹤亭"></div>
-      <div class="we-memory-editor-label">人物记忆</div>
-      <div class="we-memory-entry-list">${entries || '<div class="we-memory-entry-empty">暂无记忆，可在下方增加</div>'}</div>
-      <button class="we-btn we-memory-add-entry" type="button" data-entry-kind="memory"><i class="fa-solid fa-plus"></i> 增加记忆</button>
-      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">取消</button><button class="we-btn we-btn-primary we-memory-save-person" type="button">保存</button></div>
+      <div class="we-input-group"><label>Name and aliases (separate with /)</label><input class="we-memory-person-names" type="text" value="${h((person?.names || []).join(' / '))}" placeholder="e.g. Elias Crane / Crane"></div>
+      <div class="we-memory-editor-label">Character memories</div>
+      <div class="we-memory-entry-list">${entries || '<div class="we-memory-entry-empty">No memories yet; add one below</div>'}</div>
+      <button class="we-btn we-memory-add-entry" type="button" data-entry-kind="memory"><i class="fa-solid fa-plus"></i> Add memory</button>
+      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">Cancel</button><button class="we-btn we-btn-primary we-memory-save-person" type="button">Save</button></div>
     </div>`;
   }
 
@@ -525,17 +525,17 @@ window.WORLD_ENGINE_UI = (function() {
       const entries = Object.entries(person.memory || {}).flatMap(([time, memories]) =>
         (Array.isArray(memories) ? memories : []).map(memory => {
           const knownBy = memoryKnownBy(state, person, time, memory);
-          return `<div class="we-memory-line"><span class="we-memory-line-time">${h(time || '时间未明')}</span><div class="we-memory-line-main"><div class="we-memory-line-content">${h(memory)}</div><div class="we-memory-line-known">知情人：${h(knownBy.length ? knownBy.join(' · ') : '仅本人')}</div></div></div>`;
+          return `<div class="we-memory-line"><span class="we-memory-line-time">${h(time || 'Time unknown')}</span><div class="we-memory-line-main"><div class="we-memory-line-content">${h(memory)}</div><div class="we-memory-line-known">Known by: ${h(knownBy.length ? knownBy.join(' · ') : 'Only the holder')}</div></div></div>`;
         })
       ).join('');
       return `<div class="${memoryRecordClass(collapseKey)}" data-person-id="${h(person.id)}">
-        <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title">${h(person.names?.[0] || '未命名人物')}</div><div class="we-memory-record-meta">${h((person.names || []).slice(1).join(' · ') || person.id)}</div></div>
-          <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey)}<button class="we-icon-btn we-memory-edit-person" type="button" title="编辑"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-person" type="button" title="删除"><i class="fa-solid fa-trash"></i></button></div>
+        <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title">${h(person.names?.[0] || 'Unnamed character')}</div><div class="we-memory-record-meta">${h((person.names || []).slice(1).join(' · ') || person.id)}</div></div>
+          <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey)}<button class="we-icon-btn we-memory-edit-person" type="button" title="Edit"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-person" type="button" title="Delete"><i class="fa-solid fa-trash"></i></button></div>
         </div>
-        ${memoryRecordBody(collapseKey, editing ? renderMemoryPersonEditor(person, false, state) : (entries || '<div class="we-empty">暂无人物记忆</div>'))}
+        ${memoryRecordBody(collapseKey, editing ? renderMemoryPersonEditor(person, false, state) : (entries || '<div class="we-empty">No character memories yet</div>'))}
       </div>`;
     }).join('');
-    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-person" type="button"><i class="fa-solid fa-plus"></i> 新增人物</button></div>${draft}${cards || '<div class="we-empty">暂无人物，点击“新增人物”手动建立。</div>'}`;
+    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-person" type="button"><i class="fa-solid fa-plus"></i> New character</button></div>${draft}${cards || '<div class="we-empty">No characters yet; click "New character" to add one by hand.</div>'}`;
   }
 
   function renderMemoryEntityEditor(entity, type, isNew) {
@@ -543,13 +543,13 @@ window.WORLD_ENGINE_UI = (function() {
       .map(entry => renderMemoryEntryRow(entry.time, entry.event, 'history')).join('');
     const options = Object.entries(MEMORY_ENTITY_LABELS).map(([value, label]) => `<option value="${value}" ${value === type ? 'selected' : ''}>${label}</option>`).join('');
     return `<div class="we-memory-editor" data-entity-editor data-entity-id="${h(entity?.id || '')}" data-original-type="${h(type || 'organization')}" data-new="${isNew ? 'true' : 'false'}">
-      <div class="we-memory-form-grid"><div class="we-input-group"><label>类型</label><select class="we-memory-entity-type">${options}</select></div><div class="we-input-group"><label>名称</label><input class="we-memory-entity-name" type="text" value="${h(entity?.name || '')}" placeholder="实体名称"></div></div>
-      <div class="we-input-group"><label>别名（用 / 分隔）</label><input class="we-memory-entity-aliases" type="text" value="${h((entity?.aliases || []).join(' / '))}" placeholder="例如：断潮剑 / 断潮 / 海纹旧剑"></div>
-      <div class="we-input-group"><label>当前描述</label><textarea class="we-memory-entity-description" rows="3" placeholder="实体当前状态与特征">${h(entity?.description || '')}</textarea></div>
-      <div class="we-memory-editor-label">历史事件</div>
-      <div class="we-memory-entry-list">${history || '<div class="we-memory-entry-empty">暂无历史，可在下方增加</div>'}</div>
-      <button class="we-btn we-memory-add-entry" type="button" data-entry-kind="history"><i class="fa-solid fa-plus"></i> 增加历史</button>
-      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">取消</button><button class="we-btn we-btn-primary we-memory-save-entity" type="button">保存</button></div>
+      <div class="we-memory-form-grid"><div class="we-input-group"><label>Type</label><select class="we-memory-entity-type">${options}</select></div><div class="we-input-group"><label>Name</label><input class="we-memory-entity-name" type="text" value="${h(entity?.name || '')}" placeholder="Entity name"></div></div>
+      <div class="we-input-group"><label>Aliases (separate with /)</label><input class="we-memory-entity-aliases" type="text" value="${h((entity?.aliases || []).join(' / '))}" placeholder="e.g. Tidebreaker / the Old Sea Blade"></div>
+      <div class="we-input-group"><label>Current description</label><textarea class="we-memory-entity-description" rows="3" placeholder="The entity's current state and traits">${h(entity?.description || '')}</textarea></div>
+      <div class="we-memory-editor-label">History</div>
+      <div class="we-memory-entry-list">${history || '<div class="we-memory-entry-empty">No history yet; add one below</div>'}</div>
+      <button class="we-btn we-memory-add-entry" type="button" data-entry-kind="history"><i class="fa-solid fa-plus"></i> Add history</button>
+      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">Cancel</button><button class="we-btn we-btn-primary we-memory-save-entity" type="button">Save</button></div>
     </div>`;
   }
 
@@ -562,24 +562,24 @@ window.WORLD_ENGINE_UI = (function() {
         const key = `${type}:${entity.id}`;
         const collapseKey = `entity:${key}`;
         const history = (Array.isArray(entity.history) ? entity.history : []).map(entry =>
-          `<div class="we-memory-line"><span class="we-memory-line-time">${h(entry.time || '时间未明')}</span><div class="we-memory-line-main"><div class="we-memory-line-content">${h(entry.event)}</div></div></div>`
+          `<div class="we-memory-line"><span class="we-memory-line-time">${h(entry.time || 'Time unknown')}</span><div class="we-memory-line-main"><div class="we-memory-line-content">${h(entry.event)}</div></div></div>`
         ).join('');
         return `<div class="${memoryRecordClass(collapseKey)}" data-entity-id="${h(entity.id)}" data-entity-type="${type}">
-          <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title"><span class="we-memory-type-badge">${label}</span>${h(entity.name || '未命名实体')}</div><div class="we-memory-record-meta">${h((entity.aliases || []).join(' · ') || entity.id)}</div></div>
-            <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey)}<button class="we-icon-btn we-memory-edit-entity" type="button" title="编辑"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-entity" type="button" title="删除"><i class="fa-solid fa-trash"></i></button></div>
+          <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title"><span class="we-memory-type-badge">${label}</span>${h(entity.name || 'Unnamed entity')}</div><div class="we-memory-record-meta">${h((entity.aliases || []).join(' · ') || entity.id)}</div></div>
+            <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey)}<button class="we-icon-btn we-memory-edit-entity" type="button" title="Edit"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-entity" type="button" title="Delete"><i class="fa-solid fa-trash"></i></button></div>
           </div>
-          ${memoryRecordBody(collapseKey, _memoryEditingEntity === key ? renderMemoryEntityEditor(entity, type, false) : `<div class="we-memory-description">${h(entity.description || '暂无描述')}</div>${history}`)}
+          ${memoryRecordBody(collapseKey, _memoryEditingEntity === key ? renderMemoryEntityEditor(entity, type, false) : `<div class="we-memory-description">${h(entity.description || 'No description')}</div>${history}`)}
         </div>`;
       }).join('');
       const categoryKey = `entity-category:${type}`;
       return `<div class="${memoryRecordClass(categoryKey, 'we-memory-entity-group')}" data-entity-category="${type}">
-        <div class="we-memory-record-head" data-memory-collapse-key="${h(categoryKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title"><span class="we-memory-type-badge">${label}</span>${label}</div><div class="we-memory-record-meta">${entities.length} 项</div></div>
+        <div class="we-memory-record-head" data-memory-collapse-key="${h(categoryKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title"><span class="we-memory-type-badge">${label}</span>${label}</div><div class="we-memory-record-meta">${entities.length} items</div></div>
           <div class="we-memory-record-actions">${memoryRecordToggle(categoryKey)}</div>
         </div>
-        ${memoryRecordBody(categoryKey, cards || `<div class="we-empty">暂无${label}</div>`)}
+        ${memoryRecordBody(categoryKey, cards || `<div class="we-empty">No ${label} yet</div>`)}
       </div>`;
     }).join('');
-    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-entity" type="button"><i class="fa-solid fa-plus"></i> 新增实体</button></div>${draft}${groups}`;
+    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-entity" type="button"><i class="fa-solid fa-plus"></i> New entity</button></div>${draft}${groups}`;
   }
 
   function renderMemoryMinutes(state) {
@@ -587,9 +587,9 @@ window.WORLD_ENGINE_UI = (function() {
     const items = Array.isArray(eventMemory.small_summaries) ? eventMemory.small_summaries : [];
     const cursor = Math.max(0, Math.min(items.length, parseInt(eventMemory.big_summary_cursor) || 0));
     const editor = (item, isNew) => `<div class="we-memory-editor">
-      <div class="we-memory-form-grid"><div class="we-input-group"><label>起始楼层</label><input class="we-memory-small-start" type="number" min="0" value="${h(String(item.startLayer ?? 0))}"></div><div class="we-input-group"><label>结束楼层</label><input class="we-memory-small-end" type="number" min="0" value="${h(String(item.endLayer ?? 0))}"></div></div>
-      <div class="we-input-group"><label>纪要内容</label><textarea class="we-memory-small-content" rows="6">${h(item.content || '')}</textarea><div class="we-hint">API 以 50–200 字为目标，超出时仍完整保留；手动新增的纪要只会追加为未整理，不会改动已有总述。</div></div>
-      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">取消</button><button class="we-btn we-btn-primary we-memory-save-small" data-new="${isNew ? 'true' : 'false'}" type="button">保存</button></div>
+      <div class="we-memory-form-grid"><div class="we-input-group"><label>Start message</label><input class="we-memory-small-start" type="number" min="0" value="${h(String(item.startLayer ?? 0))}"></div><div class="we-input-group"><label>End message</label><input class="we-memory-small-end" type="number" min="0" value="${h(String(item.endLayer ?? 0))}"></div></div>
+      <div class="we-input-group"><label>Note content</label><textarea class="we-memory-small-content" rows="6">${h(item.content || '')}</textarea><div class="we-hint">The API aims for 40–150 words, and longer notes are kept in full; notes added by hand are only appended as unfiled and never change existing overviews.</div></div>
+      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">Cancel</button><button class="we-btn we-btn-primary we-memory-save-small" data-new="${isNew ? 'true' : 'false'}" type="button">Save</button></div>
     </div>`;
     const draft = _memoryEditingSmall === '__new__'
       ? `<div class="we-memory-record we-memory-record-new" data-small-id="__new__">${editor({ startLayer: eventMemory.small_summary_layer ?? 0, endLayer: eventMemory.small_summary_layer ?? 0, content: '' }, true)}</div>` : '';
@@ -597,22 +597,22 @@ window.WORLD_ENGINE_UI = (function() {
       const collapseKey = `small:${item.id}`;
       const defaultCollapsed = index !== items.length - 1;
       return `<div class="${memoryRecordClass(collapseKey, '', defaultCollapsed)}" data-small-id="${h(item.id)}">
-      <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title">楼层 ${h(String(item.startLayer))}–${h(String(item.endLayer))}</div><div class="we-memory-record-meta">${index < cursor ? '已归入总述' : '等待归档'} · ${h(item.id)}</div></div>
-        <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey, defaultCollapsed)}<button class="we-icon-btn we-memory-edit-small" type="button" title="修改"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-small" type="button" title="删除"><i class="fa-solid fa-trash"></i></button></div>
+      <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title">Messages ${h(String(item.startLayer))}–${h(String(item.endLayer))}</div><div class="we-memory-record-meta">${index < cursor ? 'Filed into overview' : 'Waiting to be filed'} · ${h(item.id)}</div></div>
+        <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey, defaultCollapsed)}<button class="we-icon-btn we-memory-edit-small" type="button" title="Edit"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-small" type="button" title="Delete"><i class="fa-solid fa-trash"></i></button></div>
       </div>
-      ${memoryRecordBody(collapseKey, _memoryEditingSmall === item.id ? editor(item, false) : `<div class="we-memory-summary-text">${h(item.content || '（内容为空）')}</div>`, defaultCollapsed)}
+      ${memoryRecordBody(collapseKey, _memoryEditingSmall === item.id ? editor(item, false) : `<div class="we-memory-summary-text">${h(item.content || '(empty)')}</div>`, defaultCollapsed)}
     </div>`;
     }).join('');
-    const countHint = items.length > 1 ? `<div class="we-hint">共 ${items.length} 条纪要，默认展开最新一条。</div>` : '';
-    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-small" type="button"><i class="fa-solid fa-plus"></i> 新增纪要</button></div>${countHint}${draft}${cards || '<div class="we-empty">尚未生成纪要，可手动新增。</div>'}`;
+    const countHint = items.length > 1 ? `<div class="we-hint">${items.length} notes in total; the latest is expanded by default.</div>` : '';
+    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-small" type="button"><i class="fa-solid fa-plus"></i> New note</button></div>${countHint}${draft}${cards || '<div class="we-empty">No notes generated yet; you can add one by hand.</div>'}`;
   }
 
   function renderMemoryOverview(state) {
     const items = Array.isArray(state.event_memory?.big_summaries) ? state.event_memory.big_summaries : [];
     const editor = (big, isNew) => `<div class="we-memory-editor">
-      <div class="we-memory-form-grid"><div class="we-input-group"><label>起始楼层</label><input class="we-memory-big-start" type="number" min="0" value="${h(String(big.startLayer ?? 0))}"></div><div class="we-input-group"><label>结束楼层</label><input class="we-memory-big-end" type="number" min="0" value="${h(String(big.endLayer ?? 0))}"></div></div>
-      <div class="we-input-group"><label>总述内容</label><textarea class="we-memory-big-content" rows="10">${h(big.content || '')}</textarea><div class="we-hint">API 目标下限为 500 字，上限为本批纪要正文的一半；上限不足 500 时上下限均为 500 字。超出时仍完整保留；删除总述不会回退纪要整理游标。</div></div>
-      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">取消</button><button class="we-btn we-btn-primary we-memory-save-big" data-new="${isNew ? 'true' : 'false'}" type="button">保存</button></div>
+      <div class="we-memory-form-grid"><div class="we-input-group"><label>Start message</label><input class="we-memory-big-start" type="number" min="0" value="${h(String(big.startLayer ?? 0))}"></div><div class="we-input-group"><label>End message</label><input class="we-memory-big-end" type="number" min="0" value="${h(String(big.endLayer ?? 0))}"></div></div>
+      <div class="we-input-group"><label>Overview content</label><textarea class="we-memory-big-content" rows="10">${h(big.content || '')}</textarea><div class="we-hint">The API aims for at least 350 words and at most half the word count of this batch of notes; if that half is under 350, both limits are 350 words. Longer overviews are kept in full; deleting an overview does not move the notes cursor back.</div></div>
+      <div class="we-memory-editor-actions"><button class="we-btn we-memory-cancel-edit" type="button">Cancel</button><button class="we-btn we-btn-primary we-memory-save-big" data-new="${isNew ? 'true' : 'false'}" type="button">Save</button></div>
     </div>`;
     const draft = _memoryEditingBig === '__new__'
       ? `<div class="we-memory-record we-memory-record-new" data-big-id="__new__">${editor({ startLayer: 0, endLayer: 0, content: '' }, true)}</div>` : '';
@@ -620,14 +620,14 @@ window.WORLD_ENGINE_UI = (function() {
       const collapseKey = `big:${big.id}`;
       const defaultCollapsed = index !== items.length - 1;
       return `<div class="${memoryRecordClass(collapseKey, 'we-memory-overview-record', defaultCollapsed)}" data-big-id="${h(big.id)}">
-      <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title">总述 ${index + 1}</div><div class="we-memory-record-meta">楼层 ${h(String(big.startLayer))}–${h(String(big.endLayer))} · ${h(big.id)}</div></div>
-        <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey, defaultCollapsed)}<button class="we-icon-btn we-memory-edit-big" type="button" title="修改"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-big" type="button" title="删除"><i class="fa-solid fa-trash"></i></button></div>
+      <div class="we-memory-record-head" data-memory-collapse-key="${h(collapseKey)}" role="button" tabindex="0"><div><div class="we-memory-record-title">Overview ${index + 1}</div><div class="we-memory-record-meta">Messages ${h(String(big.startLayer))}–${h(String(big.endLayer))} · ${h(big.id)}</div></div>
+        <div class="we-memory-record-actions">${memoryRecordToggle(collapseKey, defaultCollapsed)}<button class="we-icon-btn we-memory-edit-big" type="button" title="Edit"><i class="fa-solid fa-pen"></i></button><button class="we-icon-btn we-memory-delete-big" type="button" title="Delete"><i class="fa-solid fa-trash"></i></button></div>
       </div>
-      ${memoryRecordBody(collapseKey, _memoryEditingBig === big.id ? editor(big, false) : `<div class="we-memory-summary-text">${h(big.content || '（内容为空）')}</div>`, defaultCollapsed)}
+      ${memoryRecordBody(collapseKey, _memoryEditingBig === big.id ? editor(big, false) : `<div class="we-memory-summary-text">${h(big.content || '(empty)')}</div>`, defaultCollapsed)}
     </div>`;
     }).join('');
-    const countHint = items.length > 1 ? `<div class="we-hint">共 ${items.length} 条总述，默认展开最新一条。</div>` : '';
-    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-big" type="button"><i class="fa-solid fa-plus"></i> 新增总述</button></div>${countHint}${draft}${cards || '<div class="we-empty">尚未生成总述，可手动新增。</div>'}`;
+    const countHint = items.length > 1 ? `<div class="we-hint">${items.length} overviews in total; the latest is expanded by default.</div>` : '';
+    return `<div class="we-memory-page-actions"><button class="we-btn we-btn-primary" id="we-memory-add-big" type="button"><i class="fa-solid fa-plus"></i> New overview</button></div>${countHint}${draft}${cards || '<div class="we-empty">No overviews generated yet; you can add one by hand.</div>'}`;
   }
 
   function renderMemorySubView(view) {
@@ -643,7 +643,7 @@ window.WORLD_ENGINE_UI = (function() {
       : view === 'entities' ? renderMemoryEntities(state)
       : view === 'minutes' ? renderMemoryMinutes(state)
       : renderMemoryOverview(state);
-    return `<div class="we-sub-topbar"><button class="we-icon-btn" id="we-memory-btn-back" type="button" title="返回"><i class="fa-solid fa-arrow-left"></i></button><span class="we-sub-title">${meta.title}</span><span class="we-memory-sub-poem">${meta.poem}</span></div><div class="we-memory-subview">${content}</div>`;
+    return `<div class="we-sub-topbar"><button class="we-icon-btn" id="we-memory-btn-back" type="button" title="Back"><i class="fa-solid fa-arrow-left"></i></button><span class="we-sub-title">${meta.title}</span><span class="we-memory-sub-poem">${meta.poem}</span></div><div class="we-memory-subview">${content}</div>`;
   }
 
   function clearMemoryEditing() {
@@ -664,7 +664,7 @@ window.WORLD_ENGINE_UI = (function() {
 
   function saveEditedMemoryState(state, message, afterRepair) {
     if (window.MEMORY_ENGINE?.isRunning?.()) {
-      showToast('记忆任务运行中，暂不能修改数据', true);
+      showToast('A memory task is running; data cannot be changed right now', true);
       return false;
     }
     const previousState = window.MEMORY_ENGINE_DATA?.loadState?.();
@@ -674,7 +674,7 @@ window.WORLD_ENGINE_UI = (function() {
     window.MEMORY_ENGINE_DATA?.saveState?.(state);
     window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.afterEvolution?.();
     window.MEMORY_ENGINE?.applyInjection?.();
-    showToast(message || '记忆数据已保存');
+    showToast(message || 'Memory data saved');
     return true;
   }
 
@@ -715,7 +715,7 @@ window.WORLD_ENGINE_UI = (function() {
       card.classList.toggle('is-collapsed', collapse);
       if (body) body.hidden = collapse;
       if (button) {
-        button.title = collapse ? '展开' : '收起';
+        button.title = collapse ? 'Expand' : 'Collapse';
         button.setAttribute('aria-expanded', collapse ? 'false' : 'true');
         const icon = button.querySelector('i');
         if (icon) icon.className = `fa-solid fa-chevron-${collapse ? 'right' : 'down'}`;
@@ -754,9 +754,9 @@ window.WORLD_ENGINE_UI = (function() {
         const id = button.closest('[data-person-id]')?.dataset.personId;
         const state = window.MEMORY_ENGINE_DATA?.loadState?.();
         const person = state?.personal_memory?.find(item => item.id === id);
-        if (!person || !confirm(`删除人物“${person.names?.[0] || id}”及其全部记忆？`)) return;
+        if (!person || !confirm(`Delete character "${person.names?.[0] || id}" and all their memories?`)) return;
         state.personal_memory = state.personal_memory.filter(item => item.id !== id);
-        if (saveEditedMemoryState(state, '人物已删除')) { clearMemoryEditing(); refresh(); }
+        if (saveEditedMemoryState(state, 'Character deleted')) { clearMemoryEditing(); refresh(); }
       };
     });
     document.querySelectorAll('.we-memory-save-person').forEach(button => {
@@ -766,15 +766,15 @@ window.WORLD_ENGINE_UI = (function() {
         if (!editor || !state) return;
         const names = Array.from(new Set(String(editor.querySelector('.we-memory-person-names')?.value || '')
           .split(/[\/／,，\n]/).map(value => value.trim()).filter(Boolean)));
-        if (!names.length) { showToast('人物至少需要一个姓名', true); return; }
+        if (!names.length) { showToast('A character needs at least one name', true); return; }
         const id = editor.dataset.new === 'true'
           ? nextMemoryUiId(state.personal_memory, 'char') : editor.dataset.personId;
         const duplicated = state.personal_memory.some(item => item.id !== id && (item.names || []).some(name =>
           names.some(candidate => candidate.toLocaleLowerCase() === String(name).trim().toLocaleLowerCase())
         ));
-        if (duplicated) { showToast('姓名或别名已被其他人物使用', true); return; }
+        if (duplicated) { showToast('That name or alias is already used by another character', true); return; }
         const entries = readMemoryEntryRows(editor);
-        if (entries.some(entry => Array.from(entry.content).length > 50)) { showToast('单条人物记忆不能超过 50 字', true); return; }
+        if (entries.some(entry => Array.from(entry.content).length > 300)) { showToast('A single character memory cannot exceed 300 characters', true); return; }
         const memory = {};
         for (const entry of entries) {
           if (!Array.isArray(memory[entry.time])) memory[entry.time] = [];
@@ -783,7 +783,7 @@ window.WORLD_ENGINE_UI = (function() {
         const person = { id, names, memory };
         const index = state.personal_memory.findIndex(item => item.id === id);
         if (index >= 0) state.personal_memory[index] = person; else state.personal_memory.push(person);
-        if (saveEditedMemoryState(state, '人物记忆已保存', repaired =>
+        if (saveEditedMemoryState(state, 'Character memories saved', repaired =>
           window.MEMORY_ENGINE?.replaceKnownByRecords?.(repaired, id, entries.map(entry => ({
             time: entry.time, memory: entry.content, known_by: entry.known_by
           })))
@@ -811,9 +811,9 @@ window.WORLD_ENGINE_UI = (function() {
         const card = button.closest('[data-entity-id]'), type = card?.dataset.entityType, id = card?.dataset.entityId;
         const state = window.MEMORY_ENGINE_DATA?.loadState?.();
         const entity = state?.entity_memory?.[type]?.find(item => item.id === id);
-        if (!entity || !confirm(`删除${MEMORY_ENTITY_LABELS[type] || '实体'}“${entity.name || id}”及其全部历史？`)) return;
+        if (!entity || !confirm(`Delete ${MEMORY_ENTITY_LABELS[type] || 'Entities'} "${entity.name || id}" and its whole history?`)) return;
         state.entity_memory[type] = state.entity_memory[type].filter(item => item.id !== id);
-        if (saveEditedMemoryState(state, '实体已删除')) { clearMemoryEditing(); refresh(); }
+        if (saveEditedMemoryState(state, 'Entity deleted')) { clearMemoryEditing(); refresh(); }
       };
     });
     document.querySelectorAll('.we-memory-save-entity').forEach(button => {
@@ -827,12 +827,12 @@ window.WORLD_ENGINE_UI = (function() {
         const aliases = Array.from(new Set(String(editor.querySelector('.we-memory-entity-aliases')?.value || '')
           .split(/[\/／,，\n]/).map(value => value.trim()).filter(Boolean)))
           .filter(alias => alias.toLocaleLowerCase() !== name.toLocaleLowerCase());
-        if (!MEMORY_ENTITY_LABELS[type] || !name) { showToast('请选择类型并填写实体名称', true); return; }
+        if (!MEMORY_ENTITY_LABELS[type] || !name) { showToast('Choose a type and enter an entity name', true); return; }
         const oldId = editor.dataset.entityId;
         const incomingNames = [name, ...aliases].map(value => value.toLocaleLowerCase());
         const duplicate = (state.entity_memory?.[type] || []).some(item => item.id !== oldId
           && [item.name, ...(item.aliases || [])].some(existing => incomingNames.includes(String(existing || '').trim().toLocaleLowerCase())));
-        if (duplicate) { showToast('同类型下的名称或别名已被其他实体使用', true); return; }
+        if (duplicate) { showToast('That name or alias is already used by another entity of the same type', true); return; }
         const prefix = { organization: 'org', object: 'obj', ability: 'ability', location: 'location' }[type];
         let id = oldId;
         if (editor.dataset.new === 'true' || oldType !== type) id = nextMemoryUiId(state.entity_memory?.[type], prefix);
@@ -843,7 +843,7 @@ window.WORLD_ENGINE_UI = (function() {
         };
         if (editor.dataset.new !== 'true') state.entity_memory[oldType] = state.entity_memory[oldType].filter(item => item.id !== oldId);
         state.entity_memory[type].push(entity);
-        if (saveEditedMemoryState(state, '实体记忆已保存')) { clearMemoryEditing(); refresh(); }
+        if (saveEditedMemoryState(state, 'Entity memory saved')) { clearMemoryEditing(); refresh(); }
       };
     });
 
@@ -876,10 +876,10 @@ window.WORLD_ENGINE_UI = (function() {
         const id = button.closest('[data-small-id]')?.dataset.smallId;
         const state = window.MEMORY_ENGINE_DATA?.loadState?.(), items = state?.event_memory?.small_summaries || [];
         const index = items.findIndex(item => item.id === id);
-        if (index < 0 || !confirm(`删除这条纪要？${index < (parseInt(state.event_memory.big_summary_cursor) || 0) ? '它已归入总述，现有总述内容不会自动更新。' : ''}`)) return;
+        if (index < 0 || !confirm(`Delete this note?${index < (parseInt(state.event_memory.big_summary_cursor) || 0) ? ' It has been filed into an overview; the existing overview text will not update automatically.' : ''}`)) return;
         items.splice(index, 1);
         if (index < (parseInt(state.event_memory.big_summary_cursor) || 0)) state.event_memory.big_summary_cursor--;
-        if (saveEditedMemoryState(state, '纪要已删除')) { clearMemoryEditing(); refresh(); }
+        if (saveEditedMemoryState(state, 'Note deleted')) { clearMemoryEditing(); refresh(); }
       };
     });
     document.querySelectorAll('.we-memory-save-small').forEach(button => {
@@ -888,17 +888,17 @@ window.WORLD_ENGINE_UI = (function() {
         const content = String(card?.querySelector('.we-memory-small-content')?.value || '').trim();
         const startLayer = Math.max(0, parseInt(card?.querySelector('.we-memory-small-start')?.value) || 0);
         const endLayer = Math.max(startLayer, parseInt(card?.querySelector('.we-memory-small-end')?.value) || startLayer);
-        if (!content) { showToast('纪要内容不能为空', true); return; }
+        if (!content) { showToast('Note content cannot be empty', true); return; }
         const state = window.MEMORY_ENGINE_DATA?.loadState?.(), items = state?.event_memory?.small_summaries || [];
         if (button.dataset.new === 'true') {
           items.push({ id: nextMemoryUiId(items, 'small'), startLayer, endLayer, content });
-          if (saveEditedMemoryState(state, '纪要已新增')) { clearMemoryEditing(); refresh(); }
+          if (saveEditedMemoryState(state, 'Note added')) { clearMemoryEditing(); refresh(); }
           return;
         }
         const index = items.findIndex(item => item.id === id);
         if (index < 0) return;
         items[index] = { ...items[index], startLayer, endLayer, content };
-        if (saveEditedMemoryState(state, '纪要已修改')) { clearMemoryEditing(); refresh(); }
+        if (saveEditedMemoryState(state, 'Note updated')) { clearMemoryEditing(); refresh(); }
       };
     });
     const addBig = document.getElementById('we-memory-add-big');
@@ -915,9 +915,9 @@ window.WORLD_ENGINE_UI = (function() {
         const id = button.closest('[data-big-id]')?.dataset.bigId;
         const state = window.MEMORY_ENGINE_DATA?.loadState?.(), items = state?.event_memory?.big_summaries || [];
         const index = items.findIndex(item => item.id === id);
-        if (index < 0 || !confirm('删除这条总述？对应纪要仍会保持“已整理”，系统不会自动重新生成它。')) return;
+        if (index < 0 || !confirm('Delete this overview? Its notes will stay "filed", and the system will not regenerate it automatically.')) return;
         items.splice(index, 1);
-        if (saveEditedMemoryState(state, '总述已删除')) { clearMemoryEditing(); refresh(); }
+        if (saveEditedMemoryState(state, 'Overview deleted')) { clearMemoryEditing(); refresh(); }
       };
     });
     document.querySelectorAll('.we-memory-save-big').forEach(button => {
@@ -926,18 +926,18 @@ window.WORLD_ENGINE_UI = (function() {
         const content = String(card?.querySelector('.we-memory-big-content')?.value || '').trim();
         const startLayer = Math.max(0, parseInt(card?.querySelector('.we-memory-big-start')?.value) || 0);
         const endLayer = Math.max(startLayer, parseInt(card?.querySelector('.we-memory-big-end')?.value) || startLayer);
-        if (!content) { showToast('总述内容不能为空', true); return; }
+        if (!content) { showToast('Overview content cannot be empty', true); return; }
         const state = window.MEMORY_ENGINE_DATA?.loadState?.();
         const items = state?.event_memory?.big_summaries || [];
         if (button.dataset.new === 'true') {
           items.push({ id: nextMemoryUiId(items, 'big'), startLayer, endLayer, content });
-          if (saveEditedMemoryState(state, '总述已新增')) { clearMemoryEditing(); refresh(); }
+          if (saveEditedMemoryState(state, 'Overview added')) { clearMemoryEditing(); refresh(); }
           return;
         }
         const item = state?.event_memory?.big_summaries?.find(big => big.id === id);
         if (!item) return;
         Object.assign(item, { startLayer, endLayer, content });
-        if (saveEditedMemoryState(state, '总述已修改')) { clearMemoryEditing(); refresh(); }
+        if (saveEditedMemoryState(state, 'Overview updated')) { clearMemoryEditing(); refresh(); }
       };
     });
   }
@@ -949,14 +949,14 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   const MEMORY_SETTINGS_TABS = [
-    { key: 'common', label: '常用' },
-    { key: 'link', label: '联动' },
-    { key: 'advanced', label: '高级' },
-    { key: 'mechanics', label: '本地机制' },
-    { key: 'archive', label: '存档' },
-    { key: 'worldbook', label: '世界书' },
-    { key: 'debug', label: '调试' },
-    { key: 'about', label: '关于' }
+    { key: 'common', label: 'Common' },
+    { key: 'link', label: 'Linking' },
+    { key: 'advanced', label: 'Advanced' },
+    { key: 'mechanics', label: 'Local mechanics' },
+    { key: 'archive', label: 'Saves' },
+    { key: 'worldbook', label: 'World Info' },
+    { key: 'debug', label: 'Debug' },
+    { key: 'about', label: 'About' }
   ];
 
   function renderMemoryDebug() {
@@ -974,18 +974,18 @@ window.WORLD_ENGINE_UI = (function() {
         + '<div class="we-prompt-seg-head" data-we-seg-toggle>'
         + '<span class="we-prompt-seg-arrow">▶</span>'
         + '<span class="we-prompt-seg-label">' + h(title) + '</span>'
-        + '<span class="we-prompt-seg-meta">' + h(meta || (hasContent ? shown.length + '字' : '暂无')) + '</span>'
+        + '<span class="we-prompt-seg-meta">' + h(meta || (hasContent ? shown.length + ' chars' : 'None yet')) + '</span>'
         + '</div>'
         + '<div class="we-prompt-seg-body" style="display:none;">'
         + (hasContent ? '<pre class="we-prompt-seg-pre">' + h(shown) + '</pre>' : '<div class="we-prompt-seg-empty">' + h(emptyText) + '</div>')
         + '</div></div>';
     };
     return '<div class="we-prompt-debug">'
-      + '<div class="we-prompt-debug-summary">只显示最近一次实际运行记录；内置记忆 Prompt 不在设置中展示，也不开放修改。</div>'
+      + '<div class="we-prompt-debug-summary">Only the most recent actual run is shown; the built-in memory prompts are not shown in settings and cannot be edited.</div>'
       + renderInjectInspector('memory')
-      + card('发送给记忆后台 API 的实际 Prompt', sentPrompt ? sentPrompt.length + '字' : '暂无', sentPrompt, '执行人物实体与纪要提取或生成总述后，显示本次真正发送的完整 Prompt。')
-      + card('记忆后台 API 原始返回', apiResult ? apiResult.length + '字' : '暂无', apiResult, '执行记忆提取后显示后台 API 的原始返回。')
-      + '<div style="display:flex;gap:6px;margin-top:8px;"><button class="we-btn" id="we-memory-export-prompt" style="flex:1;">导出完整 Prompt</button><button class="we-btn" id="we-memory-export-raw-result" style="flex:1;">导出 API 返回</button></div>'
+      + card('Actual prompt sent to the memory background API', sentPrompt ? sentPrompt.length + ' chars' : 'None yet', sentPrompt, 'After running character/entity and note extraction or generating an overview, shows the full prompt that was actually sent.')
+      + card('Raw response from the memory background API', apiResult ? apiResult.length + ' chars' : 'None yet', apiResult, 'After running memory extraction, shows the background API\'s raw response.')
+      + '<div style="display:flex;gap:6px;margin-top:8px;"><button class="we-btn" id="we-memory-export-prompt" style="flex:1;">Export full prompt</button><button class="we-btn" id="we-memory-export-raw-result" style="flex:1;">Export API response</button></div>'
       + '</div>';
   }
 
@@ -1000,45 +1000,45 @@ window.WORLD_ENGINE_UI = (function() {
     const bigSummaries = Array.isArray(checkpoint?.event_memory?.big_summaries) ? checkpoint.event_memory.big_summaries : [];
     const bigSummaryContent = bigSummaries.length
       ? '<div class="we-chatcache-list">' + bigSummaries.map(item =>
-          '<div class="we-prompt-seg-card"><div class="we-prompt-seg-head"><span class="we-prompt-seg-label">楼层 '
+          '<div class="we-prompt-seg-card"><div class="we-prompt-seg-head"><span class="we-prompt-seg-label">Messages '
           + h(item.startLayer) + '-' + h(item.endLayer) + '</span></div><div class="we-prompt-seg-body" style="display:block;"><pre class="we-prompt-seg-pre">'
           + h(item.content) + '</pre></div></div>'
         ).join('') + '</div>'
-      : '<div class="we-empty">暂无总述</div>';
+      : '<div class="we-empty">No overviews yet</div>';
     const smallSummaryContent = smallSummaryCount
       ? '<div class="we-chatcache-list">' + checkpoint.event_memory.small_summaries.map(item =>
-          '<div class="we-prompt-seg-card"><div class="we-prompt-seg-head"><span class="we-prompt-seg-label">楼层 '
+          '<div class="we-prompt-seg-card"><div class="we-prompt-seg-head"><span class="we-prompt-seg-label">Messages '
           + h(item.startLayer) + '-' + h(item.endLayer) + '</span></div><div class="we-prompt-seg-body" style="display:block;"><pre class="we-prompt-seg-pre">'
           + h(item.content) + '</pre></div></div>'
         ).join('') + '</div>'
-      : '<div class="we-empty">暂无纪要</div>';
+      : '<div class="we-empty">No notes yet</div>';
     const content = checkpoint
-      ? '<div class="we-hint">包含 ' + count + ' 个人物、' + entityCount + ' 个世界实体、' + smallSummaryCount + ' 条纪要和 ' + bigSummaries.length + ' 条总述</div>'
-        + '<div class="we-section" style="margin-top:10px;"><div class="we-section-title">' + sectionHeader('总述 · ' + bigSummaries.length + ' 条', 'memory-checkpoint-big-summary') + '</div>' + sectionBody('memory-checkpoint-big-summary', bigSummaryContent) + '</div>'
-        + '<div class="we-section" style="margin-top:10px;"><div class="we-section-title">' + sectionHeader('纪要 · ' + smallSummaryCount + ' 条', 'memory-checkpoint-small-summaries') + '</div>' + sectionBody('memory-checkpoint-small-summaries', smallSummaryContent) + '</div>'
-        + '<div class="we-section" style="margin-top:10px;"><div class="we-section-title">' + sectionHeader('完整 JSON', 'memory-checkpoint-json') + '</div>' + sectionBody('memory-checkpoint-json', '<pre class="we-prompt-seg-pre">' + h(JSON.stringify(checkpoint, null, 2)) + '</pre>') + '</div>'
-      : '<div class="we-empty">暂无存档点</div>';
+      ? '<div class="we-hint">Includes ' + count + ' characters, ' + entityCount + ' world entities, ' + smallSummaryCount + ' notes and ' + bigSummaries.length + ' overviews</div>'
+        + '<div class="we-section" style="margin-top:10px;"><div class="we-section-title">' + sectionHeader('Overview · ' + bigSummaries.length + ' items', 'memory-checkpoint-big-summary') + '</div>' + sectionBody('memory-checkpoint-big-summary', bigSummaryContent) + '</div>'
+        + '<div class="we-section" style="margin-top:10px;"><div class="we-section-title">' + sectionHeader('Notes · ' + smallSummaryCount + ' items', 'memory-checkpoint-small-summaries') + '</div>' + sectionBody('memory-checkpoint-small-summaries', smallSummaryContent) + '</div>'
+        + '<div class="we-section" style="margin-top:10px;"><div class="we-section-title">' + sectionHeader('Full JSON', 'memory-checkpoint-json') + '</div>' + sectionBody('memory-checkpoint-json', '<pre class="we-prompt-seg-pre">' + h(JSON.stringify(checkpoint, null, 2)) + '</pre>') + '</div>'
+      : '<div class="we-empty">No checkpoint yet</div>';
     return '<div class="we-section" style="margin-top:16px;"><div class="we-section-title">'
-      + sectionHeader(checkpoint ? '存档点 - ' + count + ' 人物 / ' + entityCount + ' 实体' : '存档点', 'memory-checkpoint-section')
+      + sectionHeader(checkpoint ? 'Checkpoint - round ' + count + ' characters / ' + entityCount + ' entities' : 'Checkpoint', 'memory-checkpoint-section')
       + '</div>' + sectionBody('memory-checkpoint-section', content) + '</div>';
   }
 
   function renderMemorySnapshotRows() {
     const list = window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.listSnapshots?.() || [];
-    if (!list.length) return '<div class="we-empty">暂无记忆存档</div>';
+    if (!list.length) return '<div class="we-empty">No memory saves yet</div>';
     return list.map(item => {
       let time = '';
       try { time = new Date(item.createdAt).toLocaleString(); } catch (error) {}
       const count = Number(item.characters) || 0;
       const entityCount = Number(item.entities) || 0;
       return '<div class="we-snapshot-row" data-memory-snap-id="' + u(item.id) + '">'
-        + '<div class="we-snapshot-main"><div class="we-snapshot-name"><span class="we-snapshot-badge' + (item.auto ? ' is-auto' : '') + '">' + (item.auto ? '自动' : '手动') + '</span>' + h(item.name) + '</div>'
-        + '<div class="we-snapshot-meta">第 ' + (item.round || 0) + ' 轮 · ' + count + ' 个人物 · ' + entityCount + ' 个实体' + (time ? ' · ' + h(time) : '') + '</div></div>'
+        + '<div class="we-snapshot-main"><div class="we-snapshot-name"><span class="we-snapshot-badge' + (item.auto ? ' is-auto' : '') + '">' + (item.auto ? 'Auto' : 'Manual') + '</span>' + h(item.name) + '</div>'
+        + '<div class="we-snapshot-meta">Round ' + (item.round || 0) + ' · ' + count + ' characters · ' + entityCount + ' entities' + (time ? ' · ' + h(time) : '') + '</div></div>'
         + '<div class="we-snapshot-actions">'
-        + '<button class="we-icon-btn" data-memory-snap-action="restore" title="恢复"><i class="fa-solid fa-rotate-left"></i></button>'
-        + '<button class="we-icon-btn" data-memory-snap-action="rename" title="重命名"><i class="fa-solid fa-pen"></i></button>'
-        + '<button class="we-icon-btn" data-memory-snap-action="export" title="导出"><i class="fa-solid fa-download"></i></button>'
-        + '<button class="we-icon-btn" data-memory-snap-action="delete" title="删除"><i class="fa-solid fa-trash"></i></button>'
+        + '<button class="we-icon-btn" data-memory-snap-action="restore" title="Restore"><i class="fa-solid fa-rotate-left"></i></button>'
+        + '<button class="we-icon-btn" data-memory-snap-action="rename" title="Rename"><i class="fa-solid fa-pen"></i></button>'
+        + '<button class="we-icon-btn" data-memory-snap-action="export" title="Export"><i class="fa-solid fa-download"></i></button>'
+        + '<button class="we-icon-btn" data-memory-snap-action="delete" title="Delete"><i class="fa-solid fa-trash"></i></button>'
         + '</div></div>';
     }).join('');
   }
@@ -1094,7 +1094,7 @@ window.WORLD_ENGINE_UI = (function() {
     function addTag(name) {
       name = String(name || '').trim();
       if (!name) return;
-      if (!/^[a-zA-Z_][\w-]*$/.test(name)) { showToast('标签名无效（只允许字母数字下划线连字符）', true); return; }
+      if (!/^[a-zA-Z_][\w-]*$/.test(name)) { showToast('Invalid tag name (only letters, digits, underscores and hyphens)', true); return; }
       if (!tags.some(item => item.name === name)) tags.push({ name, checked: true });
       if (addInput) addInput.value = '';
       renderTags(); syncTextarea();
@@ -1107,37 +1107,40 @@ window.WORLD_ENGINE_UI = (function() {
         const chat = SillyTavern.getContext()?.chat || [];
         for (let i = chat.length - 1; i >= 0; i--) if (chat[i] && !chat[i].is_user && String(chat[i].mes || '').trim()) { text = String(chat[i].mes); break; }
       } catch (error) {}
-      if (!text) { showToast('未找到 AI 回复', true); return; }
+      if (!text) { showToast('No AI reply found', true); return; }
       const found = []; let match; SCAN.lastIndex = 0;
       while ((match = SCAN.exec(text)) !== null) if (!found.includes(match[1])) found.push(match[1]);
-      if (!found.length) { showToast('最新 AI 回复里没发现标签', true); return; }
+      if (!found.length) { showToast('No tags found in the latest AI reply', true); return; }
       found.forEach(name => { if (!tags.some(item => item.name === name)) tags.push({ name, checked: true }); });
-      renderTags(); syncTextarea(); showToast(`扫描到 ${found.length} 个标签`);
+      renderTags(); syncTextarea(); showToast(`Found ${found.length} tags`);
     });
     document.getElementById(id('btn-filter-test'))?.addEventListener('click', () => {
       const core = window.WORLD_ENGINE_CORE;
       const status = document.getElementById(id('filter-status'));
-      if (!textarea.value.trim()) { showToast('未填写正则', true); if (status) status.textContent = '（未填写正则）'; return; }
+      if (!textarea.value.trim()) { showToast('No regex entered', true); if (status) status.textContent = '(no regex entered)'; return; }
       const validated = core?.validateFilterRegex?.(textarea.value);
-      if (!validated) { showToast('core 模块不可用', true); return; }
+      if (!validated) { showToast('core module unavailable', true); return; }
       if (validated.bad.length) {
-        if (status) status.textContent = `测试中止——⚠️ ${validated.ok} 条生效 / ${validated.bad.length} 条失败：\n` + validated.bad.map(item => `行 ${item.line}「${item.raw}」无效：${item.reason}`).join('\n');
-        showToast(`有 ${validated.bad.length} 条正则无效，请先修正`, true); return;
+        if (status) status.textContent = `Test aborted — ⚠️ ${validated.ok} working / ${validated.bad.length} failed:
+` + validated.bad.map(item => `Line ${item.line} "${item.raw}" is invalid: ${item.reason}`).join('\n');
+        showToast(`${validated.bad.length} regexes are invalid; fix them first`, true); return;
       }
       let sample = '';
       try {
         const chat = SillyTavern.getContext()?.chat || [];
         for (let i = chat.length - 1; i >= 0; i--) if (String(chat[i]?.mes || '').trim()) { sample = String(chat[i].mes); break; }
       } catch (error) {}
-      if (!sample) { showToast('当前聊天没有可测试的文本', true); return; }
+      if (!sample) { showToast('The current chat has no text to test', true); return; }
       let work = sample, removed = 0;
       for (const entry of validated.entries) {
         const regex = new RegExp(entry.pattern, entry.flags); let match, count = 0;
         while ((match = regex.exec(work)) !== null) { count++; if (match.index === regex.lastIndex) regex.lastIndex++; }
         work = work.replace(regex, ''); removed += count;
       }
-      if (status) status.textContent = `已删除 ${removed} 处。\n前: ${sample.slice(0, 60)}${sample.length > 60 ? '…' : ''}\n后: ${work.slice(0, 60)}${work.length > 60 ? '…' : ''}`;
-      showToast(`已删除 ${removed} 处`);
+      if (status) status.textContent = `Removed ${removed} matches.
+Before: ${sample.slice(0, 60)}${sample.length > 60 ? '…' : ''}
+After: ${work.slice(0, 60)}${work.length > 60 ? '…' : ''}`;
+      showToast(`Removed ${removed} matches`);
     });
     let timer;
     textarea.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(syncTags, 300); });
@@ -1172,165 +1175,165 @@ window.WORLD_ENGINE_UI = (function() {
 
     const apiBody = `
       <div class="we-input-group">
-        <label>连接方式</label>
+        <label>Connection</label>
         <select id="we-connection-mode" style="width:100%;">
-          <option value="direct" ${settings.connectionMode !== 'proxy' ? 'selected' : ''}>直连（默认）</option>
-          <option value="proxy" ${settings.connectionMode === 'proxy' ? 'selected' : ''}>经酒馆代理（解决跨域 CORS）</option>
+          <option value="direct" ${settings.connectionMode !== 'proxy' ? 'selected' : ''}>Direct (default)</option>
+          <option value="proxy" ${settings.connectionMode === 'proxy' ? 'selected' : ''}>Through the SillyTavern proxy (fixes CORS)</option>
         </select>
       </div>
       <div class="we-input-group">
-        <label>记忆引擎 API URL（OpenAI 兼容）</label>
+        <label>Memory Engine API URL (OpenAI-compatible)</label>
         <input type="text" id="we-api-url" value="${u(settings.apiUrl || '')}" placeholder="https://api.openai.com/v1">
       </div>
       <div class="we-input-group">
-        <label>记忆引擎 API Key</label>
+        <label>Memory Engine API key</label>
         <input type="password" id="we-api-key" value="${u(settings.apiKey || '')}">
       </div>
       <div class="we-input-group" style="display:flex;gap:6px;align-items:end;">
         <div style="flex:1;">
-          <label>模型</label>
-          <input type="text" id="we-model" value="${u(settings.model || 'gpt-3.5-turbo')}" placeholder="模型名称" style="width:100%;">
+          <label>Model</label>
+          <input type="text" id="we-model" value="${u(settings.model || 'gpt-3.5-turbo')}" placeholder="Model name" style="width:100%;">
         </div>
-        <button class="we-btn" id="we-fetch-models" style="white-space:nowrap;flex-shrink:0;">获取列表</button>
+        <button class="we-btn" id="we-fetch-models" style="white-space:nowrap;flex-shrink:0;">Fetch list</button>
       </div>
       <div class="we-input-group">
-        <select id="we-model-list" style="display:none;width:100%;margin-top:4px;"><option value="">-- 选择模型 --</option></select>
+        <select id="we-model-list" style="display:none;width:100%;margin-top:4px;"><option value="">-- Choose a model --</option></select>
       </div>
       <div class="we-input-group" style="display:flex;gap:6px;">
-        <div style="flex:1;"><label>温度</label><input type="number" id="we-temperature" min="0" step="0.1" value="${apiTemperature}" style="width:100%;"></div>
-        <div style="flex:1;"><label>最大输出 token</label><input type="number" id="we-max-tokens" min="1" step="1" value="${apiMaxTokens}" style="width:100%;"></div>
+        <div style="flex:1;"><label>Temperature</label><input type="number" id="we-temperature" min="0" step="0.1" value="${apiTemperature}" style="width:100%;"></div>
+        <div style="flex:1;"><label>Max output tokens</label><input type="number" id="we-max-tokens" min="1" step="1" value="${apiMaxTokens}" style="width:100%;"></div>
       </div>
       <div class="we-input-group">
-        <label>请求超时（秒）</label>
+        <label>Request timeout (seconds)</label>
         <input type="number" id="we-api-timeout-sec" min="0" step="1" value="${apiTimeoutSec}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">此处只配置记忆引擎；请求实现与世界引擎共用，但配置值互不覆盖。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">This only configures the Memory Engine; the request code is shared with the World Engine, but neither overrides the other's settings.</div>
       </div>`;
 
     const modeBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-engine-enabled" ${settings.engineEnabled !== false ? 'checked' : ''}>
-          启用记忆引擎
+          Enable Memory Engine
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">关闭后停止记忆提取与记忆注入，不影响世界引擎。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When off, memory extraction and injection stop; the World Engine is not affected.</div>
       </div>
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-first-layer-ai-opening" ${settings.firstLayerIsAiOpening !== false ? 'checked' : ''}>
-          首楼为 AI 开场白
+          First message is the AI greeting
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">默认勾选：第 0 层不参与人物/实体提取、纪要和批量重填；取消勾选后，第 0 层按普通对话参与处理。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">On by default: message 0 is left out of character/entity extraction, notes and batch refills; when off, message 0 is processed like normal conversation.</div>
       </div>
       <div class="we-input-group">
-        <label>记忆推演模式</label>
+        <label>Memory evolution mode</label>
         <select id="we-memory-evolve-mode" style="width:100%;">
-          <option value="auto" ${mode === 'auto' ? 'selected' : ''}>自动 · 每轮提取</option>
-          <option value="manual" ${mode === 'manual' ? 'selected' : ''}>手动（仅手动触发记忆推演）</option>
+          <option value="auto" ${mode === 'auto' ? 'selected' : ''}>Auto · extract every round</option>
+          <option value="manual" ${mode === 'manual' ? 'selected' : ''}>Manual (memory evolution only when triggered by hand)</option>
         </select>
       </div>
-      <div style="font-size:11px;color:var(--we-text3);margin-bottom:8px;">人物、实体和纪要固定以一轮为单位处理，并合并为一次 API 请求。重 Roll 不计入新轮次。</div>
+      <div style="font-size:11px;color:var(--we-text3);margin-bottom:8px;">Characters, entities and notes are always processed one round at a time and combined into one API request. Rerolls do not count as new rounds.</div>
       <div class="we-input-group">
-        <label>总述整理</label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">每轮生成一条目标 50–200 字的纪要；每累计 X 条尚未整理的纪要，独立生成总述。总述目标下限为 500 字，上限为本批纪要正文的一半；上限不足 500 时上下限均为 500 字。超出目标仍完整保存，历史总述不会被覆盖。</div>
+        <label>Overview filing</label>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Each round generates one note aiming for 40–150 words; every X unfiled notes generate an overview on their own. An overview aims for at least 350 words and at most half the word count of this batch of notes; if that half is under 350, both limits are 350 words. Text over the target is still saved in full, and past overviews are never overwritten.</div>
       </div>
       <div class="we-input-group">
-        <label>总述间隔轮数（X）</label>
+        <label>Rounds between overviews (X)</label>
         <input type="number" id="we-memory-big-summary-every" min="1" step="1" value="${bigSummaryEveryX}" style="width:100%;">
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="we-btn we-btn-primary" id="we-memory-run-now" type="button"><i class="fa-solid fa-brain"></i> 提取本轮记忆</button>
-        <button class="we-btn" id="we-memory-big-summary-now" type="button"><i class="fa-solid fa-book-open"></i> 生成总述</button>
+        <button class="we-btn we-btn-primary" id="we-memory-run-now" type="button"><i class="fa-solid fa-brain"></i> Extract this round's memories</button>
+        <button class="we-btn" id="we-memory-big-summary-now" type="button"><i class="fa-solid fa-book-open"></i> Generate overview</button>
       </div>
-      <div class="we-hint" id="we-memory-task-status" style="margin-top:8px;">${_memoryRunningLabel ? '正在进行' + h(_memoryRunningLabel) : '当前没有运行中的记忆任务'}</div>`;
+      <div class="we-hint" id="we-memory-task-status" style="margin-top:8px;">${_memoryRunningLabel ? 'Running' + h(_memoryRunningLabel) : 'No memory task is running'}</div>`;
 
     const injectBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-inject" ${settings.injectIntoPrompt !== false ? 'checked' : ''}>
-          注入记忆信息
+          Inject memory info
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">注入最新 Y 条总述和尚未整理的纪要；被有效纪要或总述覆盖的旧正文自动隐藏，但“本地机制”中设置的近期轮数始终保留原文；同时扫描最近 N 层正文中的人物及实体名称，按需注入相关人物与实体记忆。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Injects the latest Y overviews and unfiled notes; old story text covered by valid notes or overviews is hidden automatically, but the recent rounds set in "Local mechanics" always keep their original text; it also scans the last N messages for character and entity names and injects related character and entity memories as needed.</div>
       </div>
       <div class="we-input-group" style="display:flex;gap:6px;">
         <div style="flex:1;">
-          <label>名称搜寻层数（N）</label>
+          <label>Messages to scan for names (N)</label>
           <input type="number" id="we-memory-search-depth" min="1" step="1" value="${searchDepth}" style="width:100%;">
         </div>
         <div style="flex:1;">
-          <label>每个条目最多注入</label>
+          <label>Max injected per entry</label>
           <input type="number" id="we-memory-max-per-character" min="1" step="1" value="${maxPerCharacter}" style="width:100%;">
         </div>
       </div>
       <div class="we-input-group">
-        <label>最多注入最新总述数（Y）</label>
+        <label>Max latest overviews injected (Y)</label>
         <input type="number" id="we-memory-big-summary-inject-limit" min="1" step="1" value="${bigSummaryInjectLimit}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">只限制总述数量；尚未整理的纪要仍会全部注入。本地与 JSON 中的历史总述不会被删除或截断。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Only limits the number of overviews; unfiled notes are still all injected. Past overviews stored locally and in JSON are never deleted or truncated.</div>
       </div>
-      <div style="font-size:11px;color:var(--we-text3);">人物和实体历史使用 1d10000 指数权重抽取：越新的记录越容易入选，最旧记录也保留非零机会。</div>`;
+      <div style="font-size:11px;color:var(--we-text3);">Character and entity history is drawn with 1d10000 exponential weighting: newer records are more likely to be chosen, and the oldest still keep a non-zero chance.</div>`;
 
     const mechanicsBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-hide-covered-raw" ${hideCoveredRawText ? 'checked' : ''}>
-          隐藏正文
+          Hide story text
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">开启后，只有被有效纪要或总述明确覆盖的旧正文才会隐藏；关闭并保存后恢复、保留全部正文，下面的“保留最近正文轮数”不再生效。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When on, only old story text clearly covered by valid notes or overviews is hidden; turn it off and save to restore and keep all text, and "Recent rounds of text to keep" below no longer applies.</div>
       </div>
       <div class="we-input-group">
-        <label>保留最近正文轮数</label>
+        <label>Recent rounds of text to keep</label>
         <input type="number" id="we-memory-recent-raw-rounds" min="0" step="1" value="${recentRawRounds}" style="width:100%;" ${hideCoveredRawText ? '' : 'disabled'}>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">最近多少个 AI 回合的用户与 AI 正文始终不隐藏；0 表示不额外保留。更早正文只有在有效纪要或总述的来源范围明确覆盖时才会隐藏。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">User and AI text from this many recent AI turns is never hidden; 0 keeps nothing extra. Earlier text is hidden only when the source range of a valid note or overview clearly covers it.</div>
       </div>
       <div class="we-input-group">
-        <label>推演辅助 · 追加近期正文轮数</label>
+        <label>Evolution aid · extra recent rounds of text</label>
         <input type="number" id="we-memory-reference-raw-rounds" min="0" step="1" value="${referenceRawRounds}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">人物、实体和纪要仍只提取最新一轮；这里的旧正文仅作人物、指代、前因与既有状态参考，不会重复入库。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Characters, entities and notes are still extracted from the latest round only; the older text here is only a reference for characters, references, causes and existing state, and is not stored again.</div>
       </div>
       <div class="we-input-group">
-        <label>推演辅助 · 正文之前追加纪要数</label>
+        <label>Evolution aid · extra notes before the text</label>
         <input type="number" id="we-memory-reference-small-count" min="0" step="1" value="${referenceSmallSummaryCount}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">从辅助正文起点继续向前取不重叠的纪要；0 表示不追加纪要。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Takes non-overlapping notes going back from the start of the reference text; 0 adds no notes.</div>
       </div>
       <div class="we-input-group">
-        <label>推演辅助 · 纪要之前追加总述数</label>
+        <label>Evolution aid · extra overviews before the notes</label>
         <input type="number" id="we-memory-reference-big-count" min="0" step="1" value="${referenceBigSummaryCount}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">从所选纪要之前继续向前取不重叠的总述；0 表示不追加总述。参考顺序固定为“总述 → 纪要 → 正文 → 本轮”。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Takes non-overlapping overviews going back from before the chosen notes; 0 adds no overviews. The reference order is fixed: "overviews → notes → text → this round".</div>
       </div>`;
 
     const linkBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-inject-world-engine" ${settings.injectIntoWorldEngine === true ? 'checked' : ''}>
-          向世界引擎提供记忆
+          Provide memories to the World Engine
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">世界推演时扫描完整世界状态中出现的人名、别名和实体名，仅提供匹配的人物/实体记忆；不会提供纪要或总述。记忆引擎异常不会中断世界推演。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">During world evolution, scans the full world state for character names, aliases and entity names and provides only the matching character/entity memories; notes and overviews are not provided. Memory Engine errors never interrupt world evolution.</div>
       </div>
       <div class="we-input-group">
-        <label>世界推演每个匹配条目最多注入（X）</label>
+        <label>Max injected per matching entry in world evolution (X)</label>
         <input type="number" id="we-memory-world-engine-limit" min="1" step="1" value="${worldEngineMemoryLimit}" style="width:100%;">
       </div>`;
 
     const backfillBody = `
-      <div style="font-size:11px;color:var(--we-text3);margin-bottom:6px;">两类重填彼此独立：人物/实体重填不会清理纪要与总述；纪要与总述重填不会改写人物与实体。</div>
+      <div style="font-size:11px;color:var(--we-text3);margin-bottom:6px;">The two refills are independent: a character/entity refill does not clear notes and overviews; a notes and overview refill does not rewrite characters and entities.</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>人物实体每批楼层</label>
+        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>Messages per character/entity batch</label>
           <input type="number" id="we-memory-backfill-batch" min="1" step="1" value="${backfillBatch}"></div>
-        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>结束楼层（0=全部）</label>
+        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>End message (0 = all)</label>
           <input type="number" id="we-memory-backfill-end" min="0" step="1" value="${backfillEnd}"></div>
-        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>每批 fault 重试次数</label>
+        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>Fault retries per batch</label>
           <input type="number" id="we-memory-backfill-retries" min="0" step="1" value="${backfillRetries}"></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
-        <div class="we-input-group" style="flex:1;min-width:120px;margin-bottom:0;"><label>纪要回填：每 X 个 AI 楼层</label>
+        <div class="we-input-group" style="flex:1;min-width:120px;margin-bottom:0;"><label>Notes backfill: every X AI messages</label>
           <input type="number" id="we-memory-summary-backfill-small-every" min="1" step="1" value="${summaryBackfillSmallEveryX}"></div>
-        <div class="we-input-group" style="flex:1;min-width:120px;margin-bottom:0;"><label>总述回填：每 Y 条纪要</label>
+        <div class="we-input-group" style="flex:1;min-width:120px;margin-bottom:0;"><label>Overview backfill: every Y notes</label>
           <input type="number" id="we-memory-summary-backfill-big-every" min="1" step="1" value="${summaryBackfillBigEveryX}"></div>
       </div>
       <div class="we-hint" id="we-memory-person-backfill-status" style="margin:6px 0;"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;">
-        <button class="we-btn we-btn-primary" id="we-memory-backfill-start">▶ 重填人物与实体</button>
-        <button class="we-btn we-btn-primary" id="we-memory-summary-backfill-start">▶ 重填纪要与总述</button>
-        <button class="we-btn" id="we-memory-backfill-stop">■ 停止</button>
+        <button class="we-btn we-btn-primary" id="we-memory-backfill-start">▶ Refill characters and entities</button>
+        <button class="we-btn we-btn-primary" id="we-memory-summary-backfill-start">▶ Refill notes and overviews</button>
+        <button class="we-btn" id="we-memory-backfill-stop">■ Stop</button>
       </div>
       <div class="we-hint" id="we-memory-summary-backfill-status" style="margin:6px 0;"></div>`;
 
@@ -1340,121 +1343,121 @@ window.WORLD_ENGINE_UI = (function() {
     ).join('');
     const displayBody = `
       <div class="we-input-group">
-        <label>记忆引擎主题配色</label>
+        <label>Memory Engine color theme</label>
         <select id="we-memory-theme-select" style="width:100%;">${memoryThemeOptions}</select>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">只影响记忆引擎并独立记忆；切回世界引擎时恢复世界引擎自己的配色。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Only affects the Memory Engine and is remembered separately; switching back to the World Engine restores its own colors.</div>
       </div>`;
 
     const retryBody = `
       <div class="we-input-group">
-        <label>记忆 API fault 自动重试次数</label>
+        <label>Memory API fault auto-retries</label>
         <input type="number" id="we-memory-api-auto-retries" min="0" step="1" value="${Math.max(0, parseInt(settings.apiAutoRetries) || 0)}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">仅连接、HTTP、超时、空返回或 JSON 无法修补等 fault 才重试；内容超出 Prompt 字数或条数不算错误。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Retries only on faults such as connection, HTTP, timeout, empty response or unrepairable JSON; content exceeding the prompt's length or count limits is not an error.</div>
       </div>`;
 
     const blacklistBody = `
       <div class="we-input-group">
-        <label>人物与实体名称黑名单</label>
-        <textarea id="we-memory-name-blacklist" rows="5" style="width:100%;resize:vertical;" placeholder="每行一个名称">${h(settings.nameBlacklist || '')}</textarea>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">API 返回中，人物任一名称或实体名称命中黑名单时，只忽略该条人物或实体数据；同次返回的其他数据照常处理。匹配忽略大小写和首尾空格。</div>
+        <label>Character and entity name blacklist</label>
+        <textarea id="we-memory-name-blacklist" rows="5" style="width:100%;resize:vertical;" placeholder="One name per line">${h(settings.nameBlacklist || '')}</textarea>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When any name of a character or an entity's name in the API response is on the blacklist, only that character or entity's data is ignored; the rest of the same response is processed normally. Matching ignores case and leading/trailing spaces.</div>
       </div>`;
 
     const filterBody = `
       <div class="we-input-group">
-        <label>每行一条正则，匹配内容会在喂记忆后台前删除</label>
+        <label>One regex per line; matches are removed before the text is fed to the memory background</label>
         <div style="margin-bottom:8px;border:1px solid var(--we-border,#3a3a3a);border-radius:4px;padding:6px;">
-          <div style="font-size:12px;color:var(--we-text2);margin-bottom:4px;">简单模式：勾选标签自动生成删除正则</div>
+          <div style="font-size:12px;color:var(--we-text2);margin-bottom:4px;">Simple mode: tick tags to generate removal regexes automatically</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:4px;">
-            <button class="we-btn" id="we-memory-btn-filter-scan" type="button">🔍 扫描本聊天标签</button>
-            <input type="text" id="we-memory-filter-add-input" placeholder="手动加标签名(如 tucao)" style="flex:1;min-width:140px;">
-            <button class="we-btn" id="we-memory-btn-filter-add" type="button">+ 添加</button>
+            <button class="we-btn" id="we-memory-btn-filter-scan" type="button">🔍 Scan this chat's tags</button>
+            <input type="text" id="we-memory-filter-add-input" placeholder="Add a tag name by hand (e.g. thinking)" style="flex:1;min-width:140px;">
+            <button class="we-btn" id="we-memory-btn-filter-add" type="button">+ Add</button>
           </div>
           <div id="we-memory-filter-tags" style="display:flex;flex-wrap:wrap;gap:4px;min-height:4px;"></div>
-          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">自动生成的正则不一定生效——标签带属性、带 ~、嵌套或闭标签异常时可能匹配失败。不生效请直接编辑下方文本框自行手写。未勾选标签不会保存。</div>
+          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Generated regexes don't always work — tags with attributes, with ~, nested, or with broken closing tags may fail to match. If one doesn't work, edit the box below and write it by hand. Unticked tags are not saved.</div>
         </div>
-        <textarea id="we-memory-filter-regex" rows="4" style="width:100%;resize:vertical;" placeholder="每行一条；支持纯 pattern 或 /pattern/flags 字面量。">${h(settings.filterRegex || '')}</textarea>
+        <textarea id="we-memory-filter-regex" rows="4" style="width:100%;resize:vertical;" placeholder="One per line; plain patterns or /pattern/flags literals are supported.">${h(settings.filterRegex || '')}</textarea>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px;">
-          <button class="we-btn" id="we-memory-btn-filter-test" type="button">▶ 测试正则</button>
+          <button class="we-btn" id="we-memory-btn-filter-test" type="button">▶ Test regex</button>
         </div>
         <div class="we-hint" id="we-memory-filter-status" style="margin:0 0 4px;white-space:pre-wrap;"></div>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">每行一条；支持纯 pattern（默认 g 全局）或 /pattern/flags 字面量；空行忽略。只影响喂记忆后台的文本，不影响聊天正文。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">One per line; plain patterns (global g by default) or /pattern/flags literals are supported; blank lines are ignored. Only affects the text fed to the memory background, not the chat itself.</div>
       </div>`;
 
     const toneBody = `
       <div class="we-input-group">
-        <label>记忆引擎附加提示词</label>
-        <textarea id="we-memory-tone-prompt" rows="5" style="width:100%;resize:vertical;" placeholder="可选；只附加到本次记忆提取请求">${h(settings.tonePrompt || '')}</textarea>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">这是高级运行设置；不开放内置记忆 Prompt 本体，也不提供 Prompt 预设编辑器。</div>
+        <label>Memory Engine additional prompt</label>
+        <textarea id="we-memory-tone-prompt" rows="5" style="width:100%;resize:vertical;" placeholder="Optional; only appended to memory extraction requests">${h(settings.tonePrompt || '')}</textarea>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">This is an advanced runtime setting; the built-in memory prompt itself is not editable, and there is no prompt preset editor.</div>
       </div>`;
 
     const archiveBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-sync-to-chat" ${settings.syncToChat === true ? 'checked' : ''}>
-          跨设备实时同步（存进当前聊天）
+          Live cross-device sync (stored in the current chat)
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">开启后，本聊天的人物与实体记忆会持续写入酒馆聊天文件并随之跨设备同步；换设备打开同一聊天即可续上进度。<b>不会</b>同步 API Key，也不会读写世界引擎存档。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When on, this chat's character and entity memories are continuously written into the SillyTavern chat file and sync across devices with it; open the same chat on another device to pick up where you left off. API keys are <b>not</b> synced, and World Engine saves are not read or written.</div>
       </div>
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-auto-backup" ${settings.autoBackup === true ? 'checked' : ''}>
-          自动滚动备份（每当记忆推进存一条，保留最近 3 条）
+          Rolling auto backup (saves one each time memory advances, keeps the latest 3)
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">防误删误改。自动备份与命名存档都保存在本聊天里，跨设备可见。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Guards against accidental deletes and edits. Auto backups and named saves are stored in this chat and visible across devices.</div>
       </div>
       <div class="we-hint" id="we-memory-archive-status" style="margin:4px 0;"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;">
-        <button class="we-btn we-btn-primary" id="we-memory-snapshot-save">新建命名存档</button>
-        <button class="we-btn" id="we-memory-snapshot-import">导入存档</button>
+        <button class="we-btn we-btn-primary" id="we-memory-snapshot-save">New named save</button>
+        <button class="we-btn" id="we-memory-snapshot-import">Import save</button>
         <input type="file" id="we-memory-snapshot-import-file" accept=".json,application/json" style="display:none;">
       </div>
       <div class="we-chatcache-list" id="we-memory-snapshot-list">${renderMemorySnapshotRows()}</div>`;
 
     const dataBody = `
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="we-btn" id="we-memory-export-data">导出全部记忆 JSON</button>
-        <button class="we-btn" id="we-memory-import-data">导入 JSON</button>
+        <button class="we-btn" id="we-memory-export-data">Export all memory JSON</button>
+        <button class="we-btn" id="we-memory-import-data">Import JSON</button>
         <input type="file" id="we-memory-import-data-file" accept=".json,application/json" style="display:none;">
       </div>
-      <div style="font-size:11px;color:var(--we-text3);margin-top:5px;">完整导出同时包含 <b>state（最新当前数据）</b>和 <b>checkpoint（重新推演前的旧存档点）</b>，两部分分别标注人物、实体、纪要和总述数量；人物记忆逐条保留 known_by。</div>`;
+      <div style="font-size:11px;color:var(--we-text3);margin-top:5px;">A full export contains both <b>state (the latest current data)</b> and <b>checkpoint (the old checkpoint from before a re-run)</b>, each labeled with its counts of characters, entities, notes and overviews; character memories keep known_by for every entry.</div>`;
 
     const memoryVersion = window.MEMORY_ENGINE_SETTINGS?.VERSION || '0.1.0';
     const memoryAboutBody = `
-      <div class="we-about-current"><span class="we-changelog-cur">记忆引擎 v${h(memoryVersion)}</span></div>
+      <div class="we-about-current"><span class="we-changelog-cur">Memory Engine v${h(memoryVersion)}</span></div>
       <div class="we-section" style="margin-top:10px;">
-        <div class="we-section-title">记忆引擎 1.1</div>
+        <div class="we-section-title">Memory Engine 1.1</div>
         <div style="font-size:12px;color:var(--we-text2);line-height:1.7;">
-          面向长篇对话的独立记忆系统。人物记忆保留知情人边界，实体记忆维护组织、物件、能力与地点的当前状态和历史；纪要按新增轮次记录阶段事件，总述再将多条纪要压缩为长期脉络。
+          A standalone memory system for long conversations. Character memories keep track of who knows what, entity memories maintain the current state and history of organizations, objects, abilities and locations; notes record stage events round by round, and overviews compress several notes into the long-term thread.
         </div>
       </div>
       <div class="we-section" style="margin-top:10px;">
-        <div class="we-section-title">v1.1.2 · 修复总述与纪要重复注入</div>
+        <div class="we-section-title">v1.1.2 · Fixed overviews and notes being injected twice</div>
         <ul class="we-changelog-items">
-          <li>总述超过注入条数上限后，已被旧总述整理的纪要不再重新进入提示词；只有真正尚未整理的纪要会作为近期事件注入。</li>
+          <li>Once overviews exceed the injection limit, notes already filed by older overviews no longer re-enter the prompt; only truly unfiled notes are injected as recent events.</li>
         </ul>
       </div>
       <div class="we-section" style="margin-top:10px;">
-        <div class="we-section-title">v1.1.1 · 记忆面板与提取稳定性</div>
+        <div class="we-section-title">v1.1.1 · Memory panel and extraction stability</div>
         <ul class="we-changelog-items">
-          <li>人物与实体记忆默认折叠，实体按组织、物品、能力和地点分类展示；纪要与总述默认展开最新一条。</li>
-          <li>实体支持别名，提取、归并与面板编辑均保留别名信息。</li>
-          <li>修复组合记忆请求的输出结构约束；API 成功后的解析与落库错误不再误触发整次请求重试。</li>
-          <li>世界推演与记忆联动的运行提示改为严格串行展示，先结束世界阶段，再进入记忆阶段。</li>
+          <li>Character and entity memories are collapsed by default, and entities are grouped by organization, object, ability and location; notes and overviews expand the latest one by default.</li>
+          <li>Entities support aliases, kept through extraction, merging and panel editing.</li>
+          <li>Fixed the output structure constraints of combined memory requests; parsing and saving errors after a successful API call no longer wrongly retry the whole request.</li>
+          <li>Status messages for world evolution and the memory link now show strictly in sequence: the world stage finishes before the memory stage starts.</li>
         </ul>
       </div>
       <div class="we-section" style="margin-top:10px;">
-        <div class="we-section-title">v1.1.0 · 上下文与正文管理</div>
+        <div class="we-section-title">v1.1.0 · Context and story text management</div>
         <ul class="we-changelog-items">
-          <li>日常提取仍只整理最新一轮，可分别追加近期正文、较早纪要和总述作为只读参考；默认参考 1 轮正文、5 条纪要和 1 条总述。</li>
-          <li>新增“隐藏正文”总开关；关闭后保留全部正文，开启后才按“保留最近正文轮数”和有效摘要覆盖范围隐藏旧正文。</li>
-          <li>纪要与总述完整保留 API 返回内容，不再本地截断；API 默认最大输出调整为 65000，并自动迁移旧的 4096 设置。</li>
-          <li>人物、实体、纪要和总述均可折叠；API 返回解析落库后自动刷新面板。</li>
+          <li>Routine extraction still files only the latest round, and can separately add recent text, earlier notes and overviews as read-only reference; by default it references 1 round of text, 5 notes and 1 overview.</li>
+          <li>Added a "Hide story text" master switch; when off, all text is kept; when on, old text is hidden according to "Recent rounds of text to keep" and what valid summaries cover.</li>
+          <li>Notes and overviews keep the API's full response with no local truncation; the API's default max output is now 65000, and old 4096 settings are migrated automatically.</li>
+          <li>Characters, entities, notes and overviews can all be collapsed; the panel refreshes automatically after the API response is parsed and saved.</li>
         </ul>
       </div>
       <div class="we-section" style="margin-top:10px;">
-        <div class="we-section-title">v1.0.0 · 正式版本</div>
+        <div class="we-section-title">v1.0.0 · Release</div>
         <div style="font-size:12px;color:var(--we-text2);line-height:1.7;">
-          人物、实体、纪要、总述均可在面板中查看和编辑，并支持完整 JSON 导入导出与独立存档。可选择向世界引擎提供命中人物和实体的最新记忆；该模式不会把纪要或总述重复送入世界推演。
+          Characters, entities, notes and overviews can all be viewed and edited in the panel, with full JSON import/export and separate saves. You can choose to provide the World Engine with the latest memories of matching characters and entities; this mode never sends notes or overviews into world evolution.
         </div>
       </div>`;
 
@@ -1462,53 +1465,53 @@ window.WORLD_ENGINE_UI = (function() {
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-worldbook-enabled" ${settings.worldbookEnabled === true ? 'checked' : ''}>
-          启用记忆推演世界书
+          Enable Memory World Info
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">默认关闭。开启后才会把下方选中的世界书条目作为人物与背景参考；世界书内容不会被直接当作新记忆。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Off by default. When on, the World Info entries selected below are used as reference for characters and background; World Info content is never taken directly as new memories.</div>
       </div>`;
 
     const worldbook = String(extra.worldbook || '')
-      .replace(/后台推演世界书/g, '记忆推演世界书')
-      .replace(/注入推演/g, '注入记忆推演');
+      .replace(/Evolution World Info/g, 'Memory World Info')
+      .replace(/injected into the evolution/g, 'injected into memory extraction');
     const panelContent = {
-      common: sec('set-memory-api', '记忆引擎 API', apiBody)
-        + sec('set-memory-evolve', '记忆提取与事件整理', modeBody)
-        + sec('set-memory-inject', '记忆信息注入', injectBody),
-      mechanics: sec('set-memory-mechanics', '正文保留与推演参考', mechanicsBody),
-      link: sec('set-memory-link', '向世界引擎联动', linkBody),
-      advanced: sec('set-memory-retry', 'API 自动重试', retryBody)
-        + sec('set-memory-blacklist', '人物与实体黑名单', blacklistBody)
-        + sec('set-memory-backfill', '批量重填记忆推演', backfillBody)
-        + sec('set-memory-filter', '输入过滤器', filterBody)
-        + sec('set-memory-display', '界面显示', displayBody)
-        + sec('set-memory-tone', '附加提示词', toneBody),
-      archive: sec('set-memory-archive', '记忆缓存与存档', archiveBody)
-        + sec('set-memory-data', '记忆数据导入/导出', dataBody)
+      common: sec('set-memory-api', 'Memory Engine API', apiBody)
+        + sec('set-memory-evolve', 'Memory extraction and event filing', modeBody)
+        + sec('set-memory-inject', 'Memory injection', injectBody),
+      mechanics: sec('set-memory-mechanics', 'Story text retention and evolution reference', mechanicsBody),
+      link: sec('set-memory-link', 'Link to the World Engine', linkBody),
+      advanced: sec('set-memory-retry', 'API auto-retry', retryBody)
+        + sec('set-memory-blacklist', 'Character and entity blacklist', blacklistBody)
+        + sec('set-memory-backfill', 'Batch refill of memory evolution', backfillBody)
+        + sec('set-memory-filter', 'Input filter', filterBody)
+        + sec('set-memory-display', 'Display', displayBody)
+        + sec('set-memory-tone', 'Additional prompt', toneBody),
+      archive: sec('set-memory-archive', 'Memory cache and saves', archiveBody)
+        + sec('set-memory-data', 'Memory data import/export', dataBody)
         + renderMemoryCheckpointSection(),
-      worldbook: sec('set-memory-worldbook-enabled', '世界书总开关', memoryWorldbookBody) + worldbook,
-      debug: sec('set-memory-debug', '记忆推演调试', '<button class="we-btn" id="we-memory-export-diag" style="width:100%;margin-bottom:8px;">导出诊断包</button><div id="we-memory-debug-render">' + renderMemoryDebug() + '</div>'),
+      worldbook: sec('set-memory-worldbook-enabled', 'World Info master switch', memoryWorldbookBody) + worldbook,
+      debug: sec('set-memory-debug', 'Memory evolution debug', '<button class="we-btn" id="we-memory-export-diag" style="width:100%;margin-bottom:8px;">Export diagnostics bundle</button><div id="we-memory-debug-render">' + renderMemoryDebug() + '</div>'),
       about: memoryAboutBody
     };
 
     if (!MEMORY_SETTINGS_TABS.some(tab => tab.key === _memorySettingsTab)) _memorySettingsTab = 'common';
     const tabBar = '<div class="we-settings-tabs-shell">'
-      + '<button class="we-settings-tab-scroll" data-dir="-1" title="向左滚动"><i class="fa-solid fa-chevron-left"></i></button>'
+      + '<button class="we-settings-tab-scroll" data-dir="-1" title="Scroll left"><i class="fa-solid fa-chevron-left"></i></button>'
       + '<div class="we-settings-tabs" id="we-settings-tabs">'
       + MEMORY_SETTINGS_TABS.map(tab =>
           '<button class="we-settings-tab' + (tab.key === _memorySettingsTab ? ' we-settings-tab--active' : '')
           + '" data-tab="' + tab.key + '">' + tab.label + '</button>').join('')
       + '</div>'
-      + '<button class="we-settings-tab-scroll" data-dir="1" title="向右滚动"><i class="fa-solid fa-chevron-right"></i></button>'
+      + '<button class="we-settings-tab-scroll" data-dir="1" title="Scroll right"><i class="fa-solid fa-chevron-right"></i></button>'
       + '</div>';
     const panels = MEMORY_SETTINGS_TABS.map(tab =>
       '<div class="we-settings-panel" data-tab="' + tab.key + '"'
       + (tab.key === _memorySettingsTab ? '' : ' style="display:none;"') + '>'
       + (panelContent[tab.key] || '') + '</div>').join('');
 
-    return '<div class="we-sub-topbar"><button class="we-icon-btn" id="we-memory-settings-back" type="button" title="返回"><i class="fa-solid fa-arrow-left"></i></button><span class="we-sub-title">设置</span></div>'
+    return '<div class="we-sub-topbar"><button class="we-icon-btn" id="we-memory-settings-back" type="button" title="Back"><i class="fa-solid fa-arrow-left"></i></button><span class="we-sub-title">Settings</span></div>'
       + tabBar + panels
       + '<div class="we-settings-save-actions we-settings-save-sticky">'
-      + '<button class="we-btn" id="we-save-memory-settings">保存设置</button>'
+      + '<button class="we-btn" id="we-save-memory-settings">Save settings</button>'
       + '</div>';
   }
 
@@ -1523,13 +1526,13 @@ window.WORLD_ENGINE_UI = (function() {
     if (title) {
       const next = getNextEngineFace();
       title.textContent = face.label;
-      title.title = '切换到下一界面：' + next.label;
+      title.title = 'Switch to the next view: ' + next.label;
       title.setAttribute('aria-label', title.title);
     }
     const settings = panelElement.querySelector('#we-btn-settings-open');
     if (settings) {
       settings.classList.toggle('is-active', Boolean(callEngineFace(face, 'isSettingsOpen', false)));
-      settings.title = face.label + '设置';
+      settings.title = face.label + 'Settings';
     }
     const version = panelElement.querySelector('#we-panel-version');
     if (version) {
@@ -1648,7 +1651,7 @@ window.WORLD_ENGINE_UI = (function() {
       if (panelBodyElement) panelBodyElement.innerHTML = callEngineFace(
         currentFace,
         'render',
-        '<div class="we-empty">该引擎界面加载失败或尚未提供渲染器；其他引擎不受影响。</div>'
+        '<div class="we-empty">This engine view failed to load or has no renderer yet; other engines are not affected.</div>'
       );
       if (currentFace.id === 'memory') updateMemoryPanelHeader();
       bindEvents(null);
@@ -1714,8 +1717,8 @@ window.WORLD_ENGINE_UI = (function() {
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
     // 事件链：仅 Lv3/4，单条封顶 60
-    const CONFLICT_BASE = { 萌芽:0, 发酵:1, 逼近:2, 已爆发:4, 已消散:0 };
-    const PROGRESS_BASE = { 筹备:0, 执行:1, 关键:2, 已完成:-2, 已失败:0 };
+    const CONFLICT_BASE = { 'Brewing':0, 'Escalating':1, 'Imminent':2, 'Erupted':4, 'Dissipated':0 };
+    const PROGRESS_BASE = { 'Preparing':0, 'Underway':1, 'Critical':2, 'Completed':-2, 'Failed':0 };
     let eventP = 0;
     for (const e of (state.events || [])) {
       const level = Number(e.level) || 1;
@@ -1728,9 +1731,9 @@ window.WORLD_ENGINE_UI = (function() {
         return clamp((keepTotal - (round - e._terminalSince)) / keepTotal, 0, 1);
       };
       let p;
-      if (e.stage === '已爆发') p = 4 * level * 0.5 * remainFactor();
-      else if (e.stage === '已完成') p = -2 * remainFactor();        // 不乘 level
-      else if (e.stage === '已消散' || e.stage === '已失败') p = 0;
+      if (e.stage === 'Erupted') p = 4 * level * 0.5 * remainFactor();
+      else if (e.stage === 'Completed') p = -2 * remainFactor();        // 不乘 level
+      else if (e.stage === 'Dissipated' || e.stage === 'Failed') p = 0;
       else p = (base[e.stage] || 0) * level * 0.5;
       if (e.stall) p *= 0.65;
       eventP += clamp(p, -60, 60);
@@ -1748,12 +1751,12 @@ window.WORLD_ENGINE_UI = (function() {
 
     // 天下大势：每条持续中 +6，总封顶 20
     let trendP = 0;
-    for (const t of (state.worldTrends || [])) if (t.status !== '已结束') trendP += 6;
+    for (const t of (state.worldTrends || [])) if (t.status !== 'Ended') trendP += 6;
     trendP = Math.min(trendP, 20);
 
     // 势力：关系值 × 状态系数，总封顶 35
-    const REL = { 血盟:-1.5, 盟友:-1, 友好:-0.5, 中立:0, 冷淡:0.5, 敌对:1, 世仇:1.5 };
-    const STAT = { 鼎盛:1.25, 稳固:1, 倾轧:0.75, 困顿:0.5, 衰落:0.25, 瓦解:0 };
+    const REL = { 'Blood pact':-1.5, 'Ally':-1, 'Friendly':-0.5, 'Neutral':0, 'Cold':0.5, 'Hostile':1, 'Sworn enemy':1.5 };
+    const STAT = { 'Ascendant':1.25, 'Stable':1, 'Infighting':0.75, 'Beleaguered':0.5, 'Declining':0.25, 'Collapsing':0 };
     let factionP = 0;
     for (const f of (state.factions || [])) {
       const rel = REL[f.relation] !== undefined ? REL[f.relation] : 0;
@@ -1763,7 +1766,7 @@ window.WORLD_ENGINE_UI = (function() {
     factionP = clamp(factionP, -35, 35);
 
     // 经济：只看 climate
-    const CLIMATE = { 繁荣:-2, 平稳:0, 衰退:1, 动荡:2 };
+    const CLIMATE = { 'Booming':-2, 'Steady':0, 'Recession':1, 'Turbulent':2 };
     const econP = CLIMATE[(state.economy || {}).climate] || 0;
 
     // 区域突发：激活 +5
@@ -1774,38 +1777,38 @@ window.WORLD_ENGINE_UI = (function() {
     const pressure = eventP + windP + trendP + factionP + econP + regionP;
     const stability = Number(clamp(100 - pressure, 0, 100).toFixed(1));
     const tier =
-      stability >= 90 ? '天下太平' :
-      stability >= 70 ? '暗流浮动' :
-      stability >= 45 ? '局势紧张' :
-      stability >= 20 ? '动荡失序' : '崩坏边缘';
+      stability >= 90 ? 'Peace reigns' :
+      stability >= 70 ? 'Undercurrents' :
+      stability >= 45 ? 'Tensions high' :
+      stability >= 20 ? 'Turmoil' : 'On the brink';
 
     const r1 = v => Number(v.toFixed(1));
     return {
       stability, tier, pressure: r1(pressure),
       breakdown: {
-        事件: r1(eventP), 风声: r1(windP), 大势: r1(trendP), 势力: r1(factionP),
-        经济: r1(econP), 区域: r1(regionP)
+        'Events': r1(eventP), 'News': r1(windP), 'Trends': r1(trendP), 'Factions': r1(factionP),
+        'Economy': r1(econP), 'Region': r1(regionP)
       }
     };
   }
 
   const STABILITY_TIER_COLOR = {
-    天下太平: '#69b68e', 暗流浮动: '#58b8a9', 局势紧张: '#d0aa58',
-    动荡失序: '#d98a3d', 崩坏边缘: '#ff0000'
+    'Peace reigns': '#69b68e', 'Undercurrents': '#58b8a9', 'Tensions high': '#d0aa58',
+    'Turmoil': '#d98a3d', 'On the brink': '#ff0000'
   };
 
   // 稳定度档位 → 头部小字（诗句）
   const STABILITY_TIER_MOOD = {
-    天下太平: '海静不扬波', 暗流浮动: '暗水带花流', 局势紧张: '云急风更恶',
-    动荡失序: '乾坤含疮痍', 崩坏边缘: '坤轴欹将折'
+    'Peace reigns': 'The sea lies still, not a wave stirs', 'Undercurrents': 'Dark water carries the fallen petals', 'Tensions high': 'Clouds race and the wind turns cruel',
+    'Turmoil': 'Heaven and earth bear open wounds', 'On the brink': 'The world\'s axis tilts, about to break'
   };
 
   /** 刷新头部的「第X轮 + 稳定度小字」 */
   function updatePanelHeader(state, layer) {
     const roundEl = document.getElementById('we-header-round');
     if (roundEl) {
-      const layerText = (layer !== undefined && layer !== null && layer !== '-') ? ' · 第 ' + layer + ' 层' : '';
-      roundEl.textContent = '第 ' + ((state && state.round) || 0) + ' 轮' + layerText;
+      const layerText = (layer !== undefined && layer !== null && layer !== '-') ? ' · message ' + layer + ' ' : '';
+      roundEl.textContent = 'Round ' + ((state && state.round) || 0) + ' ' + layerText;
     }
     const moodEl = document.getElementById('we-header-mood');
     if (moodEl) {
@@ -1820,7 +1823,7 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   const VIEW_TITLES = {
-    situation: '局势', events: '事件', relations: '关系', resources: '资源', settings: '设置'
+    situation: 'Situation', events: 'Events', relations: 'Relations', resources: 'Resources', settings: 'Settings'
   };
 
   function renderSection(title, id, content) {
@@ -1831,17 +1834,17 @@ window.WORLD_ENGINE_UI = (function() {
     const isEditing = editingDigest?.scope === scope;
     const editor = isEditing
       ? '<div class="we-event-editor we-digest-editor" data-digest-scope="' + h(scope) + '">'
-        + '<button class="we-event-editor-close we-digest-editor-close" title="取消">✕</button>'
+        + '<button class="we-event-editor-close we-digest-editor-close" title="Cancel">✕</button>'
         + '<textarea class="we-digest-edit-text" rows="6">' + h(s.worldDigest || '') + '</textarea>'
-        + '<div class="we-event-editor-footer"><button class="we-btn we-btn-primary we-digest-editor-save">保存</button></div>'
+        + '<div class="we-event-editor-footer"><button class="we-btn we-btn-primary we-digest-editor-save">Save</button></div>'
         + '</div>'
       : '<div class="we-digest">' + u(s.worldDigest) + '</div>';
 
     return '<div class="we-section we-digest-card" id="we-sec-digest">'
-      + '<div class="we-section-title">世界摘要</div>'
+      + '<div class="we-section-title">World digest</div>'
       + editor
       + '<div class="we-event-actions">'
-      + '<button class="we-icon-btn we-digest-edit" data-digest-scope="' + h(scope) + '" title="编辑"><i class="fa-solid fa-pen"></i></button>'
+      + '<button class="we-icon-btn we-digest-edit" data-digest-scope="' + h(scope) + '" title="Edit"><i class="fa-solid fa-pen"></i></button>'
       + '</div></div>';
   }
 
@@ -1850,10 +1853,10 @@ window.WORLD_ENGINE_UI = (function() {
     const tierColor = STABILITY_TIER_COLOR[stab.tier] || '#58b8a9';
 
     const rows = [
-      { view: 'situation', label: '局势', sub: '天下大势 · 区域事件 · 账本', poem: '天下云集响应' },
-      { view: 'events',    label: '事件', sub: '事件链 · 风声 · 影响链',     poem: '事至而应' },
-      { view: 'relations', label: '关系', sub: '声誉 · 势力 · 仇敌录',       poem: '同声相应，同气相求' },
-      { view: 'resources', label: '资源', sub: '经济 · 秘密',               poem: '地藏无尽藏' },
+      { view: 'situation', label: 'Situation', sub: 'World trends · regional incidents · ledger', poem: 'All under heaven gather and answer' },
+      { view: 'events',    label: 'Events', sub: 'Event chains · news · influence chains',     poem: 'Meet each thing as it comes' },
+      { view: 'relations', label: 'Relations', sub: 'Reputation · factions · enemy roster',       poem: 'Like voices answer, like spirits seek each other' },
+      { view: 'resources', label: 'Resources', sub: 'Economy · secrets',               poem: 'The earth hides endless treasure' },
     ];
 
     const navRows = rows.map((r, i) => {
@@ -1877,49 +1880,49 @@ window.WORLD_ENGINE_UI = (function() {
   function renderHomeViewExpanded(s, layer, scope) {
     return renderWorldCore(s)
       + renderWorldDigest(s, scope)
-      + renderSection('天下大势', 'trends', renderWorldTrends(s.worldTrends, scope))
-      + renderSection('区域事件', 'regional', renderRegionalIncident(s.regionalIncident, scope))
-      + renderSection('事件链', 'events', renderEventList(s.events, scope))
-      + renderSection('风声', 'winds', renderWindList(s.winds, scope))
-      + renderSection('影响链', 'influence', renderInfluenceChain(s.influenceChain, scope))
-      + renderSection('声誉', 'reputation', renderReputation(s.reputation, scope))
-      + renderSection('势力', 'factions', renderFactionList(s.factions, scope))
-      + renderSection('仇敌录', 'enemies', renderEnemies(s.enemies, scope))
-      + renderSection('经济', 'economy', renderEconomy(s.economy, scope))
-      + renderSection('秘密', 'blackbox', renderBlackbox(s.blackbox, scope))
-      + renderSection('事件账本', 'ledger', renderLedger(s.memories));
+      + renderSection('World trends', 'trends', renderWorldTrends(s.worldTrends, scope))
+      + renderSection('Regional incidents', 'regional', renderRegionalIncident(s.regionalIncident, scope))
+      + renderSection('Event chains', 'events', renderEventList(s.events, scope))
+      + renderSection('News', 'winds', renderWindList(s.winds, scope))
+      + renderSection('Influence chains', 'influence', renderInfluenceChain(s.influenceChain, scope))
+      + renderSection('Reputation', 'reputation', renderReputation(s.reputation, scope))
+      + renderSection('Factions', 'factions', renderFactionList(s.factions, scope))
+      + renderSection('Enemy roster', 'enemies', renderEnemies(s.enemies, scope))
+      + renderSection('Economy', 'economy', renderEconomy(s.economy, scope))
+      + renderSection('Secrets', 'blackbox', renderBlackbox(s.blackbox, scope))
+      + renderSection('Event ledger', 'ledger', renderLedger(s.memories));
   }
 
   function renderSubView(viewKey, s, layer, scope) {
     let content = '';
     if (viewKey === 'situation') {
-      content = renderSection('天下大势', 'trends', renderWorldTrends(s.worldTrends, scope))
-        + renderSection('区域事件', 'regional', renderRegionalIncident(s.regionalIncident, scope))
-        + renderSection('事件账本', 'ledger', renderLedger(s.memories));
+      content = renderSection('World trends', 'trends', renderWorldTrends(s.worldTrends, scope))
+        + renderSection('Regional incidents', 'regional', renderRegionalIncident(s.regionalIncident, scope))
+        + renderSection('Event ledger', 'ledger', renderLedger(s.memories));
     } else if (viewKey === 'events') {
-      content = renderSection('事件链', 'events', renderEventList(s.events, scope))
-        + renderSection('风声', 'winds', renderWindList(s.winds, scope))
-        + renderSection('影响链', 'influence', renderInfluenceChain(s.influenceChain, scope));
+      content = renderSection('Event chains', 'events', renderEventList(s.events, scope))
+        + renderSection('News', 'winds', renderWindList(s.winds, scope))
+        + renderSection('Influence chains', 'influence', renderInfluenceChain(s.influenceChain, scope));
     } else if (viewKey === 'relations') {
-      content = renderSection('声誉', 'reputation', renderReputation(s.reputation, scope))
-        + renderSection('势力', 'factions', renderFactionList(s.factions, scope))
-        + renderSection('仇敌录', 'enemies', renderEnemies(s.enemies, scope));
+      content = renderSection('Reputation', 'reputation', renderReputation(s.reputation, scope))
+        + renderSection('Factions', 'factions', renderFactionList(s.factions, scope))
+        + renderSection('Enemy roster', 'enemies', renderEnemies(s.enemies, scope));
     } else if (viewKey === 'resources') {
-      content = renderSection('经济', 'economy', renderEconomy(s.economy, scope))
-        + renderSection('秘密', 'blackbox', renderBlackbox(s.blackbox, scope));
+      content = renderSection('Economy', 'economy', renderEconomy(s.economy, scope))
+        + renderSection('Secrets', 'blackbox', renderBlackbox(s.blackbox, scope));
     }
     return '<div class="we-sub-topbar">'
-      + '<button class="we-icon-btn" id="we-btn-back" title="返回"><i class="fa-solid fa-arrow-left"></i></button>'
+      + '<button class="we-icon-btn" id="we-btn-back" title="Back"><i class="fa-solid fa-arrow-left"></i></button>'
       + '<span class="we-sub-title">' + (VIEW_TITLES[viewKey] || viewKey) + '</span>'
       + '</div>' + content;
   }
 
   /** 存档点小标题：青色默认小字 + 「- N轮 - M层」 */
   function checkpointTitle(checkpoint, cpLayer) {
-    if (!checkpoint) return '存档点';
+    if (!checkpoint) return 'Checkpoint';
     const round = checkpoint.round || 0;
     const layer = (cpLayer === undefined || cpLayer === null) ? '-' : cpLayer;
-    return '存档点 - ' + round + ' 轮 - ' + layer + ' 层';
+    return 'Checkpoint - round ' + round + ' - message ' + layer + ' ';
   }
 
   // 更新日志（纯数据；与渲染解耦。新版本发布时在数组头部加一项即可）。
@@ -1927,49 +1930,49 @@ window.WORLD_ENGINE_UI = (function() {
   //   date    —— 可选，日期不确定的留月份/年份；
   //   items   —— 该版本改动条目（每条一行，渲染时走 h() 转义）。
   const CHANGELOG = [
-    { version: '3.0.2', date: '2026-07-19', items: ['放宽事件链的早期创建条件：已有具体迹象的筹划、试探、调查起步或矛盾初现，可以在尚未成熟时进入事件链持续观察。', '放宽风声的传播起点：明确信息主题一旦开始公开发布、被他人听闻或转述、经渠道传递或形成小范围议论，即可创建，不再要求已影响其他持久状态。', '保留事件与风声的归并、去重和合法传播边界，避免放宽准入后产生重复条目或私密信息泄露。'] },
-    { version: '3.0.1', date: '2026-07-16', items: ['修复云白、早樱浅色主题下事件链标题与 Lv.2 等级文字接近背景色、难以阅读的问题。', '事件等级、类型、阶段、推演结果、终局印章与倒计时改为浅色主题自适应对比度；深色主题保持原有配色。'] },
-    { version: '3.0.0', date: '2026-07-14', items: ['世界引擎进入 3.0 正式版本：继续以独立世界状态推演、分层注入、本地事件机制、可编辑面板与聊天级存档为核心。', '记忆引擎 1.0 正式接入：人物、实体、纪要与总述保持独立数据和故障边界，并可按需向世界推演提供命中的最新人物与实体记忆。', '自动纪要从首次进入聊天时的当前层开始统计新增轮次；历史对话整理仅由纪要与总述批量重填执行。'] },
-    { version: '2.5.4', date: '2026-07-14', items: ['记忆引擎任务接入顶部运行提示：人物/实体、纪要、总述在自动或手动执行时均显示开始、完成、失败或停止状态。'] },
-    { version: '2.5.3', date: '2026-07-14', items: ['记忆引擎标题下方新增处理游标：人物/实体处理楼层、纪要处理楼层及总述已归并纪要条数；未处理时统一显示 0，不新增存储字段。'] },
-    { version: '2.5.2', date: '2026-07-14', items: ['世界与记忆设置新增“首楼为 AI 开场白”，默认开启；开启时自动总结和批量重填忽略第 0 层，关闭时首楼按普通对话参与处理。', '记忆数据编辑器统一使用深色输入框与白色文字，提升各主题下的编辑可读性。'] },
-    { version: '2.5.1', date: '2026-07-13', items: ['新增「近端随机事件」本地机制：按概率生成一条与当前对话、主角、所在区域或正在发展事项存在明确因果的事件链或风声，结果自动转为正式 event/wind 对象。', '近端动态支持调整触发概率、成功后冷却及事件链/风声比例；类型由本地预选，返回不合格或 API 异常时保持原类型继续强制生成，冷却最小为 1。近端、远方与区域事件可在同轮分别完成。', '精简并放宽事件链创建与归并规则：删除「至少两种未来走向」等过度准入条件，以核心目标、主要对象和连续执行过程识别同一主事项；已有事项的步骤、阻碍、局部结果与善后沿用原 id，只有可独立跨轮发展的新事项才另建事件链。'] },
-    { version: '2.5.0', date: '2026-07-12', items: ['新增「远方随机事件」本地机制：事件账本达到可调门槛后按概率触发，抽取最新四分之一账本并从旧记录随机补足至二分之一，要求推演 API 生成一条与主角及既有账本无直接关系的远方事件链或风声。', '远方动态由本地按可调比例预选事件链或风声（默认各 50%），使用临时标记确认生成成功后再分配正式 ID；返回不合格或 API 异常时保留同一类型与账本样本继续强制生成，成功后进入可调冷却。', '正文注入新增「全等级注入」选项：开启后事件链与风声的 Lv1–Lv4 全部注入；关闭时维持高等级筛选，并保留低等级事件已爆发/已完成时的注入。', '区域突发事件类型说明改为更中性的跨题材表达，去除官道、盐铺、乡兵等古风绑定词，并要求具体表现适配当前世界观、时代、技术、地理与社会制度。', '修复冷却配置为 0 时的异常：远方事件冷却、区域事件消散后冷却以及区域事件持续轮数统一限制为最小 1。'] },
-    { version: '2.4.2', date: '2026-07-12', items: ['世界状态注入与正文行为规则改为更中性的跨题材表达，并对齐当前世界引擎机制。', '新增 6 套界面配色，面板、顶部状态与悬浮球同步换色；本地机制四个区块新增独立恢复默认。', '高级设置新增 API 异常自动重试次数：支持空返回、乱码、解析失败、HTTP、超时及网络错误重试，默认关闭。'] },
-    { version: '2.4.1', date: '2026-07-11', items: ['新增「本地机制」设置：区域事件、事件骰子、风声消散、保留上限拆成四个可折叠区块，关键公式直接写在设置里，可调整事件爆发、推进/受挫、消散与保留轮数等参数。', '注入设置新增最大注入字符数，可按模型上下文和酒馆配置控制世界状态注入长度，避免 prompt 被过长状态挤爆。'] },
-    { version: '2.4.0', date: '2026-07-10', items: ['主线纳入 test 分支的世界状态增强：持续实体新增稳定 id，事件、势力、天下大势、风声、仇敌等对象在改名、重 roll、恢复存档和复制时更不容易被误合并或重复污染。', '优化世界状态模块准入与推演 prompt 规则：收紧声誉、经济、仇敌、信息黑盒、区域事件、知情边界等模块的创建/更新条件，减少无因果更新、面板泄露和过度落盘。'] },
-    { version: '2.3.22', date: '2026-07-10', items: ['控制台新增「API 请求参数」结构化日志：每次推演会打印连接方式、目标地址、模型、temperature、max_tokens、timeout 秒数、消息数量与 prompt 字符数，方便核对实际请求参数；日志不输出 API Key，也不展开完整 prompt 正文。'] },
-    { version: '2.3.21', date: '2026-07-10', items: ['API 设置页新增温度、最大输出 token、请求超时（秒）三个选项；推演请求不再硬编码 0.7 / 8000，而是读取用户设置。', '增强 API 无响应保护：超时覆盖请求响应头与响应正文读取全过程，避免服务端半开响应或正文卡住时一直停在「推演中」；获取模型列表也会按同一超时中止。'] },
-    { version: '2.3.20', date: '2026-07-09', items: ['二级页面的返回栏与分级标题改为顶部吸附，长列表滚动到任意位置都能直接返回。', '世界摘要新增行内编辑入口：点击摘要卡片后显示编辑按钮，可修改并保存；不提供复制或删除操作。', '修复编辑事件、势力、风声、大势、世界摘要等信息时内容不断回弹：编辑期间暂停后台自动刷新，避免面板重建覆盖尚未保存的输入；保存或取消后仍正常刷新。'] },
-    { version: '2.3.19', date: '2026-06-29', items: ['修复「没重 roll 却注入了存档点（旧轮次世界状态）」：v2.3.18 用纯数值 state.chatLayer===chatLayer 判重 roll，但酒馆 GENERATION_STARTED 在用户楼 push 进 chat **之前** emit——新一轮发消息时 chatLayer 仍 == 上一轮 state.chatLayer，被误判成重 roll、注入了上一轮存档点（与「蚀心入魔·数据库」等双生成插件叠加时每轮必现）。现重 roll 判据改用酒馆原生 type（GENERATION_STARTED 的 type=swipe/regenerate 才是真重 roll），不再靠楼层数值推断；dryRun（数据库类插件的预热/算 token 生成）一律跳过，杜绝「正文生成完又注入一遍」。', '注入自检查看器增强（只读）：「实际发出的消息链」现在每一条（system/user/assistant 全部）都可点击展开看完整内容，不再只显示字数；方便核对发给大模型的完整 prompt。诊断包仍只导 role+长度（不含正文，避免体积膨胀与泄露聊天上下文）。'] },
-    { version: '2.3.18', date: '2026-06-29', items: ['修复重 roll 推演轮次回退（解耦重 roll 与 redo）：自动推演把「重 roll（同楼 swipe 重新生成）」混为 redo（从存档点恢复基底重推）→ 重 roll 后推演轮次卡在存档点轮次而非当前轮。现 evolve 基底选择三分——forward（新轮次/从当前推）/ redo（手动卫星按钮回存档点）/ 自动重 roll（mode 未传且非新轮次→不恢复存档点，直接在当前 state 上推，轮次保持当前轮）。', '修复重 roll 注入走错分支（解耦注入判据与事件时序）：v2.3.17 的 _pendingReroll 闸门依赖酒馆 swipe 事件时序，易被 GENERATION_ENDED 提前清零 / 双生成插件撞窗口 → 重 roll 时注入了当前轮状态而非存档点。（注：v2.3.18 换的纯数值判据有新回归，已由 v2.3.19 的 type 判据彻底修正。）', '移除 _pendingReroll 闸门（v2.3.17 引入，现完全不需要），代码更简单'] },
-    { version: '2.3.17', date: '2026-06-28', items: ['修复与「会扰动楼层/双生成」类插件（如数据库类酒馆助手脚本）叠加时世界状态注入「时灵时不灵」：根因是 v2.3.14 的「同层重 roll 不注入」守卫判据 fingerprint==chatLayer 过于激进——fingerprint 在推演那刻被钉到当层，新一轮第①次生成（真正产出剧情正文那次）刚开始、新用户楼尚未落地时 chatLayer 恰好仍 == fingerprint，被误判成重 roll 而撤掉注入，导致真实正文拿不到世界状态。现给守卫加「真 swipe 闸门」：只在确实收到酒馆原生 MESSAGE_SWIPED 事件后（_pendingReroll=true）守卫才有资格触发，普通新生成不带 swipe 事件故照常注入当前状态；且触发时改为注入存档点（这层正文产生前的世界状态）而非完全不注入，更贴合「重 roll 注入存档点」本意（无存档点才退回不注入）。判据是酒馆原生事件，对任何插件通用、不含任何插件特判'] },
-    { version: '2.3.16', date: '2026-06-28', items: ['新增「注入自检」（调试卡顶部，只读）：很多客户反馈「注入不成功」却无从判断——根因是 registerInjection 的成功只代表「调酒馆接口没报错」，从不证明世界状态真进了发给大模型的正文。现订阅酒馆 prompt 组装完成事件（对话补全 chat_completion_prompt_ready / 文本补全 generate_after_combine_prompts），读取注入之后酒馆真正拼好的 prompt 链并按 role 分好展示，用大白话判定本轮：✅已进正文 / ❌注册了却没进正文(真失败) / ⏸按设计跳过(关了注入或同层重 roll) / —还没生成；纯只读、解耦成独立模块，不改注入逻辑、不动 eventData、忽略算 token 的预热轮，对推演零影响；诊断包同步补采该快照'] },
-    { version: '2.3.15', date: '2026-06-25', items: ['修复自动推演静默瘫痪：API 推演请求无超时，若落入网络黑洞（代理无响应/上游不返回也不报错）fetch 会永久挂起，evolution 的 _isRunning 永不复位，此后所有 GENERATION_ENDED 触发的自动推演被 isRunning() 守卫静默跳过、直到用户切一次聊天才解锁；现新增 apiTimeoutMs（默认 120s，0=不超时），超时按推演失败处理让 finally 正常复位并在状态栏报明确超时原因（用户主动中止/切聊天仍走原 AbortError 显示「已中止」）'] },
-    { version: '2.3.14', date: '2026-06-23', items: ['修复 redo 轮次虚增：点「重新推进」卫星按钮时 round 无条件 +1（在 isNew 判定之前）导致 redo 也涨轮次，与注释「redo 轮次不变」不符；现 round++ 移进 if(isNew)，只 forward / 自动新轮次涨', '修复 redo 无存档点静默退化：首次推演后无 checkpoint，点 redo 旧版整块跳过→无声退化为「在当前 state 上推」+ round++ 的伪 redo（白涨一轮无提示）；现 mode==="redo" 且无 cp 时 return false 并报错「无存档点，无法重新推进（redo）；请先『向前推进』至少一轮」，不再伪 forward', '修复重 roll 同层注入旧世界状态：重 roll 同层（chatLayer==stateLayer）旧版走 else 注入「基于旧正文推演出的当前状态」，干扰正在重写的新正文；现 applyInjectionForCurrentRound 加「同层已推演→不注入」分支，判据用 fingerprint（只在真正新轮次时更新，比 chatLayer 忠实）命中 unregisterInjection，避免新正文被旧世界状态带偏', '新增小地球（悬浮球）左侧第四卫星「插头」总开关：一键关闭/开启 推演与注入（联动 evolveMode + injectIntoPrompt 两个现有设置字段，不新增字段；关闭=切手动推演+关注入，开启=切自动推演+开注入；manual 模式自带拦 pending autoEvolveTimer，无需额外总开关注解）'] },
-    { version: '2.3.13', date: '2026-06-22', items: ['修复自动推演死锁：开了 syncToChat 的空壳聊天（从未推演过）首次 AI 楼层后状态行卡在「第 0/1 轮」永不自动推演', '修复火山方舟等自定义版本前缀（/api/v3、/api/coding/v3）API 无法拉取模型：URL 规整不再硬塞 /v1，版本前缀由用户填到完整，URL 框旁加格式提示', 'chatcache 跨设备同步护栏：云端缺少 checkpoint/fingerprint 时不随 exact 删除本地锚点，避免再次掉进死锁'] },
-    { version: '2.3.12', date: '2026-06-22', items: ['新增「关于」选项卡：内置更新日志，可下拉选择版本查看历次改动', '正则过滤「简单模式」：勾选标签自动生成删除正则'] },
-    { version: '2.3.11', date: '2026-06-22', items: ['正则过滤支持 /pattern/flags 写法、保存时校验、新增测试按钮'] },
-    { version: '2.3.10', date: '2026-06-21', items: ['引擎预设系统代码审查修复（性能与卡顿）', '诊断包补采预设系统与 prompt 分段'] },
-    { version: '2.3.9',  date: '2026-06',    items: ['引擎预设系统：推演 prompt 硬编码段可编辑、可保存、可切换'] },
-    { version: '2.3.8',  date: '2026-06',    items: ['推演 Prompt 全透明分段展示（只读）'] },
-    { version: '2.3.7',  date: '2026-06',    items: ['新增「经酒馆代理」连接方式，绕过第三方 API 的 CORS'] },
-    { version: '2.3.6',  date: '2026-06',    items: ['设置页选项卡化'] },
-    { version: '2.3.5',  date: '2026-06',    items: ['一键导出诊断包'] },
-    { version: '2.3.4',  date: '2026-06',    items: ['面板标题旁显示扩展版本号'] },
-    { version: '2.2.0',  date: '2026',       items: ['酒馆缓存与存档：跨设备同步 + 防丢失存档'] }
+    { version: '3.0.2', date: '2026-07-19', items: ['Relaxed the early creation conditions for event chains: planning, probing, the start of an investigation or a conflict first appearing, once concrete signs show, can enter an event chain for ongoing observation before it matures.', 'Relaxed where news starts spreading: once a clear information topic is publicly released, overheard or retold by others, passed on through channels or discussed in a small circle, it can be created, without first needing to affect other lasting state.', 'Kept merging, deduplication and valid spreading boundaries for events and news, so the looser admission does not produce duplicate entries or leak private information.'] },
+    { version: '3.0.1', date: '2026-07-16', items: ['Fixed event-chain titles and Lv.2 level text being close to the background color and hard to read in the light Cloud White and Early Cherry themes.', 'Event level, type, stage, evolution result, final-outcome stamp and countdown now adapt their contrast in light themes; dark themes keep the original colors.'] },
+    { version: '3.0.0', date: '2026-07-14', items: ['World Engine reaches the 3.0 release: still centered on independent world-state evolution, layered injection, local event mechanics, an editable panel and per-chat saves.', 'Memory Engine 1.0 is officially integrated: characters, entities, notes and overviews keep separate data and failure boundaries, and can feed matching up-to-date character and entity memories to world evolution on demand.', 'Automatic notes count new rounds from the current message when the chat is first opened; past conversation is filed only by the notes and overview batch refill.'] },
+    { version: '2.5.4', date: '2026-07-14', items: ['Memory Engine tasks now use the top status banner: characters/entities, notes and overviews show started, complete, failed or stopped whether run automatically or by hand.'] },
+    { version: '2.5.3', date: '2026-07-14', items: ['Added processing cursors under the Memory Engine title: the message reached by character/entity processing, the message reached by notes, and the number of notes merged into overviews; unprocessed ones show 0, with no new stored fields.'] },
+    { version: '2.5.2', date: '2026-07-14', items: ['Added "First message is the AI greeting" to world and memory settings, on by default; when on, automatic summaries and batch refills skip message 0; when off, the first message is processed like any other.', 'Memory data editors now use dark input boxes with white text for better readability in every theme.'] },
+    { version: '2.5.1', date: '2026-07-13', items: ['Added the local "nearby random event" mechanic: by chance, generates one event chain or news item with a clear causal link to the current conversation, the protagonist, their region or matters in progress; the result automatically becomes a regular event/wind object.', 'Nearby developments support adjusting the trigger chance, cooldown after success and the event chain / news ratio; the type is preselected locally, and on an invalid return or API error it keeps the same type and forces generation again, with a minimum cooldown of 1. Nearby, distant and regional events can each be completed in the same round.', 'Simplified and relaxed the rules for creating and merging event chains: removed excessive admission conditions such as "at least two possible futures", and identifies the same main matter by core goal, main parties and continuous process; steps, obstacles, partial results and aftermath of an existing matter keep the original id, and only new matters that can develop on their own across rounds get a new event chain.'] },
+    { version: '2.5.0', date: '2026-07-12', items: ['Added the local "distant random event" mechanic: once the event ledger reaches an adjustable threshold, it triggers by chance, takes the newest quarter of the ledger and fills up to half with random older records, and asks the evolution API to generate one distant event chain or news item with no direct link to the protagonist or the existing ledger.', 'Distant developments are preselected locally as an event chain or news at an adjustable ratio (50% each by default); a temporary marker confirms successful generation before the official ID is assigned; on an invalid return or API error the same type and ledger sample are kept and generation is forced again, followed by an adjustable cooldown after success.', 'Story injection gained an "Inject all levels" option: when on, event chains and news of Lv1–Lv4 are all injected; when off, the high-level filter stays, and low-level events are still injected once they reach Erupted/Completed.', 'Regional incident type descriptions now use more neutral, cross-genre wording, removing words tied to a historical Chinese setting such as imperial highways, salt shops and village militia, and require the concrete form to fit the current setting, era, technology, geography and social system.', 'Fixed errors when a cooldown is set to 0: distant event cooldown, cooldown after a regional incident fades and regional incident duration are all limited to a minimum of 1.'] },
+    { version: '2.4.2', date: '2026-07-12', items: ['World-state injection and story behavior rules now use more neutral, cross-genre wording and match the current World Engine mechanics.', 'Added 6 color themes; the panel, top status and floating ball change color together; the four sections of local mechanics each gained their own reset to defaults.', 'Advanced settings gained an API error auto-retry count: retries on empty responses, garbled text, parse failures, HTTP errors, timeouts and network errors; off by default.'] },
+    { version: '2.4.1', date: '2026-07-11', items: ['Added "Local mechanics" settings: regional incidents, event dice, news fading and retention limits are split into four collapsible sections with the key formulas written right in the settings, and parameters such as event eruption, advance/setback, fading and retention rounds can be adjusted.', 'Injection settings gained a maximum number of injected characters, so the length of the world-state injection can be controlled by model context and SillyTavern setup, keeping an oversized state from crowding out the prompt.'] },
+    { version: '2.4.0', date: '2026-07-10', items: ['Merged the world-state improvements from the test branch into the main line: persistent entities gained stable ids, so events, factions, world trends, news, enemies and other objects are less likely to be wrongly merged or polluted with duplicates when renamed, rerolled, restored from a save or copied.', 'Refined admission for world-state modules and the evolution prompt rules: tightened the creation/update conditions for reputation, economy, enemies, the information black box, regional incidents, knowledge boundaries and more, reducing causeless updates, panel leaks and over-saving.'] },
+    { version: '2.3.22', date: '2026-07-10', items: ['Added an "API request parameters" structured log to the console: each evolution prints the connection mode, target URL, model, temperature, max_tokens, timeout in seconds, message count and prompt character count, so the actual request parameters can be checked; the log never prints the API key or the full prompt text.'] },
+    { version: '2.3.21', date: '2026-07-10', items: ['The API settings page gained three options: temperature, max output tokens and request timeout (seconds); evolution requests no longer hard-code 0.7 / 8000 and read the user\'s settings instead.', 'Stronger protection against unresponsive APIs: the timeout now covers the whole process of reading response headers and body, so a half-open server response or a stuck body no longer leaves it stuck at "Evolving"; fetching the model list is also aborted by the same timeout.'] },
+    { version: '2.3.20', date: '2026-07-09', items: ['The back bar and section titles of sub-pages now stick to the top, so you can go back directly from anywhere in a long list.', 'The world digest gained an inline edit entry: click the digest card to show an edit button, then change and save it; no copy or delete actions are offered.', 'Fixed content snapping back while editing events, factions, news, trends, the world digest and so on: background auto-refresh pauses during editing so rebuilding the panel cannot overwrite unsaved input; it refreshes normally after saving or canceling.'] },
+    { version: '2.3.19', date: '2026-06-29', items: ['Fixed "injected the checkpoint (an old round\'s world state) without a reroll": v2.3.18 detected rerolls with a plain numeric check state.chatLayer===chatLayer, but SillyTavern emits GENERATION_STARTED **before** the user message is pushed into chat — so when sending a message in a new round, chatLayer still == the previous round\'s state.chatLayer, it was mistaken for a reroll, and the previous round\'s checkpoint was injected (happening every round when combined with dual-generation plugins such as database extensions). Reroll detection now uses SillyTavern\'s native type (only type=swipe/regenerate of GENERATION_STARTED is a real reroll) instead of inferring from message numbers; dryRun (warm-up / token-counting generations from database-type plugins) is always skipped, ending "injected again after the story was generated".', 'Better injection self-check viewer (read-only): every entry in "Actual message chain sent" (system/user/assistant alike) can now be clicked to expand its full content instead of only showing its length, making it easy to check the full prompt sent to the model. The diagnostics bundle still only exports role + length (no text, to avoid bloat and leaking chat context).'] },
+    { version: '2.3.18', date: '2026-06-29', items: ['Fixed the evolution round going backward on reroll (decoupled reroll from redo): automatic evolution mixed up "reroll (swipe/regenerate the same message)" with redo (restore the base from the checkpoint and evolve again) → after a reroll the round was stuck at the checkpoint\'s round instead of the current one. The evolve base is now chosen three ways — forward (new round / evolve from current) / redo (manual satellite button, back to the checkpoint) / automatic reroll (no mode passed and not a new round → don\'t restore the checkpoint, evolve on the current state, round stays the current one).', 'Fixed reroll injection taking the wrong branch (decoupled injection detection from event timing): the v2.3.17 _pendingReroll gate depended on the timing of SillyTavern\'s swipe events and was easily cleared early by GENERATION_ENDED or hit by dual-generation plugins → rerolls injected the current round\'s state instead of the checkpoint. (Note: the plain numeric check that v2.3.18 switched to had a new regression, fully fixed by the type check in v2.3.19.)', 'Removed the _pendingReroll gate (introduced in v2.3.17, now completely unnecessary); the code is simpler'] },
+    { version: '2.3.17', date: '2026-06-28', items: ['Fixed world-state injection "working only sometimes" alongside plugins that disturb message numbers or generate twice (such as database-type SillyTavern helper scripts): the root cause was that the v2.3.14 "don\'t inject on a same-message reroll" guard check fingerprint==chatLayer was too aggressive — the fingerprint is pinned to the current message at evolution time, so when the first generation of a new round (the one that actually produces story text) had just started and the new user message had not landed yet, chatLayer still happened to == fingerprint, it was mistaken for a reroll and the injection was removed, so the real story text got no world state. The guard now has a "real swipe gate": it may only trigger after actually receiving SillyTavern\'s native MESSAGE_SWIPED event (_pendingReroll=true), so ordinary new generations without a swipe event inject the current state as usual; and when it does trigger, it now injects the checkpoint (the world state from before this message\'s text) instead of nothing, closer to the intent of "rerolls inject the checkpoint" (it falls back to no injection only when there is no checkpoint). The check uses native SillyTavern events, works with any plugin and has no plugin-specific special cases'] },
+    { version: '2.3.16', date: '2026-06-28', items: ['Added an "injection self-check" (top of the debug card, read-only): many users reported "injection doesn\'t work" with no way to tell — the root cause is that registerInjection succeeding only means "calling the SillyTavern API didn\'t error", and never proves the world state actually made it into the text sent to the model. It now subscribes to SillyTavern\'s prompt-assembled events (chat completion chat_completion_prompt_ready / text completion generate_after_combine_prompts), reads the prompt chain SillyTavern actually built after injection, shows it split by role, and judges this round in plain words: ✅ reached the prompt / ❌ registered but missing from the prompt (a real failure) / ⏸ skipped by design (injection off, or a same-message reroll) / — not generated yet. It is purely read-only and split into its own module: it does not change the injection logic, does not touch eventData, ignores token-counting warm-up rounds, and has zero effect on evolution; the diagnostics bundle also captures this snapshot'] },
+    { version: '2.3.15', date: '2026-06-25', items: ['Fixed automatic evolution silently freezing: evolution API requests had no timeout, so if one fell into a network black hole (proxy not responding / upstream neither returning nor erroring), fetch hung forever, evolution\'s _isRunning never reset, and every later automatic evolution triggered by GENERATION_ENDED was silently skipped by the isRunning() guard until the user switched chats once; added apiTimeoutMs (120s by default, 0 = no timeout); a timeout is handled as an evolution failure so finally resets normally and the status bar reports a clear timeout reason (user aborts / chat switches still use the original AbortError and show "Aborted")'] },
+    { version: '2.3.14', date: '2026-06-23', items: ['Fixed redo inflating the round: clicking the "Redo" satellite button added +1 to round unconditionally (before the isNew check), so redo also raised the round, contrary to the comment "redo keeps the round"; round++ now lives inside if(isNew), so only forward / automatic new rounds raise it', 'Fixed redo silently degrading without a checkpoint: after the first evolution there is no checkpoint, and clicking redo used to skip the whole block → silently degrading into "evolve on the current state" + round++, a fake redo (one free round with no notice); now with mode==="redo" and no checkpoint it returns false and reports "No checkpoint, so redo is not possible; use \'Advance\' for at least one round", no longer a fake forward', 'Fixed same-message rerolls injecting the old world state: rerolling the same message (chatLayer==stateLayer) used to go to else and inject "the current state evolved from the old text", interfering with the new text being rewritten; applyInjectionForCurrentRound now has an "already evolved on this message → don\'t inject" branch, using the fingerprint (updated only on truly new rounds, more faithful than chatLayer) to call unregisterInjection, so the new text isn\'t skewed by the old world state', 'Added a fourth satellite on the left of the little globe (floating ball), a "plug" master switch: turns evolution and injection off/on in one click (linked to the two existing settings evolveMode + injectIntoPrompt, no new fields; off = switch to manual evolution + injection off, on = switch to automatic evolution + injection on; manual mode already blocks the pending autoEvolveTimer, so no extra master-switch handling is needed)'] },
+    { version: '2.3.13', date: '2026-06-22', items: ['Fixed an automatic evolution deadlock: in an empty chat with syncToChat on (never evolved), after the first AI message the status line got stuck at "Round 0/1" and never evolved automatically', 'Fixed APIs with custom version prefixes such as Volcano Ark (/api/v3, /api/coding/v3) being unable to fetch models: URL normalization no longer forces /v1; users fill in the full version prefix, and a format hint was added next to the URL box', 'chatcache cross-device sync guard: when the cloud copy lacks checkpoint/fingerprint, the local anchors are no longer deleted along with exact, avoiding falling into the deadlock again'] },
+    { version: '2.3.12', date: '2026-06-22', items: ['Added an "About" tab: a built-in changelog where you can pick a version from a dropdown to see past changes', 'Regex filter "simple mode": tick tags to generate removal regexes automatically'] },
+    { version: '2.3.11', date: '2026-06-22', items: ['Regex filter supports /pattern/flags syntax, validation on save, and a new test button'] },
+    { version: '2.3.10', date: '2026-06-21', items: ['Code-review fixes for the engine preset system (performance and stutter)', 'The diagnostics bundle now also captures the preset system and prompt segments'] },
+    { version: '2.3.9',  date: '2026-06',    items: ['Engine preset system: the hard-coded segments of the evolution prompt can be edited, saved and switched'] },
+    { version: '2.3.8',  date: '2026-06',    items: ['Fully transparent segmented view of the evolution prompt (read-only)'] },
+    { version: '2.3.7',  date: '2026-06',    items: ['Added the "Through the SillyTavern proxy" connection mode, bypassing third-party APIs\' CORS'] },
+    { version: '2.3.6',  date: '2026-06',    items: ['Settings page split into tabs'] },
+    { version: '2.3.5',  date: '2026-06',    items: ['One-click diagnostics bundle export'] },
+    { version: '2.3.4',  date: '2026-06',    items: ['Extension version shown next to the panel title'] },
+    { version: '2.2.0',  date: '2026',       items: ['SillyTavern cache and saves: cross-device sync + loss-proof saves'] }
   ];
 
   // [FIX] 选项卡定义：label + 包含哪些片段。仅归类现有 section，不新增/不删功能。
   const SETTINGS_TABS = [
-    { key: 'common',    label: '常用' },
-    { key: 'link',      label: '联动' },
-    { key: 'advanced',  label: '高级' },
-    { key: 'mechanics', label: '本地机制' },
-    { key: 'archive',   label: '存档' },
-    { key: 'worldbook', label: '世界书' },
-    { key: 'debug',     label: '调试' },
-    { key: 'about',     label: '关于' }
+    { key: 'common',    label: 'Common' },
+    { key: 'link',      label: 'Linking' },
+    { key: 'advanced',  label: 'Advanced' },
+    { key: 'mechanics', label: 'Local mechanics' },
+    { key: 'archive',   label: 'Saves' },
+    { key: 'worldbook', label: 'World Info' },
+    { key: 'debug',     label: 'Debug' },
+    { key: 'about',     label: 'About' }
   ];
   let _settingsTab = 'common';
   let _memorySettingsTab = 'common';
@@ -1977,7 +1980,7 @@ window.WORLD_ENGINE_UI = (function() {
   function renderSettingsView(checkpoint, cpLayer) {
     const cpContent = checkpoint
       ? renderCheckpointSections(checkpoint, cpLayer)
-      : '<div class="we-empty">暂无存档点</div>';
+      : '<div class="we-empty">No checkpoint yet</div>';
     const form = renderSettingsForm();              // {api,evolve,backfill,filter,display,chatcache,inject}
     const extra = renderSettingsAfterCheckpoint();  // {worldbook,data,tone}
 
@@ -1988,14 +1991,14 @@ window.WORLD_ENGINE_UI = (function() {
 
     // 调试 section（原样，含诊断包按钮 + renderDebug，移入「调试」卡）
     const debugSection = '<div class="we-section we-debug-section">'
-      + '<div class="we-section-title"><span class="we-debug-toggle" title="展开或收起调试信息"><span class="we-toggle-arrow">▶</span>调试</span></div>'
+      + '<div class="we-section-title"><span class="we-debug-toggle" title="Expand or collapse debug info"><span class="we-toggle-arrow">▶</span>Debug</span></div>'
       + '<div id="we-debug-body" style="display:none;">'
-      + '<button class="we-btn" id="we-export-diag" style="width:100%;margin-bottom:8px;">导出诊断包</button><!-- [FIX] 诊断包：与是否已推演无关，始终可导出 -->'
+      + '<button class="we-btn" id="we-export-diag" style="width:100%;margin-bottom:8px;">Export diagnostics bundle</button><!-- [FIX] diagnostics bundle: always exportable, whether or not evolution has run -->'
       + '<div id="we-debug-render">' + renderDebug() + '</div>'
       // [MAP] 引擎预设管理：与 PR#12 只读分段展示同处调试卡，把 4 个硬编码段升级为可编辑+预设化。
       // 独立锚点 #we-preset-manage，局部刷新；保存走独立 storage key，不进 we-save-settings。
       + '<div class="we-preset-section">'
-      + '<div class="we-section-title">引擎预设（可编辑推演 prompt 段）</div>'
+      + '<div class="we-section-title">Engine presets (editable evolution prompt segments)</div>'
       + '<div id="we-preset-manage">' + renderPresetManage() + '</div>'
       + '</div>'
       + '</div></div>';
@@ -2013,13 +2016,13 @@ window.WORLD_ENGINE_UI = (function() {
     };
 
     const tabBar = '<div class="we-settings-tabs-shell">'
-      + '<button class="we-settings-tab-scroll" data-dir="-1" title="向左滚动"><i class="fa-solid fa-chevron-left"></i></button>'
+      + '<button class="we-settings-tab-scroll" data-dir="-1" title="Scroll left"><i class="fa-solid fa-chevron-left"></i></button>'
       + '<div class="we-settings-tabs" id="we-settings-tabs">'
       + SETTINGS_TABS.map(t =>
           '<button class="we-settings-tab' + (t.key === _settingsTab ? ' we-settings-tab--active' : '')
           + '" data-tab="' + t.key + '">' + t.label + '</button>').join('')
       + '</div>'
-      + '<button class="we-settings-tab-scroll" data-dir="1" title="向右滚动"><i class="fa-solid fa-chevron-right"></i></button>'
+      + '<button class="we-settings-tab-scroll" data-dir="1" title="Scroll right"><i class="fa-solid fa-chevron-right"></i></button>'
       + '</div>';
 
     const panels = SETTINGS_TABS.map(t =>
@@ -2028,15 +2031,15 @@ window.WORLD_ENGINE_UI = (function() {
       + (panelContent[t.key] || '') + '</div>').join('');
 
     return '<div class="we-sub-topbar">'
-      + '<button class="we-icon-btn" id="we-btn-back" title="返回"><i class="fa-solid fa-arrow-left"></i></button>'
-      + '<span class="we-sub-title">设置</span>'
+      + '<button class="we-icon-btn" id="we-btn-back" title="Back"><i class="fa-solid fa-arrow-left"></i></button>'
+      + '<span class="we-sub-title">Settings</span>'
       + '</div>'
       + tabBar
       + panels
       // 保存/重置：底部常驻（sticky），任何选项卡都能一键保存全部设置
       + '<div class="we-settings-save-actions we-settings-save-sticky">'
-      + '<button class="we-btn" id="we-save-settings">保存设置</button>'
-      + '<button class="we-btn we-btn-danger" id="we-reset-world">重置世界</button>'
+      + '<button class="we-btn" id="we-save-settings">Save settings</button>'
+      + '<button class="we-btn we-btn-danger" id="we-reset-world">Reset world</button>'
       + '</div>';
   }
 
@@ -2044,16 +2047,16 @@ window.WORLD_ENGINE_UI = (function() {
   //   数据来自 CHANGELOG 常量（与渲染解耦）；版本下拉复用 #we-preset-select 范式——
   //   点击弹出原生可滚动列表，版本再多也不撑爆布局。默认选中第一项（最新版）。
   function renderAbout() {
-    if (!CHANGELOG.length) return '<div class="we-empty">暂无更新日志</div>';
+    if (!CHANGELOG.length) return '<div class="we-empty">No changelog yet</div>';
     const cur = window.WORLD_ENGINE_VERSION;
-    const curBadge = cur ? '<span class="we-changelog-cur">当前版本 v' + h(cur) + '</span>' : '';
+    const curBadge = cur ? '<span class="we-changelog-cur">Current version v' + h(cur) + '</span>' : '';
 
     const optHtml = CHANGELOG.map(function (c, i) {
-      const label = 'v' + c.version + (c.date ? '（' + c.date + '）' : '');
+      const label = 'v' + c.version + (c.date ? ' (' + c.date + ')' : '');
       return '<option value="' + h(c.version) + '"' + (i === 0 ? ' selected' : '') + '>' + h(label) + '</option>';
     }).join('');
     const verBar = '<div class="we-changelog-row">'
-      + '<label class="we-changelog-row-label">查看版本</label>'
+      + '<label class="we-changelog-row-label">View version</label>'
       + '<select id="we-changelog-select" class="we-changelog-select">' + optHtml + '</select>'
       + '</div>';
 
@@ -2075,17 +2078,17 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   function renderCheckpointSections(s, layer) {
-    return renderSection('天下大势', 'cp-trends', renderWorldTrends(s.worldTrends, 'checkpoint'))
-      + renderSection('事件链', 'cp-events', renderEventList(s.events, 'checkpoint'))
-      + renderSection('势力', 'cp-factions', renderFactionList(s.factions, 'checkpoint'))
-      + renderSection('风声', 'cp-winds', renderWindList(s.winds, 'checkpoint'))
-      + renderSection('声誉', 'cp-reputation', renderReputation(s.reputation, 'checkpoint'))
-      + renderSection('经济', 'cp-economy', renderEconomy(s.economy, 'checkpoint'))
-      + renderSection('仇敌录', 'cp-enemies', renderEnemies(s.enemies, 'checkpoint'))
-      + renderSection('影响链', 'cp-influence', renderInfluenceChain(s.influenceChain, 'checkpoint'))
-      + renderSection('区域事件', 'cp-regional', renderRegionalIncident(s.regionalIncident, 'checkpoint'))
-      + renderSection('秘密', 'cp-blackbox', renderBlackbox(s.blackbox, 'checkpoint'))
-      + renderSection('事件账本', 'cp-ledger', renderLedger(s.memories));
+    return renderSection('World trends', 'cp-trends', renderWorldTrends(s.worldTrends, 'checkpoint'))
+      + renderSection('Event chains', 'cp-events', renderEventList(s.events, 'checkpoint'))
+      + renderSection('Factions', 'cp-factions', renderFactionList(s.factions, 'checkpoint'))
+      + renderSection('News', 'cp-winds', renderWindList(s.winds, 'checkpoint'))
+      + renderSection('Reputation', 'cp-reputation', renderReputation(s.reputation, 'checkpoint'))
+      + renderSection('Economy', 'cp-economy', renderEconomy(s.economy, 'checkpoint'))
+      + renderSection('Enemy roster', 'cp-enemies', renderEnemies(s.enemies, 'checkpoint'))
+      + renderSection('Influence chains', 'cp-influence', renderInfluenceChain(s.influenceChain, 'checkpoint'))
+      + renderSection('Regional incidents', 'cp-regional', renderRegionalIncident(s.regionalIncident, 'checkpoint'))
+      + renderSection('Secrets', 'cp-blackbox', renderBlackbox(s.blackbox, 'checkpoint'))
+      + renderSection('Event ledger', 'cp-ledger', renderLedger(s.memories));
   }
 
   /** 世界核心：环形稳定度仪表 + 四格关键计数 */
@@ -2094,7 +2097,7 @@ window.WORLD_ENGINE_UI = (function() {
     const tierColor = STABILITY_TIER_COLOR[stab.tier] || '#58b8a9';
     const detail = Object.entries(stab.breakdown)
       .filter(([, v]) => v !== 0)
-      .map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('　') || '无压力来源';
+      .map(([k, v]) => `${k} ${v > 0 ? '+' : ''}${v}`).join('  ') || 'No sources of pressure';
 
     const R = 66, C = 2 * Math.PI * R;
     const pct = Math.max(0, Math.min(1, stab.stability / 100));
@@ -2143,15 +2146,15 @@ window.WORLD_ENGINE_UI = (function() {
     }
 
     const stats = [
-      ['事件', (s.events || []).length],
-      ['势力', (s.factions || []).length],
-      ['风声', (s.winds || []).length],
-      ['大势', (s.worldTrends || []).length],
+      ['Events', (s.events || []).length],
+      ['Factions', (s.factions || []).length],
+      ['News', (s.winds || []).length],
+      ['Trends', (s.worldTrends || []).length],
     ].map(([k, v]) => `<div class="we-core-stat"><div class="we-core-stat-k">${k}</div><div class="we-core-stat-v">${v}</div></div>`).join('');
 
     return `
       <div class="we-section we-core-section">
-        <div class="we-core" title="各来源压力（仅 Lv3/4 计入）：${detail}　|　压力 ${stab.pressure}">
+        <div class="we-core" title="Pressure by source (only Lv3/4 counted): ${detail}  |  pressure ${stab.pressure}">
           <div class="we-core-ring">
             <svg viewBox="0 0 160 160" width="160" height="160">
               <defs>
@@ -2174,8 +2177,8 @@ window.WORLD_ENGINE_UI = (function() {
               <circle class="we-core-dot-core" cx="${dotX}" cy="${dotY}" r="2.5" fill="#ffffff" opacity="0.95"/>
             </svg>
             <div class="we-core-center">
-              <div class="we-core-title">世界核心</div>
-              <div class="we-core-sub">稳定度</div>
+              <div class="we-core-title">World core</div>
+              <div class="we-core-sub">Stability</div>
               <div class="we-core-pct" style="color:${tierColor};">${stab.stability.toFixed(1)}<span>%</span></div>
               <div class="we-core-tier" style="color:${tierColor};">${stab.tier}</div>
             </div>
@@ -2210,21 +2213,21 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   function renderEventList(events, scope) {
-    if (!events || !events.length) return '<div class="we-empty">暂无事件链</div>';
+    if (!events || !events.length) return '<div class="we-empty">No event chains yet</div>';
     const curRound = (core.loadState() || {}).round || 0;
     return renderPagedList(events, 'events-' + scope, (e, eventIndex) => {
       const stageColors = {
-        萌芽:'#d6b85a',
-        发酵:'#d98a3d',
-        逼近:'#cf5f3f',
-        已爆发:'#b93f3f',
-        已消散:'#888888',
-        筹备:'#7de9d9',
-        执行:'#58e8b3',
-        关键:'#2a8a5d',
-        已完成:'#1b5e3b',
-        已失败:'#888888',
-        停滞:'#6688aa'
+        'Brewing':'#d6b85a',
+        'Escalating':'#d98a3d',
+        'Imminent':'#cf5f3f',
+        'Erupted':'#b93f3f',
+        'Dissipated':'#888888',
+        'Preparing':'#7de9d9',
+        'Underway':'#58e8b3',
+        'Critical':'#2a8a5d',
+        'Completed':'#1b5e3b',
+        'Failed':'#888888',
+        'Stalled':'#6688aa'
       };
       const levelColors = {
         1: '#c0c0c0',
@@ -2235,18 +2238,18 @@ window.WORLD_ENGINE_UI = (function() {
       const color = stageColors[e.stage] || '#888';
       const levelColor = levelColors[e.level] || '#9aa6b2';
       let extras = '';
-      const terminalStages = e.type === 'progress' ? ['已完成', '已失败'] : ['已爆发', '已消散'];
+      const terminalStages = e.type === 'progress' ? ['Completed', 'Failed'] : ['Erupted', 'Dissipated'];
       const isTerminal = terminalStages.includes(e.stage);
       if (e.consecutiveFails > 0 && !isTerminal) {
         const maxFails = localEventMaxFails(e);
         extras += ` <span class="we-badge" style="background:#6662;color:#888;">${e.consecutiveFails}/${maxFails}</span>`;
       }
       if (e.stall && !isTerminal) {
-        extras += ' <span class="we-badge" style="background:#6688aa22;color:#6688aa;">停滞</span>';
+        extras += ' <span class="we-badge" style="background:#6688aa22;color:#6688aa;">Stalled</span>';
       }
       let metaExtra = '';
       if (e.evolveResult && !isTerminal) {
-        const resultColors = { '成功':'#7a9a7a', '保持':'#b8a070', '受挫':'#c46a6a' };
+        const resultColors = { 'Success':'#7a9a7a', 'Hold':'#b8a070', 'Setback':'#c46a6a' };
         const color = resultColors[e.evolveResult] || '#888';
         metaExtra = ` <span class="we-badge we-event-result-badge" style="--event-result:${color};">${e.evolveResult}</span>`;
       }
@@ -2256,41 +2259,41 @@ window.WORLD_ENGINE_UI = (function() {
         const pct = Math.round((e.stageRound / 9) * 100);
 
         const progressMotionClass = {
-          '成功': 'we-event-progress-success',
-          '保持': 'we-event-progress-hold',
-          '受挫': 'we-event-progress-fail'
+          'Success': 'we-event-progress-success',
+          'Hold': 'we-event-progress-hold',
+          'Setback': 'we-event-progress-fail'
         }[e.evolveResult] || '';
 
         progressHtml = `<div class="we-event-progress ${progressMotionClass}">
           <div style="width:${pct}%;background:${color};"></div>
         </div>`;
       }
-      const typeName = e.type === 'progress' ? '推进型' : '冲突型';
+      const typeName = e.type === 'progress' ? 'progress' : 'conflict';
       const typeColor = e.type === 'progress' ? '#57b7a8' : '#cf5f3f';
       // 正面终局倒计时徽标（已爆发/已完成，保留 2+level*2 轮后自动清退）
       let countdownHtml = '';
-      const POSITIVE_TERMINALS = ['已爆发', '已完成'];
+      const POSITIVE_TERMINALS = ['Erupted', 'Completed'];
       if (POSITIVE_TERMINALS.includes(e.stage) && e._terminalSince !== undefined) {
         const keepRounds = localTerminalKeepRounds(e);
         const left = keepRounds - (curRound - e._terminalSince) + 1;
         if (left >= 1) {
-          const cdColor = e.stage === '已完成' ? '#58e8b3' : '#e07465';
-          countdownHtml = ` <span class="we-badge we-event-countdown" style="--event-countdown:${cdColor};" title="该事件在 ${left} 轮后自动清退"><i class="fa-regular fa-clock"></i>剩余${left}轮</span>`;
+          const cdColor = e.stage === 'Completed' ? '#58e8b3' : '#e07465';
+          countdownHtml = ` <span class="we-badge we-event-countdown" style="--event-countdown:${cdColor};" title="This event is cleared automatically in ${left} rounds"><i class="fa-regular fa-clock"></i>${left} rounds left</span>`;
         }
       }
       const terminalStamp = {
-        已完成: { text: '完成', color: '#58e8b3' },
-        已爆发: { text: '爆发', color: '#e07465' },
-        已消散: { text: '消散', color: '#a6a6ad' },
-        已失败: { text: '失败', color: '#c08aaa' }
+        'Completed': { text: 'Done', color: '#58e8b3' },
+        'Erupted': { text: 'Erupted', color: '#e07465' },
+        'Dissipated': { text: 'Faded', color: '#a6a6ad' },
+        'Failed': { text: 'Failed', color: '#c08aaa' }
       }[e.stage];
       const isEditing = editingEvent?.scope === scope && editingEvent?.index === eventIndex;
       // 颜色作为 CSS 变量下放，描边/底色/光效全交由样式层处理（不再内联左色条）
       const itemStyle = `--event-accent:${color};--event-type:${typeColor};--event-level:${levelColor};`;
       const stageClassMap = {
-        萌芽: 'we-stage-sprout', 发酵: 'we-stage-ferment', 逼近: 'we-stage-loom',
-        已爆发: 'we-stage-erupt', 已消散: 'we-stage-fade',
-        已完成: 'we-stage-done', 已失败: 'we-stage-failed',
+        'Brewing': 'we-stage-sprout', 'Escalating': 'we-stage-ferment', 'Imminent': 'we-stage-loom',
+        'Erupted': 'we-stage-erupt', 'Dissipated': 'we-stage-fade',
+        'Completed': 'we-stage-done', 'Failed': 'we-stage-failed',
       };
       const stageClass = stageClassMap[e.stage] || '';
       const itemClass = (isTerminal ? 'we-event-item we-event-item-terminal' : 'we-event-item') + (stageClass ? ' ' + stageClass : '');
@@ -2306,9 +2309,9 @@ window.WORLD_ENGINE_UI = (function() {
         : '';
       const actionHtml = isEditing ? '' : `
         <div class="we-event-actions">
-          <button class="we-icon-btn we-event-delete" data-event-scope="${scope}" data-event-index="${eventIndex}" title="删除事件"><i class="fa-solid fa-trash-can"></i></button>
-          <button class="we-icon-btn we-event-copy" data-event-scope="${scope}" data-event-index="${eventIndex}" title="复制事件"><i class="fa-solid fa-copy"></i></button>
-          <button class="we-icon-btn we-event-edit" data-event-scope="${scope}" data-event-index="${eventIndex}" title="修改事件"><i class="fa-solid fa-pen"></i></button>
+          <button class="we-icon-btn we-event-delete" data-event-scope="${scope}" data-event-index="${eventIndex}" title="Delete event"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="we-icon-btn we-event-copy" data-event-scope="${scope}" data-event-index="${eventIndex}" title="Copy event"><i class="fa-solid fa-copy"></i></button>
+          <button class="we-icon-btn we-event-edit" data-event-scope="${scope}" data-event-index="${eventIndex}" title="Edit event"><i class="fa-solid fa-pen"></i></button>
         </div>`;
       const editHtml = isEditing ? renderEventEditor(e, scope, eventIndex) : '';
       return `<div class="${itemClass}" style="${itemStyle}">
@@ -2324,14 +2327,14 @@ window.WORLD_ENGINE_UI = (function() {
 
   function renderEventEditor(event, scope, eventIndex) {
     const stages = event.type === 'progress'
-      ? ['筹备', '执行', '关键', '已完成', '已失败']
-      : ['萌芽', '发酵', '逼近', '已爆发', '已消散'];
+      ? ['Preparing', 'Underway', 'Critical', 'Completed', 'Failed']
+      : ['Brewing', 'Escalating', 'Imminent', 'Erupted', 'Dissipated'];
     const levelOptions = [1, 2, 3, 4].map(level =>
       `<option value="${level}" ${Number(event.level) === level ? 'selected' : ''}>Lv.${level}</option>`
     ).join('');
     const typeOptions = [
-      ['conflict', '冲突型'],
-      ['progress', '推进型']
+      ['conflict', 'conflict'],
+      ['progress', 'progress']
     ].map(([type, label]) =>
       `<option value="${type}" ${event.type === type ? 'selected' : ''}>${label}</option>`
     ).join('');
@@ -2340,7 +2343,7 @@ window.WORLD_ENGINE_UI = (function() {
     ).join('');
 
     // 正面终局倒计时：默认值取当前剩余，非终局事件留空
-    const POSITIVE_TERMINALS = ['已爆发', '已完成'];
+    const POSITIVE_TERMINALS = ['Erupted', 'Completed'];
     const keepRounds = localTerminalKeepRounds(event);
     let leftValue = '';
     if (POSITIVE_TERMINALS.includes(event.stage)) {
@@ -2353,30 +2356,30 @@ window.WORLD_ENGINE_UI = (function() {
 
     return `
       <div class="we-event-editor" data-event-scope="${scope}" data-event-index="${eventIndex}">
-        <button class="we-event-editor-close" title="取消修改"><i class="fa-solid fa-xmark"></i></button>
+        <button class="we-event-editor-close" title="Cancel edit"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">
-          <label class="we-event-editor-wide">事件名字<input class="we-event-edit-name" type="text" value="${u(event.name || '')}"></label>
-          <label>等级<select class="we-event-edit-level">${levelOptions}</select></label>
-          <label>类型<select class="we-event-edit-type">${typeOptions}</select></label>
-          <label>阶段<select class="we-event-edit-stage">${stageOptions}</select></label>
-          <label>阶段进度<input class="we-event-edit-round" type="number" min="1" max="9" value="${event.stageRound || 1}"></label>
-          <label title="仅正面终局（已爆发/已完成）生效，到期自动清退；非终局留空">剩余轮数<input class="we-event-edit-left" type="number" min="1" placeholder="终局专用" value="${leftValue}"></label>
-          <label class="we-event-editor-wide">描述<textarea class="we-event-edit-desc" rows="3">${u(event.desc || '')}</textarea></label>
+          <label class="we-event-editor-wide">Event name<input class="we-event-edit-name" type="text" value="${u(event.name || '')}"></label>
+          <label>Level<select class="we-event-edit-level">${levelOptions}</select></label>
+          <label>Type<select class="we-event-edit-type">${typeOptions}</select></label>
+          <label>Stage<select class="we-event-edit-stage">${stageOptions}</select></label>
+          <label>Stage progress<input class="we-event-edit-round" type="number" min="1" max="9" value="${event.stageRound || 1}"></label>
+          <label title="Only applies to positive final outcomes (Erupted/Completed), cleared automatically when it runs out; leave empty for non-final">Rounds left<input class="we-event-edit-left" type="number" min="1" placeholder="Final only" value="${leftValue}"></label>
+          <label class="we-event-editor-wide">Description<textarea class="we-event-edit-desc" rows="3">${u(event.desc || '')}</textarea></label>
         </div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-event-editor-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-event-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
   function renderFactionList(factions, scope) {
-    if (!factions || !factions.length) return '<div class="we-empty">暂无势力</div>';
+    if (!factions || !factions.length) return '<div class="we-empty">No factions yet</div>';
     return renderPagedList(factions, 'factions', (f, factionIndex) => {
       const relationColors = {
-        血盟:'#2563eb', 盟友:'#0ea5e9', 友好:'#06b6d4', 中立:'#94a3b8',
-        冷淡:'#f59e0b', 紧张:'#f59e0b', 敌对:'#ef4444', 世仇:'#991b1b'
+        'Blood pact':'#2563eb', 'Ally':'#0ea5e9', 'Friendly':'#06b6d4', 'Neutral':'#94a3b8',
+        'Cold':'#f59e0b', 'Tense':'#f59e0b', 'Hostile':'#ef4444', 'Sworn enemy':'#991b1b'
       };
-      const statusColors = { 鼎盛:'#d0aa58', 稳固:'#69b68e', 倾轧:'#cf5f3f', 困顿:'#70a8d2', 衰落:'#a6a6ad', 瓦解:'#888888' };
+      const statusColors = { 'Ascendant':'#d0aa58', 'Stable':'#69b68e', 'Infighting':'#cf5f3f', 'Beleaguered':'#70a8d2', 'Declining':'#a6a6ad', 'Collapsing':'#888888' };
       const relColor = relationColors[f.relation] || '#888';
       const stColor = statusColors[f.status] || '#888';
 
@@ -2384,26 +2387,26 @@ window.WORLD_ENGINE_UI = (function() {
 
       let pillarsHtml = '';
       if (f.powerPillars && f.powerPillars.length) {
-        pillarsHtml = '<div class="we-faction-meta">权力支柱: ' + f.powerPillars.map(p => '<span class="we-pillar-tag">' + u(p) + '</span>').join('') + '</div>';
+        pillarsHtml = '<div class="we-faction-meta">Pillars of power: ' + f.powerPillars.map(p => '<span class="we-pillar-tag">' + u(p) + '</span>').join('') + '</div>';
       }
 
       const actionHtml = isEditing ? '' : `
         <div class="we-event-actions">
-          <button class="we-icon-btn we-faction-delete" data-faction-scope="${scope}" data-faction-index="${factionIndex}" title="删除势力"><i class="fa-solid fa-trash-can"></i></button>
-          <button class="we-icon-btn we-faction-copy" data-faction-scope="${scope}" data-faction-index="${factionIndex}" title="复制势力"><i class="fa-solid fa-copy"></i></button>
-          <button class="we-icon-btn we-faction-edit" data-faction-scope="${scope}" data-faction-index="${factionIndex}" title="编辑势力"><i class="fa-solid fa-pen"></i></button>
+          <button class="we-icon-btn we-faction-delete" data-faction-scope="${scope}" data-faction-index="${factionIndex}" title="Delete faction"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="we-icon-btn we-faction-copy" data-faction-scope="${scope}" data-faction-index="${factionIndex}" title="Copy faction"><i class="fa-solid fa-copy"></i></button>
+          <button class="we-icon-btn we-faction-edit" data-faction-scope="${scope}" data-faction-index="${factionIndex}" title="Edit faction"><i class="fa-solid fa-pen"></i></button>
         </div>`;
       const editHtml = isEditing ? renderFactionEditor(f, factionIndex, scope) : '';
 
       return `<div class="we-faction-item">
         <div class="we-faction-name">${u(f.name)}</div>
         <div class="we-faction-tags">
-          <span class="we-tag" style="border-color:${stColor};color:${stColor};">${f.status||'稳固'}</span>
-          <span class="we-tag" style="border-color:${relColor};color:${relColor};">${f.relation||'中立'}</span>
+          <span class="we-tag" style="border-color:${stColor};color:${stColor};">${f.status||'Stable'}</span>
+          <span class="we-tag" style="border-color:${relColor};color:${relColor};">${f.relation||'Neutral'}</span>
           ${f.scope ? '<span class="we-tag">' + u(f.scope) + '</span>' : ''}
         </div>
         ${f.currentGoal ? `<div class="we-faction-goal">${u(f.currentGoal)}</div>` : ''}
-        ${f.core_person ? `<div class="we-faction-meta">核心人物: ${u(f.core_person)}</div>` : ''}
+        ${f.core_person ? `<div class="we-faction-meta">Core person: ${u(f.core_person)}</div>` : ''}
         ${pillarsHtml}
         ${actionHtml}
         ${editHtml}
@@ -2412,9 +2415,9 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   function renderFactionEditor(f, index, scope) {
-    const statusOptions = ['鼎盛','稳固','倾轧','困顿','衰落','瓦解'].map(s =>
+    const statusOptions = ['Ascendant','Stable','Infighting','Beleaguered','Declining','Collapsing'].map(s =>
       `<option value="${s}" ${f.status === s ? 'selected' : ''}>${s}</option>`).join('');
-    const relationOptions = ['血盟','盟友','友好','中立','冷淡','敌对','世仇'].map(r =>
+    const relationOptions = ['Blood pact','Ally','Friendly','Neutral','Cold','Hostile','Sworn enemy'].map(r =>
       `<option value="${r}" ${f.relation === r ? 'selected' : ''}>${r}</option>`).join('');
     const pillars = [];
     for (let i = 0; i < 3; i++) pillars.push(f.powerPillars?.[i] || '');
@@ -2423,69 +2426,69 @@ window.WORLD_ENGINE_UI = (function() {
       <div class="we-event-editor" data-faction-scope="${scope}" data-faction-index="${index}">
         <button class="we-event-editor-close we-faction-editor-close"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">
-          <label class="we-event-editor-wide">势力名称<input class="we-faction-edit-name" type="text" value="${u(f.name||'')}"></label>
-          <label>运势<select class="we-faction-edit-status">${statusOptions}</select></label>
-          <label>关系<select class="we-faction-edit-relation">${relationOptions}</select></label>
-          <label>范围<input class="we-faction-edit-scope" type="text" value="${u(f.scope||'')}"></label>
-          <label>目标<input class="we-faction-edit-goal" type="text" value="${u(f.currentGoal||'')}"></label>
-          <label>核心人物<input class="we-faction-edit-core" type="text" value="${u(f.core_person||'')}"></label>
-          ${[0,1,2].map(i => `<label>权力支柱${i+1}<input class="we-faction-edit-pillar" data-pillar-idx="${i}" type="text" value="${u(pillars[i])}" maxlength="4" placeholder="最多4字"></label>`).join('')}
+          <label class="we-event-editor-wide">Faction name<input class="we-faction-edit-name" type="text" value="${u(f.name||'')}"></label>
+          <label>Fortune<select class="we-faction-edit-status">${statusOptions}</select></label>
+          <label>Relation<select class="we-faction-edit-relation">${relationOptions}</select></label>
+          <label>Scope<input class="we-faction-edit-scope" type="text" value="${u(f.scope||'')}"></label>
+          <label>Goal<input class="we-faction-edit-goal" type="text" value="${u(f.currentGoal||'')}"></label>
+          <label>Core person<input class="we-faction-edit-core" type="text" value="${u(f.core_person||'')}"></label>
+          ${[0,1,2].map(i => `<label>Pillar of power ${i+1}<input class="we-faction-edit-pillar" data-pillar-idx="${i}" type="text" value="${u(pillars[i])}" maxlength="28" placeholder="Up to 3 words"></label>`).join('')}
         </div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-faction-editor-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-faction-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
   function renderWorldTrends(trends, scope) {
-    if (!trends || !trends.length) return '<div class="we-empty">暂无天下大势</div>';
+    if (!trends || !trends.length) return '<div class="we-empty">No world trends yet</div>';
     return renderPagedList(trends, 'world-trends', (trend, trendIndex) => {
-      const ended = trend.status === '已结束';
+      const ended = trend.status === 'Ended';
       const color = ended ? '#888888' : '#c9a45c';
       const isEditing = editingTrend?.scope === scope && editingTrend?.index === trendIndex;
       const actionHtml = isEditing ? '' : `
         <div class="we-event-actions">
-          <button class="we-icon-btn we-trend-delete" data-trend-scope="${scope}" data-trend-index="${trendIndex}" title="删除天下大势"><i class="fa-solid fa-trash-can"></i></button>
-          <button class="we-icon-btn we-trend-copy" data-trend-scope="${scope}" data-trend-index="${trendIndex}" title="复制天下大势"><i class="fa-solid fa-copy"></i></button>
-          <button class="we-icon-btn we-trend-edit" data-trend-scope="${scope}" data-trend-index="${trendIndex}" title="编辑天下大势"><i class="fa-solid fa-pen"></i></button>
+          <button class="we-icon-btn we-trend-delete" data-trend-scope="${scope}" data-trend-index="${trendIndex}" title="Delete world trend"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="we-icon-btn we-trend-copy" data-trend-scope="${scope}" data-trend-index="${trendIndex}" title="Copy world trend"><i class="fa-solid fa-copy"></i></button>
+          <button class="we-icon-btn we-trend-edit" data-trend-scope="${scope}" data-trend-index="${trendIndex}" title="Edit world trend"><i class="fa-solid fa-pen"></i></button>
         </div>`;
       const editHtml = isEditing ? renderTrendEditor(trend, scope, trendIndex) : '';
       return `<div class="we-trend-item${ended ? ' we-trend-ended' : ''}" style="border-left-color:${color};">
         ${actionHtml}
         <div class="we-trend-header">
           <span class="we-trend-name">${u(trend.name)}</span>
-          <span class="we-badge" style="background:${color}22;color:${color};">${u(trend.status || '持续中')}</span>
+          <span class="we-badge" style="background:${color}22;color:${color};">${u(trend.status || 'Ongoing')}</span>
         </div>
-        <div class="we-trend-scope">${u(trend.scope || '天下')}</div>
+        <div class="we-trend-scope">${u(trend.scope || 'Everywhere')}</div>
         <div class="we-trend-description">${u(trend.description || '?')}</div>
-        <div class="we-trend-source"><span>来源</span>${u(trend.source || '?')}</div>
+        <div class="we-trend-source"><span>Source</span>${u(trend.source || '?')}</div>
         ${editHtml}
       </div>`;
     });
   }
 
   function renderTrendEditor(trend, scope, index) {
-    const statusOptions = ['持续中', '已结束'].map(s =>
+    const statusOptions = ['Ongoing', 'Ended'].map(s =>
       `<option value="${s}" ${trend.status === s ? 'selected' : ''}>${s}</option>`).join('');
     return `
       <div class="we-event-editor" data-trend-scope="${scope}" data-trend-index="${index}">
         <button class="we-event-editor-close we-trend-editor-close"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">
-          <label class="we-event-editor-wide">大势名称<input class="we-trend-edit-name" type="text" value="${u(trend.name||'')}"></label>
-          <label>状态<select class="we-trend-edit-status">${statusOptions}</select></label>
-          <label>范围<input class="we-trend-edit-scope" type="text" value="${u(trend.scope||'')}"></label>
-          <label>来源<input class="we-trend-edit-source" type="text" value="${u(trend.source||'')}"></label>
-          <label class="we-event-editor-wide">描述<textarea class="we-trend-edit-desc" rows="3">${u(trend.description||'')}</textarea></label>
+          <label class="we-event-editor-wide">Trend name<input class="we-trend-edit-name" type="text" value="${u(trend.name||'')}"></label>
+          <label>Status<select class="we-trend-edit-status">${statusOptions}</select></label>
+          <label>Scope<input class="we-trend-edit-scope" type="text" value="${u(trend.scope||'')}"></label>
+          <label>Source<input class="we-trend-edit-source" type="text" value="${u(trend.source||'')}"></label>
+          <label class="we-event-editor-wide">Description<textarea class="we-trend-edit-desc" rows="3">${u(trend.description||'')}</textarea></label>
         </div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-trend-editor-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-trend-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
   function renderWindList(winds, scope) {
-    if (!winds || !winds.length) return '<div class="we-empty">暂无风声</div>';
-    const typeNames = { announcement:'公告', report:'消息', rumor:'流言', sentiment:'舆情' };
+    if (!winds || !winds.length) return '<div class="we-empty">No news yet</div>';
+    const typeNames = { announcement:'Announcement', report:'Report', rumor:'Rumor', sentiment:'Sentiment' };
     const typeColors = { announcement:'#c94b4b', report:'#4a8ab5', rumor:'#9178a0', sentiment:'#c17a35' };
     return renderPagedList(winds, 'winds', (w, windIndex) => {
       const typeColor = typeColors[w.type] || '#888';
@@ -2495,9 +2498,9 @@ window.WORLD_ENGINE_UI = (function() {
 
       const actionHtml = isEditing ? '' : `
         <div class="we-event-actions">
-          <button class="we-icon-btn we-wind-delete" data-wind-scope="${scope}" data-wind-index="${windIndex}" title="删除风声"><i class="fa-solid fa-trash-can"></i></button>
-          <button class="we-icon-btn we-wind-copy" data-wind-scope="${scope}" data-wind-index="${windIndex}" title="复制风声"><i class="fa-solid fa-copy"></i></button>
-          <button class="we-icon-btn we-wind-edit" data-wind-scope="${scope}" data-wind-index="${windIndex}" title="编辑风声"><i class="fa-solid fa-pen"></i></button>
+          <button class="we-icon-btn we-wind-delete" data-wind-scope="${scope}" data-wind-index="${windIndex}" title="Delete news"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="we-icon-btn we-wind-copy" data-wind-scope="${scope}" data-wind-index="${windIndex}" title="Copy news"><i class="fa-solid fa-copy"></i></button>
+          <button class="we-icon-btn we-wind-edit" data-wind-scope="${scope}" data-wind-index="${windIndex}" title="Edit news"><i class="fa-solid fa-pen"></i></button>
         </div>`;
       const editHtml = isEditing ? renderWindEditor(w, windIndex, scope) : '';
 
@@ -2513,13 +2516,13 @@ window.WORLD_ENGINE_UI = (function() {
         }
       }
       html += '<div class="we-wind-header">';
-      html += '<span class="we-wind-topic">' + u(w.topic || '未命名风声') + '</span>';
-      html += '<span class="we-badge" style="background:' + typeColor + '22;color:' + typeColor + ';">' + (typeNames[w.type] || '风声') + '</span>';
+      html += '<span class="we-wind-topic">' + u(w.topic || 'Untitled news') + '</span>';
+      html += '<span class="we-badge" style="background:' + typeColor + '22;color:' + typeColor + ';">' + (typeNames[w.type] || 'News') + '</span>';
       html += '<span class="we-badge" style="background:' + levelColor + '22;color:' + levelColor + ';">Lv.' + (w.level || 1) + '</span>';
       html += '</div>';
-      html += '<div class="we-wind-field we-wind-content"><span class="we-wind-label">内容</span><span>' + u(w.content || '?') + '</span></div>';
-      html += '<div class="we-wind-field"><span class="we-wind-label">范围</span><span>' + u(w.scope || '?') + '</span></div>';
-      html += '<div class="we-wind-field"><span class="we-wind-label">来源</span><span>' + u(w.source || '?') + '</span></div>';
+      html += '<div class="we-wind-field we-wind-content"><span class="we-wind-label">Content</span><span>' + u(w.content || '?') + '</span></div>';
+      html += '<div class="we-wind-field"><span class="we-wind-label">Scope</span><span>' + u(w.scope || '?') + '</span></div>';
+      html += '<div class="we-wind-field"><span class="we-wind-label">Source</span><span>' + u(w.source || '?') + '</span></div>';
       html += editHtml;
       html += actionHtml;
       html += '</div>';
@@ -2528,7 +2531,7 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   function renderWindEditor(w, index, scope) {
-    const typeOptions = [['announcement','公告'],['report','消息'],['rumor','流言'],['sentiment','舆情']].map(([v,label]) =>
+    const typeOptions = [['announcement','Announcement'],['report','Report'],['rumor','Rumor'],['sentiment','Sentiment']].map(([v,label]) =>
       `<option value="${v}" ${w.type === v ? 'selected' : ''}>${label}</option>`).join('');
     const levelOptions = [1,2,3,4].map(l =>
       `<option value="${l}" ${w.level === l ? 'selected' : ''}>Lv.${l}</option>`).join('');
@@ -2537,31 +2540,31 @@ window.WORLD_ENGINE_UI = (function() {
       <div class="we-event-editor" data-wind-index="${index}" data-wind-scope="${scope}">
         <button class="we-event-editor-close we-wind-editor-close"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">
-          <label class="we-event-editor-wide">主题<input class="we-wind-edit-topic" type="text" value="${u(w.topic||'')}"></label>
-          <label>类型<select class="we-wind-edit-type">${typeOptions}</select></label>
-          <label>等级<select class="we-wind-edit-level">${levelOptions}</select></label>
-          <label>范围<input class="we-wind-edit-scope" type="text" value="${u(w.scope||'')}"></label>
-          <label>来源<input class="we-wind-edit-source" type="text" value="${u(w.source||'')}"></label>
-          <label class="we-event-editor-wide">内容<textarea class="we-wind-edit-content" rows="3">${u(w.content||'')}</textarea></label>
+          <label class="we-event-editor-wide">Topic<input class="we-wind-edit-topic" type="text" value="${u(w.topic||'')}"></label>
+          <label>Type<select class="we-wind-edit-type">${typeOptions}</select></label>
+          <label>Level<select class="we-wind-edit-level">${levelOptions}</select></label>
+          <label>Scope<input class="we-wind-edit-scope" type="text" value="${u(w.scope||'')}"></label>
+          <label>Source<input class="we-wind-edit-source" type="text" value="${u(w.source||'')}"></label>
+          <label class="we-event-editor-wide">Content<textarea class="we-wind-edit-content" rows="3">${u(w.content||'')}</textarea></label>
         </div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-wind-editor-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-wind-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
   function renderReputation(rep, scope) {
-    if (!rep) return '<div class="we-empty">暂无声誉数据</div>';
-    const levels = ['天怒人怨','声名狼藉','默默无闻','受人尊敬','万众敬仰'];
-    const levelColors = { '天怒人怨':'#e05555', '声名狼藉':'#d97a5a', '默默无闻':'#7a8a9a', '受人尊敬':'#6cae8e', '万众敬仰':'#c9a45c' };
-    const legacyMap = { '小有名气':'受人尊敬' };
-    const dimLabels = { authority:'朝堂', common:'市井', shadow:'草莽', circuit:'同道' };
+    if (!rep) return '<div class="we-empty">No reputation data yet</div>';
+    const levels = ['Reviled','Notorious','Unknown','Respected','Revered'];
+    const levelColors = { 'Reviled':'#e05555', 'Notorious':'#d97a5a', 'Unknown':'#7a8a9a', 'Respected':'#6cae8e', 'Revered':'#c9a45c' };
+    const legacyMap = { 'Somewhat known':'Respected' };
+    const dimLabels = { authority:'Halls of power', common:'Streets', shadow:'Underworld', circuit:'Peers' };
     // 各维度 × 各等级的随附古文（出处略）
     const quotes = {
-      authority: { '天怒人怨':'上下疾之如仇', '声名狼藉':'在位皆言其恶', '默默无闻':'沉于下寮不见知', '受人尊敬':'群臣莫不敬惮', '万众敬仰':'天下想望其风采' },
-      common:    { '天怒人怨':'行人指目相戒', '声名狼藉':'里中无赖子亦耻之', '默默无闻':'出入市廛人莫识', '受人尊敬':'闾里称其长者', '万众敬仰':'儿童走卒皆知其名' },
-      shadow:    { '天怒人怨':'绿林亦不肯纳', '声名狼藉':'豪杰闻而鄙之', '默默无闻':'混迹渔樵无人问', '受人尊敬':'江湖豪杰多归之', '万众敬仰':'四海之内皆称其侠' },
-      circuit:   { '天怒人怨':'同辈羞与为伍', '声名狼藉':'友朋面斥其非', '默默无闻':'独行无人与语', '受人尊敬':'同门推为领袖', '万众敬仰':'吾辈望之如泰山' }
+      authority: { 'Reviled':'Loathed above and below like a foe', 'Notorious':'Everyone in office speaks ill of them', 'Unknown':'Lost among minor officials, unnoticed', 'Respected':'Ministers all regard them with awe', 'Revered':'The realm longs to see their bearing' },
+      common:    { 'Reviled':'Passers-by point and warn each other', 'Notorious':'Even the town\'s rogues are ashamed of them', 'Unknown':'They walk the market unrecognized', 'Respected':'The neighborhood calls them an elder', 'Revered':'Children and porters all know their name' },
+      shadow:    { 'Reviled':'Even the outlaws won\'t take them in', 'Notorious':'Hearing of them, heroes sneer', 'Unknown':'Drifting among fishers and woodcutters, unasked', 'Respected':'Many heroes of the wilds rally to them', 'Revered':'All within the four seas call them a hero' },
+      circuit:   { 'Reviled':'Peers are ashamed to stand with them', 'Notorious':'Friends rebuke them to their face', 'Unknown':'They walk alone, with no one to talk to', 'Respected':'Fellow disciples hail them as leader', 'Revered':'Our kind look up to them like a mountain' }
     };
     return '<div class="we-rep-grid">' + Object.entries(rep).filter(([k]) => k !== 'lastChange').map(([key, rawVal]) => {
       const val = legacyMap[rawVal] || rawVal;
@@ -2583,12 +2586,12 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   function renderEconomy(econ, scope) {
-    if (!econ) return '<div class="we-empty">暂无经济数据</div>';
+    if (!econ) return '<div class="we-empty">No economic data yet</div>';
     const sc = scope || 'state';
-    const climates = ['繁荣','平稳','衰退','动荡'];
-    const climateColors = { '繁荣': '#3ecf8e', '平稳': '#7a8a9a', '衰退': '#d9a34a', '动荡': '#e05555' };
-    const climateBg = { '繁荣': 'rgba(62,207,142,0.08)', '平稳': 'rgba(122,138,154,0.06)', '衰退': 'rgba(217,163,74,0.08)', '动荡': 'rgba(224,85,85,0.08)' };
-    const climate = econ.climate || '平稳';
+    const climates = ['Booming','Steady','Recession','Turbulent'];
+    const climateColors = { 'Booming': '#3ecf8e', 'Steady': '#7a8a9a', 'Recession': '#d9a34a', 'Turbulent': '#e05555' };
+    const climateBg = { 'Booming': 'rgba(62,207,142,0.08)', 'Steady': 'rgba(122,138,154,0.06)', 'Recession': 'rgba(217,163,74,0.08)', 'Turbulent': 'rgba(224,85,85,0.08)' };
+    const climate = econ.climate || 'Steady';
     const cColor = climateColors[climate] || '#7a8a9a';
     let html = '<div class="we-climate-bar" style="background:' + (climateBg[climate]||'rgba(122,138,154,0.06)') + ';">';
     html += '<span class="we-climate-dot" style="background:' + cColor + ';box-shadow:0 0 8px ' + cColor + '88;"></span>';
@@ -2603,79 +2606,79 @@ window.WORLD_ENGINE_UI = (function() {
         '<div class="we-signal-item" data-sig-scope="' + sc + '">' +
         '<span class="we-signal-summary">' + u(s.summary||s) + '</span>' +
         '<span class="we-signal-scope">' + u(s.scope||'?') + '</span>' +
-        '<span class="we-signal-del" data-sig-scope="' + sc + '" data-sigidx="' + i + '" title="删除信号">✕</span>' +
+        '<span class="we-signal-del" data-sig-scope="' + sc + '" data-sigidx="' + i + '" title="Delete signal">✕</span>' +
         '</div>'
       );
     } else {
-      html += '<div class="we-empty" style="margin-top:4px;">暂无市场信号</div>';
+      html += '<div class="we-empty" style="margin-top:4px;">No market signals yet</div>';
     }
-    html += '<div class="we-signal-add" data-sig-scope="' + sc + '"><i class="fa-solid fa-plus"></i> 添加信号</div>';
+    html += '<div class="we-signal-add" data-sig-scope="' + sc + '"><i class="fa-solid fa-plus"></i> Add signal</div>';
     return html;
   }
 
   function renderEnemies(enemiesList, scope) {
-    if (!enemiesList || !enemiesList.length) return '<div class="we-empty">暂无仇敌</div>';
+    if (!enemiesList || !enemiesList.length) return '<div class="we-empty">No enemies yet</div>';
     return renderPagedList(enemiesList, 'enemies', (en, enemyIndex) => {
       const isEditing = editingEnemy?.scope === scope && editingEnemy?.index === enemyIndex;
       const actionHtml = isEditing ? '' : `
         <div class="we-event-actions">
-          <button class="we-icon-btn we-enemy-delete" data-enemy-scope="${scope}" data-enemy-index="${enemyIndex}" title="删除仇敌"><i class="fa-solid fa-trash-can"></i></button>
-          <button class="we-icon-btn we-enemy-copy" data-enemy-scope="${scope}" data-enemy-index="${enemyIndex}" title="复制仇敌"><i class="fa-solid fa-copy"></i></button>
-          <button class="we-icon-btn we-enemy-edit" data-enemy-scope="${scope}" data-enemy-index="${enemyIndex}" title="编辑仇敌"><i class="fa-solid fa-pen"></i></button>
+          <button class="we-icon-btn we-enemy-delete" data-enemy-scope="${scope}" data-enemy-index="${enemyIndex}" title="Delete enemy"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="we-icon-btn we-enemy-copy" data-enemy-scope="${scope}" data-enemy-index="${enemyIndex}" title="Copy enemy"><i class="fa-solid fa-copy"></i></button>
+          <button class="we-icon-btn we-enemy-edit" data-enemy-scope="${scope}" data-enemy-index="${enemyIndex}" title="Edit enemy"><i class="fa-solid fa-pen"></i></button>
         </div>`;
       const editHtml = isEditing ? renderEnemyEditor(en, enemyIndex, scope) : '';
       return `<div class="we-blood-item">
         ${actionHtml}
-        <div class="we-blood-title">${u(en.name)} <span class="we-badge we-badge-danger">${en.status||'追踪中'}</span><span class="we-badge" style="background:var(--we-purple);font-size:10px;">${en.type==='blood'?'血仇':'恩怨'}</span></div>
-        <div class="we-blood-meta">原因: ${u(en.reason||'?')}</div>
+        <div class="we-blood-title">${u(en.name)} <span class="we-badge we-badge-danger">${en.status||'Tracking'}</span><span class="we-badge" style="background:var(--we-purple);font-size:10px;">${en.type==='blood'?'Blood feud':'Grudge'}</span></div>
+        <div class="we-blood-meta">Reason: ${u(en.reason||'?')}</div>
         ${editHtml}
       </div>`;
     });
   }
 
   function renderEnemyEditor(en, index, scope) {
-    const typeOptions = [['blood','血仇'],['grudge','恩怨']].map(([v,label]) =>
+    const typeOptions = [['blood','Blood feud'],['grudge','Grudge']].map(([v,label]) =>
       `<option value="${v}" ${en.type === v ? 'selected' : ''}>${label}</option>`).join('');
-    const statusOptions = ['追踪中','策划中','执行中','已终结'].map(s =>
+    const statusOptions = ['Tracking','Plotting','Striking','Resolved'].map(s =>
       `<option value="${s}" ${en.status === s ? 'selected' : ''}>${s}</option>`).join('');
     return `
       <div class="we-event-editor" data-enemy-scope="${scope}" data-enemy-index="${index}">
         <button class="we-event-editor-close we-enemy-editor-close"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">
-          <label class="we-event-editor-wide">仇敌名称<input class="we-enemy-edit-name" type="text" value="${u(en.name||'')}"></label>
-          <label>类型<select class="we-enemy-edit-type">${typeOptions}</select></label>
-          <label>状态<select class="we-enemy-edit-status">${statusOptions}</select></label>
-          <label class="we-event-editor-wide">原因<textarea class="we-enemy-edit-reason" rows="2">${u(en.reason||'')}</textarea></label>
+          <label class="we-event-editor-wide">Enemy name<input class="we-enemy-edit-name" type="text" value="${u(en.name||'')}"></label>
+          <label>Type<select class="we-enemy-edit-type">${typeOptions}</select></label>
+          <label>Status<select class="we-enemy-edit-status">${statusOptions}</select></label>
+          <label class="we-event-editor-wide">Reason<textarea class="we-enemy-edit-reason" rows="2">${u(en.reason||'')}</textarea></label>
         </div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-enemy-editor-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-enemy-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
   function renderInfluenceChain(chain, scope) {
-    if (!chain || !chain.length) return '<div class="we-empty">暂无影响链</div>';
+    if (!chain || !chain.length) return '<div class="we-empty">No influence chains yet</div>';
     return renderPagedList(chain, 'influence', (item, infIndex) => {
       const isEditing = editingInfluence?.scope === scope && editingInfluence?.index === infIndex;
       const actionHtml = isEditing ? '' : `
         <div class="we-event-actions">
-          <button class="we-icon-btn we-influence-delete" data-influence-scope="${scope}" data-influence-index="${infIndex}" title="删除影响链"><i class="fa-solid fa-trash-can"></i></button>
-          <button class="we-icon-btn we-influence-copy" data-influence-scope="${scope}" data-influence-index="${infIndex}" title="复制影响链"><i class="fa-solid fa-copy"></i></button>
-          <button class="we-icon-btn we-influence-edit" data-influence-scope="${scope}" data-influence-index="${infIndex}" title="编辑影响链"><i class="fa-solid fa-pen"></i></button>
+          <button class="we-icon-btn we-influence-delete" data-influence-scope="${scope}" data-influence-index="${infIndex}" title="Delete influence chain"><i class="fa-solid fa-trash-can"></i></button>
+          <button class="we-icon-btn we-influence-copy" data-influence-scope="${scope}" data-influence-index="${infIndex}" title="Copy influence chain"><i class="fa-solid fa-copy"></i></button>
+          <button class="we-icon-btn we-influence-edit" data-influence-scope="${scope}" data-influence-index="${infIndex}" title="Edit influence chain"><i class="fa-solid fa-pen"></i></button>
         </div>`;
       const editHtml = isEditing ? renderInfluenceEditor(item, infIndex, scope) : '';
       return `<div class="we-influence-item">
         ${actionHtml}
         <div class="we-influence-step we-influence-trigger">
-          <span class="we-influence-label">触发源</span>
+          <span class="we-influence-label">Trigger</span>
           <span class="we-influence-text">${u(item.trigger)}</span>
         </div>
         <div class="we-influence-step we-influence-impact">
-          <span class="we-influence-label">直接影响</span>
+          <span class="we-influence-label">Direct impact</span>
           <span class="we-influence-text">${u(item.impact)}</span>
         </div>
         ${item.fallout ? `<div class="we-influence-step we-influence-fallout">
-          <span class="we-influence-label">后续余波</span>
+          <span class="we-influence-label">Aftermath</span>
           <span class="we-influence-text">${u(item.fallout)}</span>
         </div>` : ''}
         ${editHtml}
@@ -2688,43 +2691,43 @@ window.WORLD_ENGINE_UI = (function() {
       <div class="we-event-editor" data-influence-index="${index}" data-influence-scope="${scope}">
         <button class="we-event-editor-close we-influence-editor-close"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">
-          <label class="we-event-editor-wide">触发源<textarea class="we-influence-edit-trigger" rows="2">${u(item.trigger||'')}</textarea></label>
-          <label class="we-event-editor-wide">直接影响<textarea class="we-influence-edit-impact" rows="2">${u(item.impact||'')}</textarea></label>
-          <label class="we-event-editor-wide">后续余波<textarea class="we-influence-edit-fallout" rows="2">${u(item.fallout||'')}</textarea></label>
+          <label class="we-event-editor-wide">Trigger<textarea class="we-influence-edit-trigger" rows="2">${u(item.trigger||'')}</textarea></label>
+          <label class="we-event-editor-wide">Direct impact<textarea class="we-influence-edit-impact" rows="2">${u(item.impact||'')}</textarea></label>
+          <label class="we-event-editor-wide">Aftermath<textarea class="we-influence-edit-fallout" rows="2">${u(item.fallout||'')}</textarea></label>
         </div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-influence-editor-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-influence-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
   function getRegionalIncidentTypeLabel(type) {
     const labels = {
-      banditry: '盗匪劫掠',
-      fire: '大火',
-      massacre: '恶性凶案',
-      flood: '洪涝',
-      infrastructure: '道路水利崩坏',
-      plague: '疫病',
-      famine: '饥荒粮荒',
-      riot: '骚乱暴动',
-      rebellion: '民变叛乱',
-      military: '军务突变',
-      earthquake: '地震山崩',
-      storm: '风暴雪灾',
-      other: '其他'
+      banditry: 'Banditry and raids',
+      fire: 'Great fire',
+      massacre: 'Atrocious murders',
+      flood: 'Flood',
+      infrastructure: 'Road and waterworks failure',
+      plague: 'Epidemic',
+      famine: 'Famine and grain shortage',
+      riot: 'Riots',
+      rebellion: 'Popular uprising',
+      military: 'Military upheaval',
+      earthquake: 'Earthquake and landslide',
+      storm: 'Storm and blizzard',
+      other: 'Other'
     };
-    return labels[type] || '其他';
+    return labels[type] || 'Other';
   }
 
   function renderRegionalIncident(ri, scope) {
-    if (!ri) return '<div class="we-empty">尚未进行区域事件判定</div>';
+    if (!ri) return '<div class="we-empty">No regional incident check has run yet</div>';
     const isEditing = editingRI?.active === true && editingRI?.scope === scope;
     const actionHtml = isEditing ? '' : `
       <div class="we-event-actions">
-        <button class="we-icon-btn we-ri-delete" data-ri-scope="${scope}" title="清除区域事件"><i class="fa-solid fa-trash-can"></i></button>
-        <button class="we-icon-btn we-ri-copy" data-ri-scope="${scope}" title="复制区域事件"><i class="fa-solid fa-copy"></i></button>
-        <button class="we-icon-btn we-ri-edit" data-ri-scope="${scope}" title="编辑区域事件"><i class="fa-solid fa-pen"></i></button>
+        <button class="we-icon-btn we-ri-delete" data-ri-scope="${scope}" title="Clear regional incident"><i class="fa-solid fa-trash-can"></i></button>
+        <button class="we-icon-btn we-ri-copy" data-ri-scope="${scope}" title="Copy regional incident"><i class="fa-solid fa-copy"></i></button>
+        <button class="we-icon-btn we-ri-edit" data-ri-scope="${scope}" title="Edit regional incident"><i class="fa-solid fa-pen"></i></button>
       </div>`;
     const editHtml = isEditing ? renderRIEditor(ri, scope) : '';
 
@@ -2732,22 +2735,22 @@ window.WORLD_ENGINE_UI = (function() {
       return `<div class="we-accident-item we-regional-incident-item we-accident-triggered">
         ${actionHtml}
         ${u(ri.title)}<br>
-        <span style="font-size:11px;color:var(--we-text3);">类型: ${u(getRegionalIncidentTypeLabel(ri.type))} | 范围: ${u(ri.scope||'?')} | 剩余: ${ri.duration||0}轮</span><br>
+        <span style="font-size:11px;color:var(--we-text3);">Type: ${u(getRegionalIncidentTypeLabel(ri.type))} | Scope: ${u(ri.scope||'?')} | Left: ${ri.duration||0} rounds</span><br>
         <span style="font-size:11px;color:var(--we-text2);">${u(ri.impact||'')}</span>
         ${editHtml}
       </div>`;
     }
-    if (ri.title && ri.title.includes('重试')) {
+    if (ri.title && ri.title.includes('retry')) {
       return `<div class="we-accident-item we-regional-incident-item" style="border-left:3px solid var(--we-gold);">
         ${actionHtml}
-        ${u(ri.title)}（类型: ${u(getRegionalIncidentTypeLabel(ri.type))}）
+        ${u(ri.title)} (type: ${u(getRegionalIncidentTypeLabel(ri.type))})
         ${editHtml}
       </div>`;
     }
     if (ri.cooldown > 0) {
-      return `<div class="we-accident-item we-regional-incident-item">${actionHtml}本轮无区域事件（剩余冷却 ${ri.cooldown} 轮）${editHtml}</div>`;
+      return `<div class="we-accident-item we-regional-incident-item">${actionHtml}No regional incident this round (cooldown: ${ri.cooldown} rounds left)${editHtml}</div>`;
     }
-    return `<div class="we-accident-item we-regional-incident-item">${actionHtml}本轮无区域事件${editHtml}</div>`;
+    return `<div class="we-accident-item we-regional-incident-item">${actionHtml}No regional incident this round${editHtml}</div>`;
   }
 
   function renderRIEditor(ri, scope) {
@@ -2759,135 +2762,135 @@ window.WORLD_ENGINE_UI = (function() {
       <div class="we-event-editor" data-ri-edit="1" data-ri-scope="${scope}">
         <button class="we-event-editor-close we-ri-editor-close"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">
-          <label>状态<select class="we-ri-edit-active">
-            <option value="true" ${ri.active ? 'selected' : ''}>激活并显示事件</option>
-            <option value="false" ${!ri.active ? 'selected' : ''}>未激活</option>
+          <label>Status<select class="we-ri-edit-active">
+            <option value="true" ${ri.active ? 'selected' : ''}>Active, show the incident</option>
+            <option value="false" ${!ri.active ? 'selected' : ''}>Inactive</option>
           </select></label>
-          <label class="we-event-editor-wide">标题<input class="we-ri-edit-title" type="text" value="${u(ri.title||'')}"></label>
-          <label>类型<select class="we-ri-edit-type">${typeOptions}</select></label>
-          <label>范围<input class="we-ri-edit-scope" type="text" value="${u(ri.scope||'')}"></label>
-          <label>剩余轮数<input class="we-ri-edit-duration" type="number" min="0" max="99" value="${ri.duration||0}"></label>
-          <label>冷却<input class="we-ri-edit-cooldown" type="number" min="0" max="99" value="${ri.cooldown||0}"></label>
-          <label class="we-event-editor-wide">影响<textarea class="we-ri-edit-impact" rows="3">${u(ri.impact||'')}</textarea></label>
+          <label class="we-event-editor-wide">Title<input class="we-ri-edit-title" type="text" value="${u(ri.title||'')}"></label>
+          <label>Type<select class="we-ri-edit-type">${typeOptions}</select></label>
+          <label>Scope<input class="we-ri-edit-scope" type="text" value="${u(ri.scope||'')}"></label>
+          <label>Rounds left<input class="we-ri-edit-duration" type="number" min="0" max="99" value="${ri.duration||0}"></label>
+          <label>Cooldown<input class="we-ri-edit-cooldown" type="number" min="0" max="99" value="${ri.cooldown||0}"></label>
+          <label class="we-event-editor-wide">Impact<textarea class="we-ri-edit-impact" rows="3">${u(ri.impact||'')}</textarea></label>
         </div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-ri-editor-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-ri-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
-  const SECRET_STATUS_COLOR = { '有效': 'var(--we-green)', '过期': 'var(--we-text3)', '暴露': 'var(--we-red)', '失效': 'var(--we-text3)' };
+  const SECRET_STATUS_COLOR = { 'Active': 'var(--we-green)', 'Stale': 'var(--we-text3)', 'Exposed': 'var(--we-red)', 'Void': 'var(--we-text3)' };
 
   function isEditingSecret(scope, list, index) {
     return editingSecret && editingSecret.scope === scope && editingSecret.list === list && editingSecret.index === index;
   }
 
   function renderBlackbox(blackbox, scope) {
-    if (!blackbox) return '<div class="we-empty">暂无黑盒信息</div>';
+    if (!blackbox) return '<div class="we-empty">No black-box information yet</div>';
     let html = '';
     const actions = blackbox.secretActions || [];
     const assets = blackbox.secretAssets || [];
 
     if (actions.length) {
-      html += '<div class="we-secret-group-label we-secret-action">隐秘行为</div>';
+      html += '<div class="we-secret-group-label we-secret-action">Secret actions</div>';
       html += renderPagedList(actions, 'secret-actions', (raw, idx) => {
         const a = (typeof raw === 'string') ? { action: raw } : raw;
         if (isEditingSecret(scope, 'action', idx)) return renderSecretEditor(a, 'action', idx, scope);
         return `<div class="we-secret-card we-secret-action">
           <div class="we-secret-ops">
-            <button class="we-icon-btn we-secret-edit" data-secret-scope="${scope}" data-secret-list="action" data-secret-index="${idx}" title="编辑"><i class="fa-solid fa-pen"></i></button>
-            <button class="we-icon-btn we-secret-copy" data-secret-scope="${scope}" data-secret-list="action" data-secret-index="${idx}" title="复制"><i class="fa-solid fa-copy"></i></button>
-            <button class="we-icon-btn we-secret-del" data-secret-scope="${scope}" data-secret-list="action" data-secret-index="${idx}" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+            <button class="we-icon-btn we-secret-edit" data-secret-scope="${scope}" data-secret-list="action" data-secret-index="${idx}" title="Edit"><i class="fa-solid fa-pen"></i></button>
+            <button class="we-icon-btn we-secret-copy" data-secret-scope="${scope}" data-secret-list="action" data-secret-index="${idx}" title="Copy"><i class="fa-solid fa-copy"></i></button>
+            <button class="we-icon-btn we-secret-del" data-secret-scope="${scope}" data-secret-list="action" data-secret-index="${idx}" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
           </div>
           <div class="we-secret-body">
-            <div class="we-secret-title">${u(a.action || '未命名行为')}</div>
-            <div class="we-secret-meta">知情者 · ${u(a.witnesses || '无')}</div>
+            <div class="we-secret-title">${u(a.action || 'Unnamed action')}</div>
+            <div class="we-secret-meta">Known by · ${u(a.witnesses || 'None')}</div>
           </div>
         </div>`;
       });
     }
 
     if (assets.length) {
-      html += '<div class="we-secret-group-label we-secret-asset">隐秘资产</div>';
+      html += '<div class="we-secret-group-label we-secret-asset">Secret assets</div>';
       html += renderPagedList(assets, 'secret-assets', (raw, idx) => {
         const a = (typeof raw === 'string') ? { name: raw } : raw;
         if (isEditingSecret(scope, 'asset', idx)) return renderSecretEditor(a, 'asset', idx, scope);
         const expo = Math.min(100, Math.max(0, Number(a.exposure) || 0));
-        const status = a.status || '有效';
+        const status = a.status || 'Active';
         const stColor = SECRET_STATUS_COLOR[status] || 'var(--we-text3)';
         return `<div class="we-secret-card we-secret-asset">
           <div class="we-secret-ops">
-            <button class="we-icon-btn we-secret-edit" data-secret-scope="${scope}" data-secret-list="asset" data-secret-index="${idx}" title="编辑"><i class="fa-solid fa-pen"></i></button>
-            <button class="we-icon-btn we-secret-copy" data-secret-scope="${scope}" data-secret-list="asset" data-secret-index="${idx}" title="复制"><i class="fa-solid fa-copy"></i></button>
-            <button class="we-icon-btn we-secret-del" data-secret-scope="${scope}" data-secret-list="asset" data-secret-index="${idx}" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+            <button class="we-icon-btn we-secret-edit" data-secret-scope="${scope}" data-secret-list="asset" data-secret-index="${idx}" title="Edit"><i class="fa-solid fa-pen"></i></button>
+            <button class="we-icon-btn we-secret-copy" data-secret-scope="${scope}" data-secret-list="asset" data-secret-index="${idx}" title="Copy"><i class="fa-solid fa-copy"></i></button>
+            <button class="we-icon-btn we-secret-del" data-secret-scope="${scope}" data-secret-list="asset" data-secret-index="${idx}" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
           </div>
           <div class="we-secret-body">
-            <div class="we-secret-title">${u(a.name || '未命名资产')}<span class="we-secret-status" style="color:${stColor};border-color:${stColor};">${u(status)}</span></div>
+            <div class="we-secret-title">${u(a.name || 'Unnamed asset')}<span class="we-secret-status" style="color:${stColor};border-color:${stColor};">${u(status)}</span></div>
             <div class="we-secret-expo">
               <div class="we-secret-expo-track"><div class="we-secret-expo-fill" style="width:${expo}%;"></div></div>
-              <span class="we-secret-expo-num">暴露 ${expo}%</span>
+              <span class="we-secret-expo-num">Exposure ${expo}%</span>
             </div>
           </div>
         </div>`;
       });
     }
 
-    if (!html) html = '<div class="we-empty">无暗面信息</div>';
+    if (!html) html = '<div class="we-empty">No hidden information</div>';
     return html;
   }
 
   /** 秘密统一编辑器：顶部「类型」下拉只切表单(view)，转换延到保存才落库 */
   function renderSecretEditor(a, list, index, scope, view) {
     view = view || (editingSecret && editingSecret.view) || list;
-    const typeSelect = `<label>类型<select class="we-secret-type">
-        <option value="action" ${view === 'action' ? 'selected' : ''}>隐秘行为</option>
-        <option value="asset" ${view === 'asset' ? 'selected' : ''}>隐秘资产</option>
+    const typeSelect = `<label>Type<select class="we-secret-type">
+        <option value="action" ${view === 'action' ? 'selected' : ''}>Secret action</option>
+        <option value="asset" ${view === 'asset' ? 'selected' : ''}>Secret asset</option>
       </select></label>`;
     // 跨类型预填：行为↔资产 标题字段互通（action.action ↔ asset.name）
     const titleText = u(a.action || a.name || '');
     let fields;
     if (view === 'action') {
       fields = `${typeSelect}
-        <label class="we-event-editor-wide">行为描述<textarea class="we-secret-f-action" rows="2">${titleText}</textarea></label>
-        <label class="we-event-editor-wide">目击者<input class="we-secret-f-witnesses" type="text" value="${u(a.witnesses || '无')}"></label>`;
+        <label class="we-event-editor-wide">Action description<textarea class="we-secret-f-action" rows="2">${titleText}</textarea></label>
+        <label class="we-event-editor-wide">Witnesses<input class="we-secret-f-witnesses" type="text" value="${u(a.witnesses || 'None')}"></label>`;
     } else {
-      const statusOptions = ['有效','过期','暴露','失效'].map(s =>
+      const statusOptions = ['Active','Stale','Exposed','Void'].map(s =>
         `<option value="${s}" ${a.status === s ? 'selected' : ''}>${s}</option>`).join('');
       fields = `${typeSelect}
-        <label class="we-event-editor-wide">资产名称<input class="we-secret-f-name" type="text" value="${titleText}"></label>
-        <label>暴露度<input class="we-secret-f-exposure" type="number" min="0" max="100" value="${Number(a.exposure) || 0}"></label>
-        <label>状态<select class="we-secret-f-status">${statusOptions}</select></label>`;
+        <label class="we-event-editor-wide">Asset name<input class="we-secret-f-name" type="text" value="${titleText}"></label>
+        <label>Exposure<input class="we-secret-f-exposure" type="number" min="0" max="100" value="${Number(a.exposure) || 0}"></label>
+        <label>Status<select class="we-secret-f-status">${statusOptions}</select></label>`;
     }
     return `
       <div class="we-event-editor we-secret-editor" data-secret-scope="${scope}" data-secret-list="${list}" data-secret-index="${index}" data-secret-view="${view}">
         <button class="we-event-editor-close we-secret-editor-close"><i class="fa-solid fa-xmark"></i></button>
         <div class="we-event-editor-grid">${fields}</div>
         <div class="we-event-editor-footer">
-          <button class="we-btn we-btn-primary we-secret-save"><i class="fa-solid fa-floppy-disk"></i> 保存</button>
+          <button class="we-btn we-btn-primary we-secret-save"><i class="fa-solid fa-floppy-disk"></i> Save</button>
         </div>
       </div>`;
   }
 
   function renderLedger(memories) {
     const entries = (memories || []).filter(m => m.type === 'ledger').reverse();
-    if (!entries.length) return '<div class="we-empty">暂无重大事件记录</div>';
+    if (!entries.length) return '<div class="we-empty">No major events recorded yet</div>';
     return renderPagedList(entries, 'ledger', entry => {
       const lines = [];
       for (const c of (entry.changes || [])) {
         if (c.type === 'event_new') {
-          const tn = { conflict: '冲突型', progress: '推进型' }[c.eventType] || c.eventType;
-          lines.push(`[新增Lv${c.level}${tn}] ${u(c.name)} - ${u(c.stage)} - ${u(c.desc||'')}`);
+          const tn = { conflict: 'conflict', progress: 'progress' }[c.eventType] || c.eventType;
+          lines.push(`[New Lv${c.level} ${tn}] ${u(c.name)} - ${u(c.stage)} - ${u(c.desc||'')}`);
         } else if (c.type === 'event_advance') {
-          lines.push(`[推进] ${u(c.name)}(Lv${c.level}) ${u(c.fromStage)}->${u(c.toStage)} - ${u(c.desc||'')}`);
+          lines.push(`[Advanced] ${u(c.name)}(Lv${c.level}) ${u(c.fromStage)}->${u(c.toStage)} - ${u(c.desc||'')}`);
         } else if (c.type === 'event_terminal') {
           const transition = c.fromStage ? `${u(c.fromStage)}->${u(c.stage||c.toStage)}` : u(c.stage||c.toStage);
-          lines.push(`[终局] ${u(c.name)}(Lv${c.level}) ${transition} - ${u(c.desc||'')}`);
+          lines.push(`[Ended] ${u(c.name)}(Lv${c.level}) ${transition} - ${u(c.desc||'')}`);
         } else if (c.type === 'wind_new') {
-          lines.push(`[新增Lv${c.level}风声] ${u(c.topic)} - ${u(c.content||'')}`);
+          lines.push(`[New Lv${c.level} news] ${u(c.topic)} - ${u(c.content||'')}`);
         }
       }
       return `<div class="we-ledger-item">
-        <span class="we-ledger-round">第${entry.round}轮</span>
+        <span class="we-ledger-round">Round ${entry.round}</span>
         <div class="we-ledger-changes">${lines.map(l => `<div class="we-ledger-line">${l}</div>`).join('')}</div>
       </div>`;
     });
@@ -2923,12 +2926,12 @@ window.WORLD_ENGINE_UI = (function() {
         const evo = window.WORLD_ENGINE_EVOLUTION;
         if (!evo || !evo.getLastDebug) return;
         const dbg = evo.getLastDebug();
-        if (!dbg.prompt) { showToast('无 Prompt 可导出', true); return; }
+        if (!dbg.prompt) { showToast('No prompt to export', true); return; }
         const blob = new Blob([dbg.prompt], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'prompt-' + Date.now() + '.txt'; a.click();
         URL.revokeObjectURL(url);
-        showToast('Prompt 已导出');
+        showToast('Prompt exported');
       };
     }
     const exportRawBtn = document.getElementById('we-export-raw-result');
@@ -2937,12 +2940,12 @@ window.WORLD_ENGINE_UI = (function() {
         const evo = window.WORLD_ENGINE_EVOLUTION;
         if (!evo || !evo.getLastDebug) return;
         const dbg = evo.getLastDebug();
-        if (!dbg.rawResult) { showToast('无 API 返回可导出', true); return; }
+        if (!dbg.rawResult) { showToast('No API response to export', true); return; }
         const blob = new Blob([dbg.rawResult], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = 'api-raw-' + Date.now() + '.txt'; a.click();
         URL.revokeObjectURL(url);
-        showToast('API 返回已导出');
+        showToast('API response exported');
       };
     }
   }
@@ -2965,7 +2968,7 @@ window.WORLD_ENGINE_UI = (function() {
       dot.style.boxShadow = '0 0 6px var(--we-accent)';
     }
     if (text) {
-      text.textContent = `人物/实体至第 ${memoryLayer} 层 · 纪要至第 ${summaryLayer} 层 · 总述至第 ${overviewCount} 条`;
+      text.textContent = `Memory: msg ${memoryLayer} · Notes: msg ${summaryLayer} · Filed: ${overviewCount} notes`;
       text.style.color = 'var(--we-text2)';
     }
   }
@@ -2988,15 +2991,15 @@ window.WORLD_ENGINE_UI = (function() {
     const promptButton = document.getElementById('we-memory-export-prompt');
     if (promptButton) promptButton.onclick = () => {
       const value = debug().prompt || debug().requestPrompt || '';
-      if (!value) { showToast('无记忆 Prompt 可导出', true); return; }
-      download(value, 'memory-prompt-' + Date.now() + '.txt'); showToast('记忆 Prompt 已导出');
+      if (!value) { showToast('No memory prompt to export', true); return; }
+      download(value, 'memory-prompt-' + Date.now() + '.txt'); showToast('Memory prompt exported');
     };
     const resultButton = document.getElementById('we-memory-export-raw-result');
     if (resultButton) resultButton.onclick = () => {
       const current = debug();
       const value = current.rawResult || current.apiResponse || current.response || '';
-      if (!value) { showToast('无记忆 API 返回可导出', true); return; }
-      download(typeof value === 'string' ? value : JSON.stringify(value, null, 2), 'memory-api-raw-' + Date.now() + '.txt'); showToast('记忆 API 返回已导出');
+      if (!value) { showToast('No memory API response to export', true); return; }
+      download(typeof value === 'string' ? value : JSON.stringify(value, null, 2), 'memory-api-raw-' + Date.now() + '.txt'); showToast('Memory API response exported');
     };
   }
 
@@ -3015,7 +3018,7 @@ window.WORLD_ENGINE_UI = (function() {
   // 每段 textarea 初值 = 当前生效文本（有覆写用覆写，否则默认硬编码原文）。
   function renderPresetManage() {
     const P = getPresetMod();
-    if (!P) return '<div class="we-empty">预设系统未加载</div>';
+    if (!P) return '<div class="we-empty">Preset system not loaded</div>';
 
     const all = P.getAllPresets();
     const activeId = P.getActivePresetId();
@@ -3026,12 +3029,12 @@ window.WORLD_ENGINE_UI = (function() {
 
     const optHtml = all.map(p =>
       '<option value="' + h(p.id) + '"' + (p.id === activeId ? ' selected' : '') + '>'
-      + h(p.name) + (p.builtin ? '（内置）' : '') + '</option>').join('');
+      + h(p.name) + (p.builtin ? ' (built-in)' : '') + '</option>').join('');
 
     const segCards = keys.map(k => {
       const text = P.getSegmentDisplayText(k) || '';
       const isOver = overridden.indexOf(k) >= 0;
-      const meta = isOver ? '已自定义' : '默认（未改）';
+      const meta = isOver ? 'Customized' : 'Default (unchanged)';
       return '<div class="we-prompt-seg-card we-preset-seg-card' + (isOver ? ' we-preset-seg-card-over' : '') + '">'
         + '<div class="we-prompt-seg-head" data-we-preset-toggle>'
         + '<span class="we-prompt-seg-arrow">▶</span>'
@@ -3039,9 +3042,9 @@ window.WORLD_ENGINE_UI = (function() {
         + '<span class="we-prompt-seg-meta">' + meta + '</span>'
         + '</div>'
         + '<div class="we-prompt-seg-body we-preset-seg-body" style="display:none;">'
-        + '<textarea class="we-preset-textarea" data-we-preset-seg="' + h(k) + '" rows="14" spellcheck="false" placeholder="留空则使用默认硬编码原文">'
+        + '<textarea class="we-preset-textarea" data-we-preset-seg="' + h(k) + '" rows="14" spellcheck="false" placeholder="Leave empty to use the built-in default text">'
         + h(text) + '</textarea>'
-        + '<div class="we-preset-seg-hint">留空保存后回退默认原文。改 ⑦⑧ 可能导致推演解析失败，自行负责。可保留 {{user}}。</div>'
+        + '<div class="we-preset-seg-hint">Save it empty to fall back to the default text. Changing ⑦⑧ may break evolution parsing, at your own risk. You can keep {{user}}.</div>'
         + '</div>'
         + '</div>';
     }).join('');
@@ -3050,21 +3053,21 @@ window.WORLD_ENGINE_UI = (function() {
 
     return '<div class="we-preset-manage">'
       + '<div class="we-preset-row">'
-      + '<label class="we-preset-select-label">当前预设</label>'
+      + '<label class="we-preset-select-label">Current preset</label>'
       + '<select id="we-preset-select" class="we-preset-select">' + optHtml + '</select>'
       + '</div>'
       + '<div class="we-preset-active-desc">' + h(active && active.description || '') + '</div>'
       + '<div class="we-preset-actions">'
-      + '<button class="we-btn we-btn-primary" id="we-preset-save">保存</button>'
-      + '<button class="we-btn" id="we-preset-saveas">另存为</button>'
-      + (builtinActive ? '' : '<button class="we-btn we-btn-danger" id="we-preset-delete">删除</button>')
-      + '<button class="we-btn" id="we-preset-export">导出</button>'
-      + '<button class="we-btn" id="we-preset-import">导入</button>'
+      + '<button class="we-btn we-btn-primary" id="we-preset-save">Save</button>'
+      + '<button class="we-btn" id="we-preset-saveas">Save as</button>'
+      + (builtinActive ? '' : '<button class="we-btn we-btn-danger" id="we-preset-delete">Delete</button>')
+      + '<button class="we-btn" id="we-preset-export">Export</button>'
+      + '<button class="we-btn" id="we-preset-import">Import</button>'
       + '<input type="file" id="we-preset-import-file" accept=".json,application/json" style="display:none;">'
       + '</div>'
       + '<div class="we-preset-hint">'
-      + '此处编辑的是「世界推演引擎」发给推演 AI 的 prompt 硬编码段。改了会改变推演行为本身，'
-      + '请自行负责。内置「默认」预设不可删，编辑内置预设点「保存」会提示另存为副本。'
+      + 'Here you edit the hard-coded prompt segments the world evolution engine sends to the evolution AI. Changing them changes how evolution itself behaves, '
+      + 'at your own risk. The built-in "Default" preset cannot be deleted; clicking "Save" while editing a built-in preset asks you to save a copy.'
       + '</div>'
       + '<div class="we-prompt-seg-list">' + segCards + '</div>'
       + '</div>';
@@ -3129,7 +3132,7 @@ window.WORLD_ENGINE_UI = (function() {
       sel.onchange = () => {
         const id = sel.value;
         P.setActivePreset(id);
-        showToast('已切换预设');
+        showToast('Preset switched');
         refreshPresetManage();
       };
     }
@@ -3143,16 +3146,16 @@ window.WORLD_ENGINE_UI = (function() {
         const segs = collectPresetSegmentsFromDOM();
         if (active && active.builtin) {
           // 内置预设不可覆盖：走另存为副本流程
-          const name = prompt('当前是内置预设，保存会另存为新预设副本。请输入新预设名称：', active.name + ' 副本');
+          const name = prompt('This is a built-in preset; saving creates a new copy. Enter a name for the new preset:', active.name + ' copy');
           if (name == null) return;
-          const np = P.saveAsCustomPreset({ name: name || (active.name + ' 副本'), description: active.description, segments: segs });
+          const np = P.saveAsCustomPreset({ name: name || (active.name + ' copy'), description: active.description, segments: segs });
           P.setActivePreset(np.id);
-          showToast('已另存为新预设：' + np.name);
+          showToast('Saved as new preset: ' + np.name);
           refreshPresetManage();
           return;
         }
         P.saveCustomPreset({ id: activeId, name: active.name, description: active.description, segments: segs });
-        showToast('预设已保存');
+        showToast('Preset saved');
         refreshPresetManage();
       };
     }
@@ -3163,11 +3166,11 @@ window.WORLD_ENGINE_UI = (function() {
       saveAsBtn.onclick = () => {
         const active = P.getActivePreset();
         const segs = collectPresetSegmentsFromDOM();
-        const name = prompt('请输入新预设名称：', active.name + ' 副本');
+        const name = prompt('Enter a name for the new preset:', active.name + ' copy');
         if (name == null) return;
-        const np = P.saveAsCustomPreset({ name: name || (active.name + ' 副本'), description: active.description, segments: segs });
+        const np = P.saveAsCustomPreset({ name: name || (active.name + ' copy'), description: active.description, segments: segs });
         P.setActivePreset(np.id);
-        showToast('已另存为新预设：' + np.name);
+        showToast('Saved as new preset: ' + np.name);
         refreshPresetManage();
       };
     }
@@ -3178,10 +3181,10 @@ window.WORLD_ENGINE_UI = (function() {
       delBtn.onclick = () => {
         const activeId = P.getActivePresetId();
         const active = P.getActivePreset();
-        if (!active || active.builtin) { showToast('内置预设不可删除', true); return; }
-        if (!confirm('确认删除预设「' + active.name + '」？此操作不可撤销。')) return;
+        if (!active || active.builtin) { showToast('Built-in presets cannot be deleted', true); return; }
+        if (!confirm('Delete preset "' + active.name + '"? This cannot be undone.')) return;
         P.deleteCustomPreset(activeId);
-        showToast('已删除预设');
+        showToast('Preset deleted');
         refreshPresetManage();
       };
     }
@@ -3191,10 +3194,10 @@ window.WORLD_ENGINE_UI = (function() {
     if (expBtn) {
       expBtn.onclick = () => {
         const json = P.exportPreset(P.getActivePresetId());
-        if (!json) { showToast('无预设可导出', true); return; }
+        if (!json) { showToast('No preset to export', true); return; }
         const name = (P.getActivePreset().name || 'preset').replace(/[\\/:*?"<>|]/g, '_');
         setupDownload(json, 'world-engine-preset-' + name + '-' + Date.now() + '.json');
-        showToast('预设已导出');
+        showToast('Preset exported');
       };
     }
 
@@ -3210,13 +3213,13 @@ window.WORLD_ENGINE_UI = (function() {
         reader.onload = () => {
           try {
             const np = P.importPreset(String(reader.result || ''));
-            showToast('已导入预设：' + np.name);
+            showToast('Imported preset: ' + np.name);
             refreshPresetManage();
           } catch (e) {
-            showToast('导入失败: ' + (e && e.message || e), true);
+            showToast('Import failed: ' + (e && e.message || e), true);
           }
         };
-        reader.onerror = () => showToast('读取文件失败', true);
+        reader.onerror = () => showToast('Failed to read the file', true);
         reader.readAsText(f, 'utf-8');
         // 清空 value 以便重复选同一文件
         impFile.value = '';
@@ -3239,15 +3242,15 @@ window.WORLD_ENGINE_UI = (function() {
       || null;
     const status = snap ? snap.status : 'NOT_YET';
     const fallbackText = memoryScope ? {
-      NOT_YET: '尚未生成，暂无记忆注入记录',
-      SKIPPED_DISABLED: '本轮未注入：记忆注入已关闭',
-      SKIPPED_REROLL: '本轮按设计未注入：同层重 roll',
-      SKIPPED_OTHER: '本轮未注入：没有匹配到相关记忆',
-      SUCCESS: '✅ 本轮记忆信息已进入正文',
-      MISSING: '❌ 已注册却没进最终 prompt'
+      NOT_YET: 'Not generated yet; no memory injection record',
+      SKIPPED_DISABLED: 'Not injected this round: memory injection is off',
+      SKIPPED_REROLL: 'Not injected this round by design: reroll of the same message',
+      SKIPPED_OTHER: 'Not injected this round: no related memories matched',
+      SUCCESS: '✅ This round\'s memory info reached the story prompt',
+      MISSING: '❌ Registered but missing from the final prompt'
     } : {};
     const text = insp?.statusText ? insp.statusText(status, memoryScope ? 'memory' : 'world') : (fallbackText[status] || fallbackText.NOT_YET || '');
-    const subject = memoryScope ? '人物记忆' : '世界状态';
+    const subject = memoryScope ? 'Character memories' : 'world state';
 
     const palette = {
       SUCCESS:          { icon: '✅', color: '#3fb950', bg: 'rgba(63,185,80,0.10)' },
@@ -3260,21 +3263,21 @@ window.WORLD_ENGINE_UI = (function() {
     const p = palette[status] || palette.NOT_YET;
 
     let html = '<div class="we-inject-inspector" style="border:1px solid var(--we-border);border-radius:8px;padding:10px;margin-bottom:12px;background:' + p.bg + ';">';
-    html += '<div style="font-weight:600;color:' + p.color + ';margin-bottom:4px;">' + p.icon + ' 注入自检 · ' + h(text) + '</div>';
+    html += '<div style="font-weight:600;color:' + p.color + ';margin-bottom:4px;">' + p.icon + ' injection self-check · ' + h(text) + '</div>';
 
     if (!snap) {
-      html += '<div style="font-size:11px;color:var(--we-text3);">发一条消息触发生成后，这里会显示「' + subject + '」有没有真正进入发给大模型的正文 prompt。</div>';
+      html += '<div style="font-size:11px;color:var(--we-text3);">After you send a message to trigger generation, this shows whether "' + subject + '" actually made it into the story prompt sent to the model.</div>';
       return html + '</div>';
     }
 
     // 元信息行
-    const apiLabel = snap.apiType === 'chat' ? '对话补全' : '文本补全';
+    const apiLabel = snap.apiType === 'chat' ? 'Chat Completion' : 'Text Completion';
     let when = '';
     try { when = snap.ts ? new Date(snap.ts).toLocaleTimeString() : ''; } catch (e) {}
     html += '<div style="font-size:11px;color:var(--we-text3);margin-bottom:6px;">'
-      + 'API：' + apiLabel + ' · 轮次：' + (snap.round != null ? h(String(snap.round)) : '?')
-      + ' · 已注册：' + (snap.registeredAtSend ? '是' : '否')
-      + ' · 进正文：' + (snap.landed ? '是' : '否')
+      + 'API: ' + apiLabel + ' · round: ' + (snap.round != null ? h(String(snap.round)) : '?')
+      + ' · registered: ' + (snap.registeredAtSend ? 'yes' : 'no')
+      + ' · in prompt: ' + (snap.landed ? 'yes' : 'no')
       + (when ? ' · ' + h(when) : '')
       + '</div>';
 
@@ -3286,9 +3289,9 @@ window.WORLD_ENGINE_UI = (function() {
     };
 
     if (snap.apiType === 'chat' && Array.isArray(snap.messages)) {
-      html += '<div style="font-size:11px;color:var(--we-text2);margin-bottom:4px;">实际发出的消息链（共 ' + h(String(snap.messageCount)) + ' 条，按 role 分；点击任意条展开看完整内容）：</div>';
+      html += '<div style="font-size:11px;color:var(--we-text2);margin-bottom:4px;">Actual message chain sent (' + h(String(snap.messageCount)) + ' messages, split by role; click any to expand its full content):</div>';
       html += snap.messages.map((m) => {
-        const meta = (m.length != null ? m.length + ' 字' : '');
+        const meta = (m.length != null ? m.length + ' chars' : '');
         const hasBody = (m.content != null && m.content.length > 0);
         if (m.isOurs) {
           // 本扩展注入那条：可折叠，展开看完整注入内容。
@@ -3297,7 +3300,7 @@ window.WORLD_ENGINE_UI = (function() {
             + '<div class="we-prompt-seg-head" data-we-seg-toggle style="display:flex;align-items:center;gap:6px;">'
             + '<span class="we-prompt-seg-arrow">▶</span>'
             + roleBadge(m.role)
-            + '<span class="we-prompt-seg-label" style="color:#3fb950;">✅ 含本扩展注入</span>'
+            + '<span class="we-prompt-seg-label" style="color:#3fb950;">✅ Contains this extension\'s injection</span>'
             + '<span class="we-prompt-seg-meta">' + meta + '</span>'
             + '</div>'
             + '<div class="we-prompt-seg-body" style="display:none;">' + body + '</div>'
@@ -3322,13 +3325,13 @@ window.WORLD_ENGINE_UI = (function() {
           + '</div>';
       }).join('');
     } else if (snap.apiType === 'text') {
-      html += '<div style="font-size:11px;color:var(--we-text2);margin-bottom:4px;">文本补全 prompt 共 ' + h(String(snap.promptLength || 0)) + ' 字（已 flatten 成单串，无 role 之分）：</div>';
+      html += '<div style="font-size:11px;color:var(--we-text2);margin-bottom:4px;">Text Completion prompt: ' + h(String(snap.promptLength || 0)) + ' chars (flattened into one string, no roles):</div>';
       if (snap.landed && snap.ourExcerpt) {
         const body = '<pre class="we-prompt-seg-pre">' + u(snap.ourExcerpt) + '</pre>';
         html += '<div class="we-prompt-seg-card" style="margin:3px 0;">'
           + '<div class="we-prompt-seg-head" data-we-seg-toggle style="display:flex;align-items:center;gap:6px;">'
           + '<span class="we-prompt-seg-arrow">▶</span>'
-          + '<span class="we-prompt-seg-label" style="color:#3fb950;">✅ 哨兵命中处摘录</span>'
+          + '<span class="we-prompt-seg-label" style="color:#3fb950;">✅ Excerpt where the sentinel matched</span>'
           + '</div>'
           + '<div class="we-prompt-seg-body" style="display:none;">' + body + '</div>'
           + '</div>';
@@ -3347,9 +3350,9 @@ window.WORLD_ENGINE_UI = (function() {
     const injectCard = renderInjectInspector();
     const evo = window.WORLD_ENGINE_EVOLUTION;
     const wrap = (inner) => '<div class="we-prompt-debug">' + injectCard + inner + '</div>';
-    if (!evo || !evo.getLastDebug) return wrap('<div class="we-empty">调试数据不可用</div>');
+    if (!evo || !evo.getLastDebug) return wrap('<div class="we-empty">Debug data unavailable</div>');
     const dbg = evo.getLastDebug();
-    if (!dbg || !dbg.prompt) return wrap('<div class="we-empty">尚未推演，暂无调试数据</div>');
+    if (!dbg || !dbg.prompt) return wrap('<div class="we-empty">No evolution yet, so no debug data</div>');
 
     const segments = Array.isArray(dbg.segments) ? dbg.segments : [];
     const totalLen = dbg.prompt.length || 0;
@@ -3358,7 +3361,7 @@ window.WORLD_ENGINE_UI = (function() {
       ? '<div class="we-prompt-seg-bar">' + segments.map(seg => {
           const len = (seg.content || '').length;
           const pct = totalLen ? (len / totalLen * 100) : 0;
-          return '<span class="we-prompt-seg-bar-cell" style="width:' + pct.toFixed(2) + '%" title="' + u(seg.label) + ' ' + len + '字"></span>';
+          return '<span class="we-prompt-seg-bar-cell" style="width:' + pct.toFixed(2) + '%" title="' + u(seg.label) + ' ' + len + ' chars"></span>';
         }).join('') + '</div>'
       : '';
 
@@ -3384,7 +3387,7 @@ window.WORLD_ENGINE_UI = (function() {
       // 状态段/示例段尝试 JSON 高亮
       let bodyHtml;
       if (isEmpty) {
-        bodyHtml = '<div class="we-prompt-seg-empty">本轮未启用</div>';
+        bodyHtml = '<div class="we-prompt-seg-empty">Not enabled this round</div>';
       } else {
         const pretty = tryPrettyJson(content);
         const shown = pretty !== null ? pretty : content;
@@ -3394,7 +3397,7 @@ window.WORLD_ENGINE_UI = (function() {
         + '<div class="we-prompt-seg-head" data-we-seg-toggle>'
         + '<span class="we-prompt-seg-arrow">▶</span>'
         + '<span class="we-prompt-seg-label">' + u(seg.label) + '</span>'
-        + '<span class="we-prompt-seg-meta">' + (isEmpty ? '空' : (len + '字 · ' + pct + '%')) + '</span>'
+        + '<span class="we-prompt-seg-meta">' + (isEmpty ? 'empty' : (len + ' chars · ' + pct + '%')) + '</span>'
         + '</div>'
         + '<div class="we-prompt-seg-body" style="display:none;">' + bodyHtml + '</div>'
         + '</div>';
@@ -3408,12 +3411,12 @@ window.WORLD_ENGINE_UI = (function() {
       ? (parsedJson !== null
           ? '<pre class="we-prompt-seg-pre we-prompt-seg-pre-json">' + u(parsedJson) + '</pre>'
           : '<pre class="we-prompt-seg-pre">' + u(rawResult) + '</pre>')
-      : '<div class="we-prompt-seg-empty">无 API 返回</div>';
+      : '<div class="we-prompt-seg-empty">No API response</div>';
     const rawCard = '<div class="we-prompt-seg-card we-prompt-seg-card-raw">'
       + '<div class="we-prompt-seg-head" data-we-seg-toggle>'
       + '<span class="we-prompt-seg-arrow">▶</span>'
-      + '<span class="we-prompt-seg-label">AI 返回（推演 API 原始结果）</span>'
-      + '<span class="we-prompt-seg-meta">' + (rawLen ? (rawLen + '字' + (parsedJson !== null ? ' · JSON 已解析' : ' · 未能解析为 JSON')) : '空') + '</span>'
+      + '<span class="we-prompt-seg-label">AI response (raw evolution API result)</span>'
+      + '<span class="we-prompt-seg-meta">' + (rawLen ? (rawLen + ' chars' + (parsedJson !== null ? ' · JSON parsed' : ' · could not be parsed as JSON')) : 'empty') + '</span>'
       + '</div>'
       + '<div class="we-prompt-seg-body" style="display:none;">' + rawBodyHtml + '</div>'
       + '</div>';
@@ -3421,13 +3424,13 @@ window.WORLD_ENGINE_UI = (function() {
     return ''
       + '<div class="we-prompt-debug">'
       + injectCard
-      + '<div class="we-prompt-debug-summary">发送给推演 API 的 Prompt 共 ' + totalLen + ' 字，分 ' + segments.length + ' 段（只读展示，与实际发出字节一致）</div>'
+      + '<div class="we-prompt-debug-summary">Prompt sent to the evolution API: ' + totalLen + ' chars in ' + segments.length + ' segments (read-only view, identical to the bytes actually sent)</div>'
       + barHtml
       + '<div class="we-prompt-seg-list">' + segments.map((seg, i) => segCard(i, seg)).join('') + '</div>'
       + rawCard
       + '<div style="display:flex;gap:6px;margin-top:8px;">'
-      + '<button class="we-btn" id="we-export-prompt" style="flex:1;">导出完整 Prompt</button>'
-      + '<button class="we-btn" id="we-export-raw-result" style="flex:1;">导出 API 返回</button>'
+      + '<button class="we-btn" id="we-export-prompt" style="flex:1;">Export full prompt</button>'
+      + '<button class="we-btn" id="we-export-raw-result" style="flex:1;">Export API response</button>'
       + '</div>'
       + '</div>';
   }
@@ -3451,7 +3454,7 @@ window.WORLD_ENGINE_UI = (function() {
     const apiMaxTokens = Math.max(1, parseInt(settings.maxTokens) || 65000);
     const apiTimeoutMs = Number.isFinite(Number(settings.apiTimeoutMs)) ? Number(settings.apiTimeoutMs) : 120000;
     const apiTimeoutSec = Math.max(0, Math.round(apiTimeoutMs / 1000));
-    const injectMaxChars = Number.isFinite(Number(settings.injectMaxChars)) ? Math.max(0, Math.floor(Number(settings.injectMaxChars))) : 5000;
+    const injectMaxChars = Number.isFinite(Number(settings.injectMaxChars)) ? Math.max(0, Math.floor(Number(settings.injectMaxChars))) : 18000;
 
     const sec = (id, title, body) =>
       '<div class="we-section"><div class="we-section-title">' + sectionHeader(title, id) + '</div>' +
@@ -3459,17 +3462,17 @@ window.WORLD_ENGINE_UI = (function() {
 
     const apiBody = `
       <div class="we-input-group">
-        <label>连接方式</label>
+        <label>Connection</label>
         <select id="we-connection-mode" style="width:100%;">
-          <option value="direct" ${settings.connectionMode !== 'proxy' ? 'selected' : ''}>直连（默认）</option>
-          <option value="proxy" ${settings.connectionMode === 'proxy' ? 'selected' : ''}>经酒馆代理（解决跨域 CORS）</option>
+          <option value="direct" ${settings.connectionMode !== 'proxy' ? 'selected' : ''}>Direct (default)</option>
+          <option value="proxy" ${settings.connectionMode === 'proxy' ? 'selected' : ''}>Through the SillyTavern proxy (fixes CORS)</option>
         </select>
-        <div style="font-size:11px;color:#888;margin-top:3px;">连不上 / 控制台报 CORS 错误时，切到「经酒馆代理」由酒馆服务端转发。</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">If it can't connect or the console shows a CORS error, switch to "Through the SillyTavern proxy" so the SillyTavern server forwards the request.</div>
       </div>
       <div class="we-input-group">
-        <label>API URL（OpenAI 兼容）</label>
+        <label>API URL (OpenAI-compatible)</label>
         <input type="text" id="we-api-url" value="${u(settings.apiUrl||'')}" placeholder="https://api.openai.com/v1">
-        <div style="font-size:11px;color:#888;margin-top:3px;">填到「版本前缀」一级即可，/chat/completions 可加可不加（会自动补）。例：OpenAI <span style="color:#aaa;">https://api.openai.com/v1</span>；火山方舟 <span style="color:#aaa;">https://ark.cn-beijing.volces.com/api/v3</span>（或 <span style="color:#aaa;">.../api/coding/v3</span>）。务必带上自己的版本前缀。</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">Fill it in up to the version prefix; /chat/completions is optional (added automatically). Examples: OpenAI <span style="color:#aaa;">https://api.openai.com/v1</span>; Volcano Ark <span style="color:#aaa;">https://ark.cn-beijing.volces.com/api/v3</span> (or <span style="color:#aaa;">.../api/coding/v3</span>). Always include your own version prefix.</div>
       </div>
       <div class="we-input-group">
         <label>API Key</label>
@@ -3477,167 +3480,169 @@ window.WORLD_ENGINE_UI = (function() {
       </div>
       <div class="we-input-group" style="display:flex;gap:6px;align-items:end;">
         <div style="flex:1;">
-          <label>模型</label>
-          <input type="text" id="we-model" value="${u(settings.model||'gpt-3.5-turbo')}" placeholder="模型名称" style="width:100%;">
+          <label>Model</label>
+          <input type="text" id="we-model" value="${u(settings.model||'gpt-3.5-turbo')}" placeholder="Model name" style="width:100%;">
         </div>
-        <button class="we-btn" id="we-fetch-models" style="white-space:nowrap;flex-shrink:0;">获取列表</button>
+        <button class="we-btn" id="we-fetch-models" style="white-space:nowrap;flex-shrink:0;">Fetch list</button>
       </div>
       <div class="we-input-group">
         <select id="we-model-list" style="display:none;width:100%;margin-top:4px;">
-          <option value="">-- 选择模型 --</option>
+          <option value="">-- Choose a model --</option>
         </select>
       </div>
       <div class="we-input-group" style="display:flex;gap:6px;">
         <div style="flex:1;">
-          <label>温度</label>
+          <label>Temperature</label>
           <input type="number" id="we-temperature" min="0" step="0.1" value="${apiTemperature}" style="width:100%;">
         </div>
         <div style="flex:1;">
-          <label>最大输出 token</label>
+          <label>Max output tokens</label>
           <input type="number" id="we-max-tokens" min="1" step="1" value="${apiMaxTokens}" style="width:100%;">
         </div>
       </div>
       <div class="we-input-group">
-        <label>请求超时（秒）</label>
+        <label>Request timeout (seconds)</label>
         <input type="number" id="we-api-timeout-sec" min="0" step="1" value="${apiTimeoutSec}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">超过该时间仍未收到完整响应会自动中止并解除「推演中」状态。0 = 不超时。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">If no complete response arrives within this time, the request is aborted and the "Evolving" state is cleared. 0 = no timeout.</div>
       </div>`;
 
     const evolveBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-world-engine-enabled" ${settings.engineEnabled !== false ? 'checked' : ''}>
-          启用世界引擎
+          Enable World Engine
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">关闭后停止世界推演与世界状态注入，不影响记忆引擎。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When off, world evolution and world-state injection stop; the Memory Engine is not affected.</div>
       </div>
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-first-layer-ai-opening" ${settings.firstLayerIsAiOpening !== false ? 'checked' : ''}>
-          首楼为 AI 开场白
+          First message is the AI greeting
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">默认勾选：批量重填忽略第 0 层；取消勾选后，第 0 层按普通对话参与重填。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">On by default: batch refill skips message 0; when off, message 0 is refilled like normal conversation.</div>
       </div>
       <div class="we-input-group">
-        <label>推演模式</label>
+        <label>Evolution mode</label>
         <select id="we-evolve-mode" style="width:100%;">
-          <option value="auto" ${mode === 'auto' ? 'selected' : ''}>自动 · 按轮（每 X 轮推演一次）</option>
-          <option value="time" ${mode === 'time' ? 'selected' : ''}>自动 · 按时间（正文日期差够 N 天）</option>
-          <option value="manual" ${mode === 'manual' ? 'selected' : ''}>手动（仅点「手动推演」才触发）</option>
+          <option value="auto" ${mode === 'auto' ? 'selected' : ''}>Auto · by round (evolve every X rounds)</option>
+          <option value="time" ${mode === 'time' ? 'selected' : ''}>Auto · by time (when the story date has moved N days)</option>
+          <option value="manual" ${mode === 'manual' ? 'selected' : ''}>Manual (only when you click "Evolve manually")</option>
         </select>
       </div>
       <div class="we-input-group" id="we-evolve-everyx-group" style="${mode === 'auto' ? '' : 'display:none;'}">
-        <label>每几轮推演一次（X）</label>
+        <label>Evolve every how many rounds (X)</label>
         <input type="number" id="we-evolve-everyx" min="1" step="1" value="${everyX}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">填 1 = 每轮推演；填 3 = 每向前 3 轮推演一次。重 roll 不计入轮数。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">1 = evolve every round; 3 = evolve once every 3 rounds forward. Rerolls don't count as rounds.</div>
       </div>
       <div class="we-input-group" id="we-evolve-readrounds-group" style="${mode === 'auto' ? '' : 'display:none;'}">
-        <label>每次推演读取最近几轮对话（a）</label>
+        <label>Recent rounds of conversation read per evolution (a)</label>
         <input type="number" id="we-evolve-readrounds" min="1" max="${everyX}" step="1" value="${readRounds}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">从当前层往前取 a 轮的「用户输入 + AI 输出」喂给后台推演。最小 1，最大不超过 X（每次推演的轮数）。默认 1 = 只读最新一轮。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Feeds the "user input + AI output" of the last a rounds before the current message to background evolution. Minimum 1, at most X (rounds per evolution). Default 1 = only the latest round.</div>
       </div>
       <div class="we-input-group" id="we-manual-readrounds-group" style="${mode === 'manual' ? '' : 'display:none;'}">
-        <label>手动推演读取最近几轮对话</label>
+        <label>Recent rounds read by manual evolution</label>
         <input type="number" id="we-manual-readrounds" min="1" step="1" value="${manualReadRounds}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">点击「向前推进」或「重新推进」时，从当前层往前取这些轮的「用户输入 + AI 输出」喂给后台推演。默认 1 = 只读最新一轮。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When you click "Advance" or "Redo", feeds the "user input + AI output" of this many rounds before the current message to background evolution. Default 1 = only the latest round.</div>
       </div>
       <div id="we-evolve-time-group" style="${mode === 'time' ? '' : 'display:none;'}">
         <div class="we-input-group" style="display:flex;gap:6px;">
-          <div style="flex:1;"><label>取正文前 N 字</label><input type="number" id="we-time-front" min="0" step="1" value="${tv('evolveTimeFront', 0)}" style="width:100%;"></div>
-          <div style="flex:1;"><label>取正文后 N 字</label><input type="number" id="we-time-back" min="0" step="1" value="${tv('evolveTimeBack', 80)}" style="width:100%;"></div>
+          <div style="flex:1;"><label>Use the first N characters of the text</label><input type="number" id="we-time-front" min="0" step="1" value="${tv('evolveTimeFront', 0)}" style="width:100%;"></div>
+          <div style="flex:1;"><label>Use the last N characters of the text</label><input type="number" id="we-time-back" min="0" step="1" value="${tv('evolveTimeBack', 80)}" style="width:100%;"></div>
         </div>
         <div class="we-input-group">
-          <label>日期正则（6 框：1/3/5 抓数字 → 捕获组，2/4/6 单位）</label>
+          <label>Date regex (6 boxes: 1/3/5 capture numbers → capture groups, 2/4/6 are units or labels)</label>
           <div style="display:flex;gap:4px;flex-wrap:wrap;">
-            <input type="text" id="we-time-re1" value="${u(tv('evolveTimeRe1',''))}" placeholder="框1 如 \\d+ 或 [一二三...]+" style="flex:1 1 30%;">
-            <input type="text" id="we-time-re2" value="${u(tv('evolveTimeRe2',''))}" placeholder="框2 单位 如 年" style="flex:1 1 18%;">
-            <input type="text" id="we-time-re3" value="${u(tv('evolveTimeRe3',''))}" placeholder="框3" style="flex:1 1 30%;">
-            <input type="text" id="we-time-re4" value="${u(tv('evolveTimeRe4',''))}" placeholder="框4 如 月" style="flex:1 1 18%;">
-            <input type="text" id="we-time-re5" value="${u(tv('evolveTimeRe5',''))}" placeholder="框5" style="flex:1 1 30%;">
-            <input type="text" id="we-time-re6" value="${u(tv('evolveTimeRe6',''))}" placeholder="框6 如 日/号" style="flex:1 1 18%;">
+            <input type="text" id="we-time-re1" value="${u(tv('evolveTimeRe1',''))}" placeholder="Box 1, e.g. \\d+ or [a-z]+" style="flex:1 1 30%;">
+            <input type="text" id="we-time-re2" value="${u(tv('evolveTimeRe2',''))}" placeholder="Box 2 unit, e.g. Year or Day\\s*" style="flex:1 1 18%;">
+            <input type="text" id="we-time-re3" value="${u(tv('evolveTimeRe3',''))}" placeholder="Box 3" style="flex:1 1 30%;">
+            <input type="text" id="we-time-re4" value="${u(tv('evolveTimeRe4',''))}" placeholder="Box 4, e.g. Month" style="flex:1 1 18%;">
+            <input type="text" id="we-time-re5" value="${u(tv('evolveTimeRe5',''))}" placeholder="Box 5" style="flex:1 1 30%;">
+            <input type="text" id="we-time-re6" value="${u(tv('evolveTimeRe6',''))}" placeholder="Box 6, e.g. Day" style="flex:1 1 18%;">
           </div>
-          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">某框留空即跳过。中文数字自动换算，多个日期取最后一个。</div>
+          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Leave a box empty to skip it. Number words are converted automatically (Chinese, and English such as three, twenty-first or 21st); if several dates match, the last one is used. For English formats like "Day 12", put the label in the box before the number (e.g. box 2 = Day\\s* and box 3 = \\d+).</div>
         </div>
         <div class="we-input-group" style="display:flex;gap:6px;">
-          <div style="flex:1;"><label>乘数A（框1）</label><input type="number" id="we-time-mul1" step="any" value="${tv('evolveTimeMul1',360)}" style="width:100%;"></div>
-          <div style="flex:1;"><label>乘数B（框3）</label><input type="number" id="we-time-mul2" step="any" value="${tv('evolveTimeMul2',30)}" style="width:100%;"></div>
-          <div style="flex:1;"><label>乘数C（框5）</label><input type="number" id="we-time-mul3" step="any" value="${tv('evolveTimeMul3',1)}" style="width:100%;"></div>
+          <div style="flex:1;"><label>Multiplier A (box 1)</label><input type="number" id="we-time-mul1" step="any" value="${tv('evolveTimeMul1',360)}" style="width:100%;"></div>
+          <div style="flex:1;"><label>Multiplier B (box 3)</label><input type="number" id="we-time-mul2" step="any" value="${tv('evolveTimeMul2',30)}" style="width:100%;"></div>
+          <div style="flex:1;"><label>Multiplier C (box 5)</label><input type="number" id="we-time-mul3" step="any" value="${tv('evolveTimeMul3',1)}" style="width:100%;"></div>
         </div>
         <div class="we-input-group">
-          <label>满 N 天推演一次</label>
+          <label>Evolve every N days</label>
           <input type="number" id="we-time-threshold" min="1" step="1" value="${tv('evolveTimeThreshold',1)}" style="width:100%;">
         </div>
         <div class="we-input-group">
-          <label>最多读取最近 X 轮对话</label>
+          <label>Read at most the last X rounds of conversation</label>
           <input type="number" id="we-time-maxrounds" min="1" step="1" value="${tv('evolveTimeMaxRounds',10)}" style="width:100%;">
-          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">自上次推演以来跨了几轮就读几轮，超过 X 则只读最近 X 轮，封顶防止 prompt 过长。</div>
+          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Reads as many rounds as have passed since the last evolution; above X it reads only the last X, a cap that keeps the prompt from growing too long.</div>
         </div>
         <div class="we-input-group" style="border-top:1px solid var(--we-border,#3a3a3a);padding-top:8px;">
-          <label>当前状态时间（总天数）</label>
-          <input type="number" id="we-time-state" step="any" value="${stTimeVal}" placeholder="state.time，空则不写" style="width:100%;">
+          <label>Current state time (total days)</label>
+          <input type="number" id="we-time-state" step="any" value="${stTimeVal}" placeholder="state.time; empty = not written" style="width:100%;">
         </div>
         <div class="we-input-group">
-          <label>存档点时间（总天数）</label>
-          <input type="number" id="we-time-checkpoint" step="any" value="${cpTimeVal}" placeholder="checkpoint.time，空则不写" style="width:100%;">
+          <label>Checkpoint time (total days)</label>
+          <input type="number" id="we-time-checkpoint" step="any" value="${cpTimeVal}" placeholder="checkpoint.time; empty = not written" style="width:100%;">
         </div>
         <div class="we-input-group">
-          <label>本轮对话时间（总天数）</label>
-          <input type="number" id="we-time-current" step="any" value="${lastDayVal}" placeholder="保存即判断是否推演" style="width:100%;">
-          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">保存后：与基准时间相减，够 N 天则立即推演。三个时间框都只在有值时写入，写错可关闭插件重开重填。</div>
+          <label>This round's conversation time (total days)</label>
+          <input type="number" id="we-time-current" step="any" value="${lastDayVal}" placeholder="Saving checks whether to evolve" style="width:100%;">
+          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">After saving: subtracts the base time, and evolves at once if N days have passed. The three time boxes are only written when they have a value; if you enter a wrong one, close and reopen the extension and fill it in again.</div>
         </div>
       </div>`;
 
     const filterBody = `
       <div class="we-input-group">
-        <label>每行一条正则，匹配内容会在喂后台前删除</label>
+        <label>One regex per line; matches are removed before the text is fed to the background</label>
         <div style="margin-bottom:8px;border:1px solid var(--we-border,#3a3a3a);border-radius:4px;padding:6px;">
-          <div style="font-size:12px;color:var(--we-text2);margin-bottom:4px;">简单模式：勾选标签自动生成删除正则</div>
+          <div style="font-size:12px;color:var(--we-text2);margin-bottom:4px;">Simple mode: tick tags to generate removal regexes automatically</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:4px;">
-            <button class="we-btn" id="we-btn-filter-scan" type="button">🔍 扫描本聊天标签</button>
-            <input type="text" id="we-filter-add-input" placeholder="手动加标签名(如 tucao)" style="flex:1;min-width:140px;">
-            <button class="we-btn" id="we-btn-filter-add" type="button">+ 添加</button>
+            <button class="we-btn" id="we-btn-filter-scan" type="button">🔍 Scan this chat's tags</button>
+            <input type="text" id="we-filter-add-input" placeholder="Add a tag name by hand (e.g. thinking)" style="flex:1;min-width:140px;">
+            <button class="we-btn" id="we-btn-filter-add" type="button">+ Add</button>
           </div>
           <div id="we-filter-tags" style="display:flex;flex-wrap:wrap;gap:4px;min-height:4px;"></div>
-          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">自动生成的正则不一定生效——标签带属性(如 &lt;wlog time&gt;)、带 ~(如 &lt;konatan_planning~&gt;)、嵌套或闭标签异常时可能匹配失败。不生效请直接编辑下方文本框自行手写。未勾选标签不会保存。</div>
+          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Generated regexes don't always work — tags with attributes (like &lt;wlog time&gt;), with ~ (like &lt;konatan_planning~&gt;), nested, or with broken closing tags may fail to match. If one doesn't work, edit the box below and write it by hand. Unticked tags are not saved.</div>
         </div>
-        <textarea id="we-filter-regex" rows="4" style="width:100%;resize:vertical;" placeholder="每行一条；支持纯 pattern 或 /pattern/flags 字面量。例：\n<details>[\\s\\S]*?</details>\\n?\n/&lt;think&gt;[\\s\\S]*?&lt;\\/think&gt;/g">${u(tv('evolveFilterRegex',''))}</textarea>
+        <textarea id="we-filter-regex" rows="4" style="width:100%;resize:vertical;" placeholder="One per line; plain patterns or /pattern/flags literals are supported. Examples:
+<details>[\\s\\S]*?</details>\\n?
+/&lt;think&gt;[\\s\\S]*?&lt;\\/think&gt;/g">${u(tv('evolveFilterRegex',''))}</textarea>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px;">
-          <button class="we-btn" id="we-btn-filter-test" type="button">▶ 测试正则</button>
+          <button class="we-btn" id="we-btn-filter-test" type="button">▶ Test regex</button>
         </div>
         <div class="we-hint" id="we-filter-status" style="margin:0 0 4px;white-space:pre-wrap;"></div>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">每行一条；支持纯 pattern（默认 g 全局）或 /pattern/flags 字面量（如 /.../gi）；空行忽略。仅影响喂后台推演的文本，不影响聊天正文与日期抓取。保存时自动校验每条，测试按钮可对最近一条对话试跑。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">One per line; plain patterns (global g by default) or /pattern/flags literals (like /.../gi) are supported; blank lines are ignored. Only affects the text fed to background evolution, not the chat itself or date capture. Each line is validated on save, and the test button runs them on the latest message.</div>
       </div>`;
 
     const injectBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-inject-into-prompt" ${settings.injectIntoPrompt !== false ? 'checked' : ''}>
-          注入正文
+          Inject into the story prompt
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">关闭后不会将当前状态或存档点注入聊天正文。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When off, neither the current state nor the checkpoint is injected into the chat prompt.</div>
       </div>
       <div class="we-input-group">
-        <label>正文注入最大字符数</label>
+        <label>Max characters injected into the story prompt</label>
         <input type="number" id="we-inject-max-chars" min="0" step="100" value="${injectMaxChars}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">限制注入到正文 prompt 的世界状态长度。默认 5000；0 = 不限制。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Limits the length of the world state injected into the story prompt. Default 18000; 0 = no limit.</div>
       </div>
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-inject-all-levels" ${settings.injectAllLevels === true ? 'checked' : ''}>
-          全等级注入
+          Inject all levels
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">勾选后，事件链和风声的 Lv1–Lv4 全部注入正文；不勾选时，风声仅注入 Lv3/4，事件链注入 Lv3/4 以及 Lv1/2 中已爆发或已完成的事件。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When ticked, event chains and news of Lv1–Lv4 are all injected; when unticked, only Lv3/4 news is injected, and event chains of Lv3/4 plus Lv1/2 events that have Erupted or Completed.</div>
       </div>`;
 
     const linkBody = `
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-memory-link-enabled" ${settings.memoryLinkEnabled === true ? 'checked' : ''}>
-          世界推演完成后联动记忆引擎
+          Link to the Memory Engine after world evolution
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">开启后，世界 API 的本轮返回会交给记忆 API 更新人物与实体，并把世界摘要新增为一条纪要。同楼层重 roll 只撤销带联动标记的旧结果，不影响普通记忆与原有纪要。</div>
-        <button class="we-btn we-btn-primary" id="we-memory-link-now" type="button" style="width:100%;margin-top:8px;"><i class="fa-solid fa-link"></i> 手动联动当前世界信息</button>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">立即把当前世界状态交给记忆引擎处理，并把当前世界摘要新增为纪要；同楼层重复执行会替换上一次联动结果。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When on, this round's world API output is handed to the memory API to update characters and entities, and the world digest is added as a note. A reroll of the same message only undoes old results carrying the link marker; ordinary memories and existing notes are not affected.</div>
+        <button class="we-btn we-btn-primary" id="we-memory-link-now" type="button" style="width:100%;margin-top:8px;"><i class="fa-solid fa-link"></i> Link the current world info now</button>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Hands the current world state to the Memory Engine right away and adds the current world digest as a note; running it again on the same message replaces the previous link result.</div>
       </div>`;
 
     const displayMode = settings.displayMode === 'expand' ? 'expand' : 'mask';
@@ -3647,17 +3652,17 @@ window.WORLD_ENGINE_UI = (function() {
     ).join('');
     const displayBody = `
       <div class="we-input-group">
-        <label>主题配色</label>
+        <label>Color theme</label>
         <select id="we-theme-select" style="width:100%;">${themeOptions}</select>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">即时应用并自动记忆。深色：墨玉、夜阑、深海、夜合；浅色：云白、早樱。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Applied instantly and remembered. Dark: Jade, Late Night, Deep Sea, Night Bloom; light: Cloud White, Early Cherry.</div>
       </div>
       <div class="we-input-group">
-        <label>主页显示模式</label>
+        <label>Home display mode</label>
         <select id="we-display-mode" style="width:100%;">
-          <option value="mask" ${displayMode === 'mask' ? 'selected' : ''}>遮蔽模式（主页 + 分页进入）</option>
-          <option value="expand" ${displayMode === 'expand' ? 'selected' : ''}>展开模式（所有内容平铺）</option>
+          <option value="mask" ${displayMode === 'mask' ? 'selected' : ''}>Covered (home page + open sections)</option>
+          <option value="expand" ${displayMode === 'expand' ? 'selected' : ''}>Expanded (everything laid out)</option>
         </select>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">展开模式下世界摘要下方直接平铺全部 section，无需进分页。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">In expanded mode every section is laid out below the world digest, with no need to open pages.</div>
       </div>`;
 
     // 酒馆缓存与存档：存进当前聊天的 chat_metadata（随聊天文件保存到酒馆服务器，跨设备同步）。
@@ -3666,42 +3671,42 @@ window.WORLD_ENGINE_UI = (function() {
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-sync-to-chat" ${settings.syncToChat === true ? 'checked' : ''}>
-          跨设备实时同步（存进当前聊天）
+          Live cross-device sync (stored in the current chat)
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">开启后，本聊天的世界状态会持续写入酒馆聊天文件并随之跨设备同步；换设备打开同一聊天即可续上进度（冲突时较新版本胜出）。<b>不会</b>同步 API Key 等全局设置。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When on, this chat's world state is continuously written into the SillyTavern chat file and syncs across devices with it; open the same chat on another device to pick up where you left off (on conflict, the newer version wins).<b>Does not</b>sync API keys or other global settings.</div>
       </div>
       <div class="we-input-group">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
           <input type="checkbox" id="we-auto-backup" ${settings.autoBackup === true ? 'checked' : ''}>
-          自动滚动备份（每当轮次推进存一条，保留最近 ${'3'} 条）
+          Rolling auto backup (saves one each time the round advances, keeps the latest ${'3'})
         </label>
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">防误删误改。自动备份与命名存档都保存在本聊天里，跨设备可见。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Guards against accidental deletes and edits. Auto backups and named saves are stored in this chat and visible across devices.</div>
       </div>
       <div class="we-hint" id="we-chatcache-status" style="margin:4px 0;"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;">
-        <button class="we-btn we-btn-primary" id="we-chatcache-save">新建命名存档</button>
-        <button class="we-btn" id="we-chatcache-import">导入存档</button>
+        <button class="we-btn we-btn-primary" id="we-chatcache-save">New named save</button>
+        <button class="we-btn" id="we-chatcache-import">Import save</button>
         <input type="file" id="we-chatcache-import-file" accept=".json" style="display:none;">
       </div>
-      <div class="we-chatcache-list" id="we-chatcache-snapshots"><div class="we-empty">暂无存档</div></div>`;
+      <div class="we-chatcache-list" id="we-chatcache-snapshots"><div class="we-empty">No saves yet</div></div>`;
 
     // 批量重填世界推演：从第 1 个 AI 楼层分批推到指定楼层（清空重来）。
     const bf = (k, d) => { const v = settings[k]; return (v === undefined || v === null || v === '') ? d : v; };
     const apiAutoRetries = Math.max(0, parseInt(settings.apiAutoRetries) || 0);
     const backfillBody = `
-      <div style="font-size:11px;color:var(--we-text3);margin-bottom:6px;">从第 1 个 AI 楼层开始，<b>分批</b>把世界状态重新推演到指定楼层。每批仅喂本批楼层的对话，但世界状态逐批累积、保持连贯。<b>会清空当前世界状态推倒重来</b>（开始前自动存一份备份快照）。</div>
+      <div style="font-size:11px;color:var(--we-text3);margin-bottom:6px;">Starting from the first AI message, <b>in batches</b> re-evolves the world state up to the chosen message. Each batch only feeds that batch's messages, but the world state builds up batch by batch and stays coherent. <b>It clears the current world state and starts over</b> (a backup snapshot is saved automatically first).</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>每批 AI 楼层数</label>
+        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>AI messages per batch</label>
           <input type="number" id="we-backfill-batch" min="1" step="1" value="${bf('backfillBatchSize', 5)}"></div>
-        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>结束楼层（0=全部）</label>
+        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>End message (0 = all)</label>
           <input type="number" id="we-backfill-end" min="0" step="1" value="${bf('backfillEndLayer', 0)}"></div>
-        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>每批 fault 重试次数</label>
+        <div class="we-input-group" style="flex:1;min-width:90px;margin-bottom:0;"><label>Fault retries per batch</label>
           <input type="number" id="we-backfill-retries" min="0" step="1" value="${bf('backfillRetries', 2)}"></div>
       </div>
       <div class="we-hint" id="we-backfill-status" style="margin:6px 0;"></div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0;">
-        <button class="we-btn we-btn-primary" id="we-backfill-start">▶ 开始重填世界推演</button>
-        <button class="we-btn" id="we-backfill-stop">■ 停止</button>
+        <button class="we-btn we-btn-primary" id="we-backfill-start">▶ Start world evolution refill</button>
+        <button class="we-btn" id="we-backfill-stop">■ Stop</button>
       </div>`;
 
     // [FIX] 选项卡化：返回按 section 分好的片段字典，由 renderSettingsView 归入各选项卡。
@@ -3718,95 +3723,95 @@ window.WORLD_ENGINE_UI = (function() {
       + '<input type="number" id="' + id + '" min="' + min + '" step="' + step + '" value="' + mech(key, d) + '"></div>';
     const mechanicsResetButton = (group) =>
       '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">'
-      + '<button class="we-btn" type="button" data-we-mechanics-reset="' + group + '"><i class="fa-solid fa-arrow-rotate-left"></i> 恢复默认</button>'
+      + '<button class="we-btn" type="button" data-we-mechanics-reset="' + group + '"><i class="fa-solid fa-arrow-rotate-left"></i> Reset to defaults</button>'
       + '</div>';
     const regionalBody = `
       ${mechanicsResetButton('regional')}
       <div style="font-size:12px;color:var(--we-text2);line-height:1.6;margin-bottom:10px;">
-        区域突发事件是纯本地骰子：先由本地判定是否发生，再把事件类型和约束交给推演模型写成世界变化。
-        概率越高，远方灾变、治安事件、交通断裂这类背景波动越频繁。
+        Regional incidents are purely local dice: the local system first decides whether one happens, then hands the incident type and constraints to the evolution model to write as a world change.
+        The higher the chance, the more often background shocks like distant disasters, public-order incidents and broken transport links happen.
       </div>
       <div class="we-input-group">
-        <label>区域突发事件参数</label>
+        <label>Regional incident parameters</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${numInput('we-local-ri-chance', 'localRegionalIncidentChancePercent', '触发概率 %', 3, 0, '0.1')}
-          ${numInput('we-local-ri-duration', 'localRegionalIncidentDuration', '持续轮数', 5, 1, '1')}
-          ${numInput('we-local-ri-cooldown', 'localRegionalIncidentCooldown', '消散后冷却', 5, 1, '1')}
+          ${numInput('we-local-ri-chance', 'localRegionalIncidentChancePercent', 'Trigger chance %', 3, 0, '0.1')}
+          ${numInput('we-local-ri-duration', 'localRegionalIncidentDuration', 'Duration (rounds)', 5, 1, '1')}
+          ${numInput('we-local-ri-cooldown', 'localRegionalIncidentCooldown', 'Cooldown after fading', 5, 1, '1')}
         </div>
       </div>`;
 
     const distantBody = `
       ${mechanicsResetButton('distant')}
       <div style="font-size:12px;color:var(--we-text2);line-height:1.6;margin-bottom:10px;">
-        生成一条与主角及既有账本无直接关系的远方事件链或风声（Lv2/Lv3）。<br>
-        账本门槛：至少积累多少轮账本后才启用；触发概率：每个可触发轮命中的概率；成功后冷却：成功生成后暂停掷骰的轮数；事件链占比：命中后生成事件链的概率，剩余比例生成风声。
+        Generates one distant event chain or news item (Lv2/Lv3) with no direct link to the protagonist or the existing ledger.<br>
+        Ledger threshold: how many rounds of ledger must build up before it is enabled; trigger chance: the chance of a hit on each eligible round; cooldown after success: rounds without dice after a successful generation; event chain share: the chance a hit generates an event chain, with the rest generating news.
       </div>
       <div class="we-input-group">
-        <label>远方随机事件参数</label>
+        <label>Distant random event parameters</label>
         <div style="display:flex;gap:6px;flex-wrap:nowrap;">
-          ${compactNumInput('we-local-distant-threshold', 'localDistantEventLedgerThreshold', '账本门槛', 10, 1, '1')}
-          ${compactNumInput('we-local-distant-chance', 'localDistantEventChancePercent', '触发概率 %', 20, 0, '0.1')}
-          ${compactNumInput('we-local-distant-cooldown', 'localDistantEventCooldown', '成功后冷却', 5, 1, '1')}
-          ${compactNumInput('we-local-distant-event-percent', 'localDistantEventEventPercent', '事件链占比 %', 50, 0, '0.1')}
+          ${compactNumInput('we-local-distant-threshold', 'localDistantEventLedgerThreshold', 'Ledger threshold', 10, 1, '1')}
+          ${compactNumInput('we-local-distant-chance', 'localDistantEventChancePercent', 'Trigger chance %', 20, 0, '0.1')}
+          ${compactNumInput('we-local-distant-cooldown', 'localDistantEventCooldown', 'Cooldown after success', 5, 1, '1')}
+          ${compactNumInput('we-local-distant-event-percent', 'localDistantEventEventPercent', 'Event chain share %', 50, 0, '0.1')}
         </div>
       </div>`;
 
     const nearBody = `
       ${mechanicsResetButton('near')}
       <div style="font-size:12px;color:var(--we-text2);line-height:1.6;margin-bottom:10px;">
-        生成一条与当前对话、主角或所在区域有明确因果关系的近端事件链或风声（Lv2/Lv3）。<br>
-        触发概率：每个可触发轮命中的概率；成功后冷却：成功生成后暂停掷骰的轮数；事件链占比：命中后生成事件链的概率，剩余比例生成风声。
+        Generates one nearby event chain or news item (Lv2/Lv3) with a clear causal link to the current conversation, the protagonist or their region.<br>
+        Trigger chance: the chance of a hit on each eligible round; cooldown after success: rounds without dice after a successful generation; event chain share: the chance a hit generates an event chain, with the rest generating news.
       </div>
       <div class="we-input-group">
-        <label>近端随机事件参数</label>
+        <label>Nearby random event parameters</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${numInput('we-local-near-chance', 'localNearEventChancePercent', '触发概率 %', 20, 0, '0.1')}
-          ${numInput('we-local-near-cooldown', 'localNearEventCooldown', '成功后冷却', 5, 1, '1')}
-          ${numInput('we-local-near-event-percent', 'localNearEventEventPercent', '事件链占比 %', 50, 0, '0.1')}
+          ${numInput('we-local-near-chance', 'localNearEventChancePercent', 'Trigger chance %', 20, 0, '0.1')}
+          ${numInput('we-local-near-cooldown', 'localNearEventCooldown', 'Cooldown after success', 5, 1, '1')}
+          ${numInput('we-local-near-event-percent', 'localNearEventEventPercent', 'Event chain share %', 50, 0, '0.1')}
         </div>
       </div>`;
 
     const retryBody = `
       <div class="we-input-group">
-        <label>API fault 自动重试次数（X）</label>
+        <label>API fault auto-retries (X)</label>
         <input type="number" id="we-api-auto-retries" min="0" step="1" value="${apiAutoRetries}" style="width:100%;">
-        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">仅连接、HTTP、超时、空返回或 JSON 无法修补等 fault 才重试；内容超出 Prompt 字数或条数不算错误。</div>
+        <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">Retries only on faults such as connection, HTTP, timeout, empty response or unrepairable JSON; content exceeding the prompt's length or count limits is not an error.</div>
       </div>`;
 
     const diceBody = `
       ${mechanicsResetButton('dice')}
       <div style="font-size:12px;color:var(--we-text2);line-height:1.65;margin-bottom:10px;">
-        每条事件链每轮掷 1d100。设阶段格数 r = 当前格数 / 9。<br>
-        目标值 T = 阶段基础值 - 200 × r × (1 - r) + Lv修正 - 全局推进修正。<br>
-        若 骰值 &gt; T：推进一格；若 骰值 &lt; T × 受挫系数：倒退一格；否则保持。<br>
-        冲突型 Lv 修正 = -(Lv - 1) × 10，Lv 越高越容易爆发。推进型 Lv 修正 = +(Lv - 1) × 10，Lv 越高越难完成。
+        Each event chain rolls 1d100 per round. Let stage progress r = current step / 9.<br>
+        Target T = stage base - 200 × r × (1 - r) + Lv modifier - global advance modifier.<br>
+        If roll &gt; T: advance one step; if roll &lt; T × setback factor: go back one step; otherwise hold.<br>
+        Conflict Lv modifier = -(Lv - 1) × 10; the higher the Lv, the easier it erupts. Progress Lv modifier = +(Lv - 1) × 10; the higher the Lv, the harder it completes.
       </div>
       <div class="we-input-group">
-        <label>事件骰子公式参数</label>
+        <label>Event dice formula parameters</label>
         <div style="margin-bottom:6px;">
-          ${wideNumInput('we-local-dice-mod', 'localEventDiceModifier', '全局推进修正', 0, -100, '1')}
+          ${wideNumInput('we-local-dice-mod', 'localEventDiceModifier', 'Global advance modifier', 0, -100, '1')}
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${numInput('we-local-setback-ratio', 'localEventSetbackRatioPercent', '受挫系数 %', 40, 0, '1')}
-          ${numInput('we-local-progress-fail-base', 'localProgressFailBase', '推进型保底 A', 2, 0, '1')}
-          ${numInput('we-local-conflict-fail-base', 'localConflictFailBase', '冲突型保底 B', 6, 1, '1')}
+          ${numInput('we-local-setback-ratio', 'localEventSetbackRatioPercent', 'Setback factor %', 40, 0, '1')}
+          ${numInput('we-local-progress-fail-base', 'localProgressFailBase', 'Progress floor A', 2, 0, '1')}
+          ${numInput('we-local-conflict-fail-base', 'localConflictFailBase', 'Conflict floor B', 6, 1, '1')}
         </div>
         <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">
-          保底公式：推进型连续失败上限 = A + Lv；冲突型连续失败上限 = max(1, B - Lv)。达到上限后强制推进一格。
+          Floor formula: progress max consecutive failures = A + Lv; conflict max consecutive failures = max(1, B - Lv). On reaching the limit it is forced to advance one step.
         </div>
       </div>`;
 
     const winddecayBody = `
       ${mechanicsResetButton('winddecay')}
       <div style="font-size:12px;color:var(--we-text2);line-height:1.65;margin-bottom:10px;">
-        风声本轮没有被同 ID 更新时，沉寂轮数 +1。沉寂轮数 ≤ grace 时不检查消散。<br>
-        超过 grace 后：n = 沉寂轮数 - grace - 1。<br>
-        消散率 P = clamp(base + linear × n + quadratic × n² - (Lv - 1) × 10, 5, 95)。<br>
-        掷 1d100，若 骰值 ≤ P，则该风声消散。Lv 越高，越不容易消散。
+        When a news item is not updated with the same ID this round, its quiet rounds +1. While quiet rounds ≤ grace, fading is not checked.<br>
+        After grace: n = quiet rounds - grace - 1.<br>
+        Fade chance P = clamp(base + linear × n + quadratic × n² - (Lv - 1) × 10, 5, 95).<br>
+        Roll 1d100; if roll ≤ P, the news fades. The higher the Lv, the less likely it fades.
       </div>
       <div class="we-input-group">
-        <label>风声消散公式参数</label>
-        ${['Rumor:流言:25:1:5:3','Sentiment:舆论:8:5:2:1','Report:消息:20:2:4:2','Announcement:公告:10:4:3:1'].map(row => {
+        <label>News fading formula parameters</label>
+        ${['Rumor:Rumor:25:1:5:3','Sentiment:Sentiment:8:5:2:1','Report:Report:20:2:4:2','Announcement:Announcement:10:4:3:1'].map(row => {
           const p = row.split(':');
           return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;">'
             + '<div style="width:42px;color:var(--we-text2);font-size:12px;align-self:center;">' + p[1] + '</div>'
@@ -3821,50 +3826,50 @@ window.WORLD_ENGINE_UI = (function() {
     const retentionBody = `
       ${mechanicsResetButton('retention')}
       <div style="font-size:12px;color:var(--we-text2);line-height:1.65;margin-bottom:10px;">
-        这里控制“东西在面板里留多久”和“每类最多存多少”。<br>
-        正面终局事件（已爆发 / 已完成）保留轮数 = 基础保留 + Lv × 每级额外保留。<br>
-        负面终局事件（已消散 / 已失败）下一轮清退；影响链、已终结仇敌、账本分别按各自保存轮数清退。
+        This controls "how long things stay in the panel" and "how many of each kind are kept".<br>
+        Rounds kept for positive final events (Erupted / Completed) = base retention + Lv × extra retention per level.<br>
+        Negative final events (Dissipated / Failed) are cleared the next round; influence chains, resolved enemies and the ledger are each cleared by their own retention rounds.
       </div>
       <div class="we-input-group">
-        <label>保留轮数</label>
+        <label>Retention rounds</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${numInput('we-local-terminal-base', 'localTerminalBaseKeepRounds', '终局基础保留', 2, 0, '1')}
-          ${numInput('we-local-terminal-level', 'localTerminalLevelKeepRounds', '每级额外保留', 2, 0, '1')}
-          ${numInput('we-local-influence-keep', 'localInfluenceKeepRounds', '影响链保留', 8, 1, '1')}
-          ${numInput('we-local-enemy-keep', 'localEnemyTerminalKeepRounds', '已终结仇敌保留', 20, 1, '1')}
-          ${numInput('we-local-ledger-keep', 'localLedgerKeepRounds', '账本保存轮数', 20, 1, '1')}
+          ${numInput('we-local-terminal-base', 'localTerminalBaseKeepRounds', 'Base retention for final events', 2, 0, '1')}
+          ${numInput('we-local-terminal-level', 'localTerminalLevelKeepRounds', 'Extra retention per level', 2, 0, '1')}
+          ${numInput('we-local-influence-keep', 'localInfluenceKeepRounds', 'Influence chain retention', 8, 1, '1')}
+          ${numInput('we-local-enemy-keep', 'localEnemyTerminalKeepRounds', 'Resolved enemy retention', 20, 1, '1')}
+          ${numInput('we-local-ledger-keep', 'localLedgerKeepRounds', 'Ledger retention (rounds)', 20, 1, '1')}
         </div>
       </div>
       <div class="we-input-group">
-        <label>容量上限</label>
+        <label>Capacity limits</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${numInput('we-local-cap-events', 'localCapEvents', '事件上限', 16, 1, '1')}
-          ${numInput('we-local-cap-factions', 'localCapFactions', '势力上限', 15, 1, '1')}
-          ${numInput('we-local-cap-winds', 'localCapWinds', '风声上限', 12, 1, '1')}
-          ${numInput('we-local-cap-trends', 'localCapWorldTrends', '大势上限', 4, 1, '1')}
-          ${numInput('we-local-cap-influence', 'localCapInfluence', '影响链上限', 12, 1, '1')}
-          ${numInput('we-local-cap-enemies', 'localCapEnemies', '仇敌上限', 8, 1, '1')}
-          ${numInput('we-local-cap-econ', 'localCapEconomySignals', '经济信号上限', 8, 1, '1')}
-          ${numInput('we-local-cap-blackbox', 'localCapBlackbox', '黑盒总上限', 12, 1, '1')}
+          ${numInput('we-local-cap-events', 'localCapEvents', 'Event limit', 16, 1, '1')}
+          ${numInput('we-local-cap-factions', 'localCapFactions', 'Faction limit', 15, 1, '1')}
+          ${numInput('we-local-cap-winds', 'localCapWinds', 'News limit', 12, 1, '1')}
+          ${numInput('we-local-cap-trends', 'localCapWorldTrends', 'Trend limit', 4, 1, '1')}
+          ${numInput('we-local-cap-influence', 'localCapInfluence', 'Influence chain limit', 12, 1, '1')}
+          ${numInput('we-local-cap-enemies', 'localCapEnemies', 'Enemy limit', 8, 1, '1')}
+          ${numInput('we-local-cap-econ', 'localCapEconomySignals', 'Economic signal limit', 8, 1, '1')}
+          ${numInput('we-local-cap-blackbox', 'localCapBlackbox', 'Black box total limit', 12, 1, '1')}
         </div>
       </div>`;
 
     return {
-      api: sec('set-api', 'API 配置', apiBody),
-      evolve: sec('set-evolve', '推演模式', evolveBody),
-      backfill: sec('set-backfill', '批量重填世界推演', backfillBody),
-      retry: sec('set-api-retry', 'API 自动重试', retryBody),
-      mechanics: sec('set-regional', '区域事件', regionalBody)
-        + sec('set-near', '近端随机事件', nearBody)
-        + sec('set-distant', '远方随机事件', distantBody)
-        + sec('set-dice', '事件骰子', diceBody)
-        + sec('set-winddecay', '风声消散', winddecayBody)
-        + sec('set-retention', '保留上限', retentionBody),
-      filter: sec('set-filter', '输入输出过滤器', filterBody),
-      display: sec('set-display', '界面显示', displayBody),
-      chatcache: sec('set-chatcache', '酒馆缓存与存档', chatcacheBody),
-      inject: sec('set-inject', '正文注入', injectBody),
-      link: sec('set-world-memory-link', '世界 → 记忆', linkBody)
+      api: sec('set-api', 'API configuration', apiBody),
+      evolve: sec('set-evolve', 'Evolution mode', evolveBody),
+      backfill: sec('set-backfill', 'Batch refill of world evolution', backfillBody),
+      retry: sec('set-api-retry', 'API auto-retry', retryBody),
+      mechanics: sec('set-regional', 'Regional incidents', regionalBody)
+        + sec('set-near', 'Nearby random events', nearBody)
+        + sec('set-distant', 'Distant random events', distantBody)
+        + sec('set-dice', 'Event dice', diceBody)
+        + sec('set-winddecay', 'News fading', winddecayBody)
+        + sec('set-retention', 'Retention limits', retentionBody),
+      filter: sec('set-filter', 'Input/output filter', filterBody),
+      display: sec('set-display', 'Display', displayBody),
+      chatcache: sec('set-chatcache', 'SillyTavern cache and saves', chatcacheBody),
+      inject: sec('set-inject', 'Story injection', injectBody),
+      link: sec('set-world-memory-link', 'World → Memory', linkBody)
     };
   }
 
@@ -3881,40 +3886,40 @@ window.WORLD_ENGINE_UI = (function() {
         <div class="we-input-group">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
             <input type="checkbox" id="we-worldbook-trigger" ${settings.worldbookTrigger === true ? 'checked' : ''}>
-            启用蓝绿灯触发（跟随酒馆世界书）
+            Enable blue/green triggers (follow SillyTavern World Info)
           </label>
-          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">关闭时：已选条目全部注入推演（现状）。开启后：🔵常驻条目恒注入，🟢关键词条目仅在近期对话命中其关键词时注入；每条可单独覆写。关键词扫描由本扩展自行完成，与酒馆解耦。</div>
+          <div style="font-size:11px;color:var(--we-text3);margin-top:3px;">When off: all selected entries are injected into the evolution (current behavior). When on: 🔵 constant entries are always injected, and 🟢 keyword entries only when recent conversation hits their keywords; each entry can be overridden on its own. Keyword scanning is done by this extension itself, independent of SillyTavern.</div>
         </div>
         <div class="we-worldbook-header">
-          <div><div class="we-worldbook-summary" id="we-worldbook-summary">正在读取当前聊天世界书...</div></div>
-          <button class="we-icon-btn" id="we-worldbook-reload" title="重新读取当前聊天世界书"><i class="fa-solid fa-rotate"></i></button>
+          <div><div class="we-worldbook-summary" id="we-worldbook-summary">Reading the current chat's World Info...</div></div>
+          <button class="we-icon-btn" id="we-worldbook-reload" title="Reload the current chat's World Info"><i class="fa-solid fa-rotate"></i></button>
         </div>
         <div class="we-worldbook-toolbar">
-          <button class="we-btn" id="we-worldbook-select-all">全选</button>
-          <button class="we-btn" id="we-worldbook-clear-all">取消全选</button>
-          <button class="we-btn we-btn-primary" id="we-worldbook-save">保存世界书选择</button>
+          <button class="we-btn" id="we-worldbook-select-all">Select all</button>
+          <button class="we-btn" id="we-worldbook-clear-all">Deselect all</button>
+          <button class="we-btn we-btn-primary" id="we-worldbook-save">Save World Info selection</button>
         </div>
-        <div class="we-worldbook-list" id="we-worldbook-list"><div class="we-empty">正在读取...</div></div>
+        <div class="we-worldbook-list" id="we-worldbook-list"><div class="we-empty">Reading...</div></div>
       </div>`;
     const dataBody = `
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="we-btn" id="we-export-data">导出 JSON</button>
-        <button class="we-btn" id="we-import-data">导入 JSON</button>
+        <button class="we-btn" id="we-export-data">Export JSON</button>
+        <button class="we-btn" id="we-import-data">Import JSON</button>
         <input type="file" id="we-import-file" accept=".json" style="display:none;">
       </div>`;
     const toneBody = `
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="we-btn" id="we-tone-import">导入</button>
-        <button class="we-btn" id="we-tone-export">导出</button>
-        <button class="we-btn" id="we-tone-clear">清除</button>
+        <button class="we-btn" id="we-tone-import">Import</button>
+        <button class="we-btn" id="we-tone-export">Export</button>
+        <button class="we-btn" id="we-tone-clear">Clear</button>
         <input type="file" id="we-tone-file" accept=".txt" style="display:none;">
       </div>
       <div class="we-hint" id="we-tone-status" style="margin-top:6px;"></div>`;
     // [FIX] 选项卡化：同样返回片段字典
     return {
-      worldbook: sec('set-worldbook', memoryScope ? '记忆推演世界书' : '后台推演世界书', worldbookBody),
-      data: sec('set-data', '数据导入/导出', dataBody),
-      tone: sec('set-tone', '附加提示词', toneBody)
+      worldbook: sec('set-worldbook', memoryScope ? 'Memory World Info' : 'Evolution World Info', worldbookBody),
+      data: sec('set-data', 'Data import/export', dataBody),
+      tone: sec('set-tone', 'Additional prompt', toneBody)
     };
   }
 
@@ -3933,7 +3938,7 @@ window.WORLD_ENGINE_UI = (function() {
           const input = document.getElementById(id);
           if (input) value === null ? input.value = '' : input.value = String(value);
         }
-        showToast('已恢复本区默认值，点击“保存设置”后生效');
+        showToast('This section\'s defaults were restored; they take effect after you click "Save settings"');
       };
     });
 
@@ -3943,11 +3948,11 @@ window.WORLD_ENGINE_UI = (function() {
         const index = Number(button.dataset.eventIndex);
         const scopedState = loadScopedState(scope);
         const event = scopedState?.events?.[index];
-        if (!event || !confirm(`删除事件“${event.name}”？`)) return;
+        if (!event || !confirm(`Delete event "${event.name}"?`)) return;
         scopedState.events.splice(index, 1);
         editingEvent = null;
         saveScopedState(scope, scopedState);
-        showToast('事件已删除');
+        showToast('Event deleted');
         refresh();
       };
     });
@@ -3966,7 +3971,7 @@ window.WORLD_ENGINE_UI = (function() {
         core.assignEntityId(scopedState.events, copy, core.ENTITY_ID_PREFIXES.events);
         scopedState.events.push(copy);
         saveScopedState(scope, scopedState);
-        showToast('事件已复制到列表末尾');
+        showToast('Event copied to the end of the list');
         refresh();
       };
     });
@@ -3992,8 +3997,8 @@ window.WORLD_ENGINE_UI = (function() {
       select.onchange = () => {
         const stageSelect = select.closest('.we-event-editor').querySelector('.we-event-edit-stage');
         const stages = select.value === 'progress'
-          ? ['筹备', '执行', '关键', '已完成', '已失败']
-          : ['萌芽', '发酵', '逼近', '已爆发', '已消散'];
+          ? ['Preparing', 'Underway', 'Critical', 'Completed', 'Failed']
+          : ['Brewing', 'Escalating', 'Imminent', 'Erupted', 'Dissipated'];
         stageSelect.innerHTML = stages.map(stage => `<option value="${stage}">${stage}</option>`).join('');
       };
     });
@@ -4009,7 +4014,7 @@ window.WORLD_ENGINE_UI = (function() {
 
         const name = editor.querySelector('.we-event-edit-name').value.trim();
         if (!name) {
-          showToast('事件名字不能为空', true);
+          showToast('Event name cannot be empty', true);
           return;
         }
         event.name = name;
@@ -4022,7 +4027,7 @@ window.WORLD_ENGINE_UI = (function() {
         delete event.evolveResult;
 
         // 剩余轮数 → 反推 _terminalSince（仅正面终局）
-        const POSITIVE_TERMINALS = ['已爆发', '已完成'];
+        const POSITIVE_TERMINALS = ['Erupted', 'Completed'];
         if (POSITIVE_TERMINALS.includes(event.stage)) {
           const K = localTerminalKeepRounds(event);
           const curRound = scopedState.round || 0;
@@ -4035,7 +4040,7 @@ window.WORLD_ENGINE_UI = (function() {
         core.ensureEventFields(event);
         saveScopedState(scope, scopedState);
         editingEvent = null;
-        showToast('事件修改已保存');
+        showToast('Event changes saved');
         refresh();
       };
     });
@@ -4059,7 +4064,7 @@ window.WORLD_ENGINE_UI = (function() {
         const faction = state.factions?.[index];
         if (!faction) return;
         const name = editor.querySelector('.we-faction-edit-name').value.trim();
-        if (!name) { showToast('势力名称不能为空', true); return; }
+        if (!name) { showToast('Faction name cannot be empty', true); return; }
         faction.name = name;
         faction.status = editor.querySelector('.we-faction-edit-status').value;
         faction.relation = editor.querySelector('.we-faction-edit-relation').value;
@@ -4068,13 +4073,13 @@ window.WORLD_ENGINE_UI = (function() {
         faction.core_person = editor.querySelector('.we-faction-edit-core').value.trim();
         const pillars = [];
         editor.querySelectorAll('.we-faction-edit-pillar').forEach(input => {
-          const v = input.value.trim().slice(0, 4);
+          const v = core.clipPillar(input.value);
           if (v) pillars.push(v);
         });
         faction.powerPillars = pillars;
         saveScopedState(scope, state);
         editingFaction = null;
-        showToast('势力修改已保存');
+        showToast('Faction changes saved');
         refresh();
       };
     });
@@ -4084,10 +4089,10 @@ window.WORLD_ENGINE_UI = (function() {
         const index = Number(button.dataset.factionIndex);
         const state = loadScopedState(scope);
         const faction = state.factions?.[index];
-        if (!faction || !confirm(`删除势力"${faction.name}"？`)) return;
+        if (!faction || !confirm(`Delete faction "${faction.name}"?`)) return;
         state.factions.splice(index, 1);
         saveScopedState(scope, state);
-        showToast('势力已删除');
+        showToast('Faction deleted');
         refresh();
       };
     });
@@ -4103,7 +4108,7 @@ window.WORLD_ENGINE_UI = (function() {
         core.assignEntityId(state.factions, copy, core.ENTITY_ID_PREFIXES.factions);
         state.factions.splice(index + 1, 0, copy);
         saveScopedState(scope, state);
-        showToast('势力已复制');
+        showToast('Faction copied');
         refresh();
       };
     });
@@ -4127,7 +4132,7 @@ window.WORLD_ENGINE_UI = (function() {
         const wind = scopedState.winds?.[index];
         if (!wind) return;
         const topic = editor.querySelector('.we-wind-edit-topic').value.trim();
-        if (!topic) { showToast('风声主题不能为空', true); return; }
+        if (!topic) { showToast('News topic cannot be empty', true); return; }
         wind.topic = topic;
         wind.type = editor.querySelector('.we-wind-edit-type').value;
         wind.level = Number(editor.querySelector('.we-wind-edit-level').value);
@@ -4137,7 +4142,7 @@ window.WORLD_ENGINE_UI = (function() {
         wind.quietRounds = 0;
         saveScopedState(scope, scopedState);
         editingWind = null;
-        showToast('风声修改已保存');
+        showToast('News changes saved');
         refresh();
       };
     });
@@ -4147,10 +4152,10 @@ window.WORLD_ENGINE_UI = (function() {
         const index = Number(button.dataset.windIndex);
         const scopedState = loadScopedState(scope);
         const wind = scopedState.winds?.[index];
-        if (!wind || !confirm(`删除风声"${wind.topic}"？`)) return;
+        if (!wind || !confirm(`Delete news "${wind.topic}"?`)) return;
         scopedState.winds.splice(index, 1);
         saveScopedState(scope, scopedState);
-        showToast('风声已删除');
+        showToast('News deleted');
         refresh();
       };
     });
@@ -4167,7 +4172,7 @@ window.WORLD_ENGINE_UI = (function() {
         core.assignEntityId(scopedState.winds, copy, core.ENTITY_ID_PREFIXES.winds);
         scopedState.winds.push(copy);
         saveScopedState(scope, scopedState);
-        showToast('风声已复制');
+        showToast('News copied');
         refresh();
       };
     });
@@ -4191,7 +4196,7 @@ window.WORLD_ENGINE_UI = (function() {
         const trend = scopedState?.worldTrends?.[index];
         if (!trend) return;
         const name = editor.querySelector('.we-trend-edit-name').value.trim();
-        if (!name) { showToast('大势名称不能为空', true); return; }
+        if (!name) { showToast('Trend name cannot be empty', true); return; }
         trend.name = name;
         trend.status = editor.querySelector('.we-trend-edit-status').value;
         trend.scope = editor.querySelector('.we-trend-edit-scope').value.trim();
@@ -4199,7 +4204,7 @@ window.WORLD_ENGINE_UI = (function() {
         trend.description = editor.querySelector('.we-trend-edit-desc').value.trim();
         saveScopedState(scope, scopedState);
         editingTrend = null;
-        showToast('天下大势修改已保存');
+        showToast('World trend changes saved');
         refresh();
       };
     });
@@ -4209,10 +4214,10 @@ window.WORLD_ENGINE_UI = (function() {
         const index = Number(button.dataset.trendIndex);
         const scopedState = loadScopedState(scope);
         const trend = scopedState?.worldTrends?.[index];
-        if (!trend || !confirm(`删除大势"${trend.name}"？`)) return;
+        if (!trend || !confirm(`Delete trend "${trend.name}"?`)) return;
         scopedState.worldTrends.splice(index, 1);
         saveScopedState(scope, scopedState);
-        showToast('天下大势已删除');
+        showToast('World trend deleted');
         refresh();
       };
     });
@@ -4228,7 +4233,7 @@ window.WORLD_ENGINE_UI = (function() {
         core.assignEntityId(scopedState.worldTrends, copy, core.ENTITY_ID_PREFIXES.worldTrends);
         scopedState.worldTrends.push(copy);
         saveScopedState(scope, scopedState);
-        showToast('天下大势已复制');
+        showToast('World trend copied');
         refresh();
       };
     });
@@ -4252,14 +4257,14 @@ window.WORLD_ENGINE_UI = (function() {
         const enemy = state.enemies?.[index];
         if (!enemy) return;
         const name = editor.querySelector('.we-enemy-edit-name').value.trim();
-        if (!name) { showToast('仇敌名称不能为空', true); return; }
+        if (!name) { showToast('Enemy name cannot be empty', true); return; }
         enemy.name = name;
         enemy.type = editor.querySelector('.we-enemy-edit-type').value;
         enemy.status = editor.querySelector('.we-enemy-edit-status').value;
         enemy.reason = editor.querySelector('.we-enemy-edit-reason').value.trim();
         saveScopedState(scope, state);
         editingEnemy = null;
-        showToast('仇敌修改已保存');
+        showToast('Enemy changes saved');
         refresh();
       };
     });
@@ -4269,10 +4274,10 @@ window.WORLD_ENGINE_UI = (function() {
         const index = Number(button.dataset.enemyIndex);
         const state = loadScopedState(scope);
         const enemy = state.enemies?.[index];
-        if (!enemy || !confirm(`删除仇敌"${enemy.name}"？`)) return;
+        if (!enemy || !confirm(`Delete enemy "${enemy.name}"?`)) return;
         state.enemies.splice(index, 1);
         saveScopedState(scope, state);
-        showToast('仇敌已删除');
+        showToast('Enemy deleted');
         refresh();
       };
     });
@@ -4288,7 +4293,7 @@ window.WORLD_ENGINE_UI = (function() {
         core.assignEntityId(state.enemies, copy, core.ENTITY_ID_PREFIXES.enemies);
         state.enemies.splice(index + 1, 0, copy);
         saveScopedState(scope, state);
-        showToast('仇敌已复制');
+        showToast('Enemy copied');
         refresh();
       };
     });
@@ -4313,13 +4318,13 @@ window.WORLD_ENGINE_UI = (function() {
         if (!inf) return;
         const trigger = editor.querySelector('.we-influence-edit-trigger').value.trim();
         const impact = editor.querySelector('.we-influence-edit-impact').value.trim();
-        if (!trigger || !impact) { showToast('触发源和直接影响不能为空', true); return; }
+        if (!trigger || !impact) { showToast('Trigger and direct impact cannot be empty', true); return; }
         inf.trigger = trigger;
         inf.impact = impact;
         inf.fallout = editor.querySelector('.we-influence-edit-fallout').value.trim();
         saveScopedState(scope, scopedState);
         editingInfluence = null;
-        showToast('影响链修改已保存');
+        showToast('Influence chain changes saved');
         refresh();
       };
     });
@@ -4329,10 +4334,10 @@ window.WORLD_ENGINE_UI = (function() {
         const index = Number(button.dataset.influenceIndex);
         const scopedState = loadScopedState(scope);
         const inf = scopedState.influenceChain?.[index];
-        if (!inf || !confirm(`删除影响链"${inf.trigger}"？`)) return;
+        if (!inf || !confirm(`Delete influence chain "${inf.trigger}"?`)) return;
         scopedState.influenceChain.splice(index, 1);
         saveScopedState(scope, scopedState);
-        showToast('影响链已删除');
+        showToast('Influence chain deleted');
         refresh();
       };
     });
@@ -4347,7 +4352,7 @@ window.WORLD_ENGINE_UI = (function() {
         copy._createdRound = Number(scopedState.round) || 0;
         scopedState.influenceChain.push(copy);
         saveScopedState(scope, scopedState);
-        showToast('影响链已复制');
+        showToast('Influence chain copied');
         refresh();
       };
     });
@@ -4380,7 +4385,7 @@ window.WORLD_ENGINE_UI = (function() {
         ri.impact = editor.querySelector('.we-ri-edit-impact').value.trim();
         saveScopedState(scope, state);
         editingRI = null;
-        showToast('区域事件修改已保存');
+        showToast('Regional incident changes saved');
         refresh();
       };
     });
@@ -4389,10 +4394,10 @@ window.WORLD_ENGINE_UI = (function() {
         const scope = button.dataset.riScope;
         const state = loadScopedState(scope);
         if (!state.regionalIncident) return;
-        if (!confirm('清除区域事件？')) return;
+        if (!confirm('Clear the regional incident?')) return;
         state.regionalIncident = { active: false, title: '', type: '', scope: '', impact: '', cooldown: state.regionalIncident.cooldown || 0, _retry: false, _retryType: '' };
         saveScopedState(scope, state);
-        showToast('区域事件已清除');
+        showToast('Regional incident cleared');
         refresh();
       };
     });
@@ -4407,7 +4412,7 @@ window.WORLD_ENGINE_UI = (function() {
         copy.cooldown = 0;
         state.regionalIncident = copy;
         saveScopedState(scope, state);
-        showToast('区域事件已复制（冷却已重置）');
+        showToast('Regional incident copied (cooldown reset)');
         refresh();
       };
     });
@@ -4447,11 +4452,11 @@ window.WORLD_ENGINE_UI = (function() {
         let item, okMsg;
         if (view === 'action') {
           const action = editor.querySelector('.we-secret-f-action').value.trim();
-          if (!action) { showToast('行为描述不能为空', true); return; }
-          item = { action, witnesses: editor.querySelector('.we-secret-f-witnesses').value.trim() || '无' };
+          if (!action) { showToast('Action description cannot be empty', true); return; }
+          item = { action, witnesses: editor.querySelector('.we-secret-f-witnesses').value.trim() || 'None' };
         } else {
           const name = editor.querySelector('.we-secret-f-name').value.trim();
-          if (!name) { showToast('资产名称不能为空', true); return; }
+          if (!name) { showToast('Asset name cannot be empty', true); return; }
           item = {
             name,
             exposure: Math.min(100, Math.max(0, Number(editor.querySelector('.we-secret-f-exposure').value) || 0)),
@@ -4461,13 +4466,13 @@ window.WORLD_ENGINE_UI = (function() {
 
         if (view === list) {
           srcArr[index] = item;                            // 原地更新
-          okMsg = view === 'action' ? '隐秘行为已保存' : '隐秘资产已保存';
+          okMsg = view === 'action' ? 'Secret action saved' : 'Secret asset saved';
         } else {
           srcArr.splice(index, 1);                         // 从旧桶移除
           const arrKey = SECRET_ARR[view];
           if (!Array.isArray(state.blackbox[arrKey])) state.blackbox[arrKey] = [];
           state.blackbox[arrKey].push(item);               // 落入新桶 = 真正的类型转换
-          okMsg = view === 'action' ? '已转为隐秘行为' : '已转为隐秘资产';
+          okMsg = view === 'action' ? 'Converted to a secret action' : 'Converted to a secret asset';
         }
         saveScopedState(scope, state);
         editingSecret = null;
@@ -4483,10 +4488,10 @@ window.WORLD_ENGINE_UI = (function() {
         const state = loadScopedState(scope);
         const arr = state.blackbox?.[SECRET_ARR[list]];
         if (!arr || arr[index] === undefined) return;
-        if (!confirm(list === 'action' ? '删除隐秘行为？' : '删除隐秘资产？')) return;
+        if (!confirm(list === 'action' ? 'Delete the secret action?' : 'Delete the secret asset?')) return;
         arr.splice(index, 1);
         saveScopedState(scope, state);
-        showToast('已删除');
+        showToast('Deleted');
         refresh();
       };
     });
@@ -4500,7 +4505,7 @@ window.WORLD_ENGINE_UI = (function() {
         if (!arr || arr[index] === undefined) return;
         arr.splice(index + 1, 0, JSON.parse(JSON.stringify(arr[index])));  // 就近插入
         saveScopedState(scope, state);
-        showToast('已复制');
+        showToast('Copied');
         refresh();
       };
     });
@@ -4525,7 +4530,7 @@ window.WORLD_ENGINE_UI = (function() {
         scopedState.worldDigest = value;
         saveScopedState(scope, scopedState);
         editingDigest = null;
-        showToast('世界摘要已保存');
+        showToast('World digest saved');
         refresh();
       };
     });
@@ -4648,10 +4653,11 @@ window.WORLD_ENGINE_UI = (function() {
       const el = document.getElementById('we-filter-status');
       if (!el) return;
       const pfx = prefix || '';
-      if (!v || (!v.ok && !v.bad.length)) { el.textContent = pfx + '（未填写正则）'; return; }
-      if (!v.bad.length) { el.textContent = pfx + `✅ ${v.ok} 条全部生效`; return; }
-      let s = pfx + `⚠️ ${v.ok} 条生效 / ${v.bad.length} 条失败：`;
-      for (const b of v.bad) s += `\n行 ${b.line} 「${b.raw}」无效：${b.reason}`;
+      if (!v || (!v.ok && !v.bad.length)) { el.textContent = pfx + '(no regex entered)'; return; }
+      if (!v.bad.length) { el.textContent = pfx + `✅ All ${v.ok} work`; return; }
+      let s = pfx + `⚠️ ${v.ok} working / ${v.bad.length} failed:`;
+      for (const b of v.bad) s += `
+Line ${b.line} "${b.raw}" is invalid: ${b.reason}`;
       el.textContent = s;
     }
 
@@ -4660,10 +4666,10 @@ window.WORLD_ENGINE_UI = (function() {
       testBtn.onclick = () => {
         const core = window.WORLD_ENGINE_CORE;
         const raw = (document.getElementById('we-filter-regex')?.value) || '';
-        if (!raw.trim()) { showToast('未填写正则', true); renderFilterStatus(null); return; }
-        if (!core || !core.validateFilterRegex) { showToast('core 模块不可用', true); return; }
+        if (!raw.trim()) { showToast('No regex entered', true); renderFilterStatus(null); return; }
+        if (!core || !core.validateFilterRegex) { showToast('core module unavailable', true); return; }
         const v = core.validateFilterRegex(raw);
-        if (v.bad.length) { renderFilterStatus(v, '测试中止——'); showToast(`有 ${v.bad.length} 条正则无效，请先修正`, true); return; }
+        if (v.bad.length) { renderFilterStatus(v, 'Test aborted — '); showToast(`${v.bad.length} regexes are invalid; fix them first`, true); return; }
         // 取最近一条非空对话文本（不限 user/ai，沿用 manualEvolve 取 chat 的范式）
         let sample = '';
         try {
@@ -4674,7 +4680,7 @@ window.WORLD_ENGINE_UI = (function() {
             if (t) { sample = String(chat[i].mes); break; }
           }
         } catch (e) {}
-        if (!sample) { showToast('当前聊天没有可测试的文本', true); return; }
+        if (!sample) { showToast('The current chat has no text to test', true); return; }
         // 跑过滤 + 按顺序累计删除处数（与 filterDialogue 同序：每条在前一条的结果上 replace）
         let removed = 0, work = sample;
         for (const e of v.entries) {
@@ -4689,8 +4695,10 @@ window.WORLD_ENGINE_UI = (function() {
         const filtered = work;
         const before = sample.slice(0, 60), after = filtered.slice(0, 60);
         const el = document.getElementById('we-filter-status');
-        if (el) el.textContent = `已删除 ${removed} 处。\n前: ${before}${sample.length > 60 ? '…' : ''}\n后: ${after}${filtered.length > 60 ? '…' : ''}`;
-        showToast(`已删除 ${removed} 处`);
+        if (el) el.textContent = `Removed ${removed} matches.
+Before: ${before}${sample.length > 60 ? '…' : ''}
+After: ${after}${filtered.length > 60 ? '…' : ''}`;
+        showToast(`Removed ${removed} matches`);
       };
     }
 
@@ -4783,7 +4791,7 @@ window.WORLD_ENGINE_UI = (function() {
           if (m && !m.is_user && String(m.mes || '').trim()) { text = String(m.mes); break; }
         }
       } catch (e) {}
-      if (!text) { showToast('未找到 AI 回复', true); return; }
+      if (!text) { showToast('No AI reply found', true); return; }
       const found = [];
       let m;
       SCAN_TAG_RE.lastIndex = 0;
@@ -4791,14 +4799,14 @@ window.WORLD_ENGINE_UI = (function() {
         const name = m[1];
         if (name && !found.includes(name)) found.push(name);
       }
-      if (!found.length) { showToast('最新 AI 回复里没发现标签', true); return; }
+      if (!found.length) { showToast('No tags found in the latest AI reply', true); return; }
       // 合并进清单：已有的保留勾选态，新发现的默认勾选
       for (const name of found) {
         if (!_filterTags.some(t => t.name === name)) _filterTags.push({ name, checked: true });
       }
       renderFilterTags();
       syncTextareaFromTags();
-      showToast(`扫描到 ${found.length} 个标签`);
+      showToast(`Found ${found.length} tags`);
     }
 
     // 绑定：扫描按钮
@@ -4811,7 +4819,7 @@ window.WORLD_ENGINE_UI = (function() {
     function doAddTag() {
       const v = (addInput && addInput.value || '').trim();
       if (!v) return;
-      if (!/^[a-zA-Z_][\w-]*$/.test(v)) { showToast('标签名无效（只允许字母数字下划线连字符）', true); return; }
+      if (!/^[a-zA-Z_][\w-]*$/.test(v)) { showToast('Invalid tag name (only letters, digits, underscores and hyphens)', true); return; }
       if (!_filterTags.some(t => t.name === v)) _filterTags.push({ name: v, checked: true });
       if (addInput) addInput.value = '';
       renderFilterTags();
@@ -4839,9 +4847,9 @@ window.WORLD_ENGINE_UI = (function() {
         memoryLinkNow.disabled = true;
         try {
           const ok = await window.WORLD_ENGINE?.manualMemoryLink?.();
-          showToast(ok ? '手动联动完成，世界摘要已新增为纪要' : '手动联动未完成', !ok);
+          showToast(ok ? 'Manual link complete; the world digest was added as a note' : 'Manual link did not finish', !ok);
         } catch (error) {
-          showToast('手动联动失败：' + (error?.message || error), true);
+          showToast('Manual link failed: ' + (error?.message || error), true);
         } finally {
           memoryLinkNow.disabled = false;
         }
@@ -4909,7 +4917,7 @@ window.WORLD_ENGINE_UI = (function() {
         };
         window.MEMORY_ENGINE_SETTINGS?.saveSettings(memorySettings);
         window.MEMORY_ENGINE?.applyInjection?.();
-        showToast('设置已保存');
+        showToast('Settings saved');
       };
     }
 
@@ -4917,9 +4925,9 @@ window.WORLD_ENGINE_UI = (function() {
     const memoryCache = window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory');
     const memoryExportData = document.getElementById('we-memory-export-data');
     if (memoryExportData) memoryExportData.onclick = () => {
-      if (!memoryData) { showToast('记忆数据模块未加载', true); return; }
+      if (!memoryData) { showToast('Memory data module not loaded', true); return; }
       setupDownload(JSON.stringify(memoryData.exportData(), null, 2), 'memory-engine-data-' + Date.now() + '.json');
-      showToast('已导出全部记忆数据（最新状态与存档点已分开标明）');
+      showToast('Exported all memory data (latest state and checkpoint are labeled separately)');
     };
     const memoryImportData = document.getElementById('we-memory-import-data');
     const memoryImportDataFile = document.getElementById('we-memory-import-data-file');
@@ -4932,10 +4940,10 @@ window.WORLD_ENGINE_UI = (function() {
           const imported = memoryData.importData(JSON.parse(await file.text()));
           window.WORLD_ENGINE_CHATCACHE?.forScope?.('memory')?.afterEvolution?.();
           window.MEMORY_ENGINE?.applyInjection?.();
-          showToast(`记忆数据已导入，进度已衔接当前第 ${Math.max(0, Number(imported?.chatLayer) || 0)} 层`);
+          showToast(`Memory data imported; progress now continues from message ${Math.max(0, Number(imported?.chatLayer) || 0)}`);
           refresh();
         } catch (error) {
-          showToast('导入记忆数据失败：' + (error?.message || error), true);
+          showToast('Failed to import memory data: ' + (error?.message || error), true);
         } finally {
           memoryImportDataFile.value = '';
         }
@@ -4944,10 +4952,10 @@ window.WORLD_ENGINE_UI = (function() {
 
     const memorySnapshotSave = document.getElementById('we-memory-snapshot-save');
     if (memorySnapshotSave) memorySnapshotSave.onclick = () => {
-      const name = prompt('给这份记忆存档起个名字：', '记忆存档 ' + new Date().toLocaleString());
+      const name = prompt('Name this memory save:', 'Memory save ' + new Date().toLocaleString());
       if (name == null) return;
-      if (memoryCache?.createSnapshot?.(name)) { showToast('记忆存档已创建'); refresh(); }
-      else showToast('存档失败（当前聊天无记忆数据或不可写）', true);
+      if (memoryCache?.createSnapshot?.(name)) { showToast('Memory save created'); refresh(); }
+      else showToast('Save failed (the current chat has no memory data or cannot be written)', true);
     };
     const memorySnapshotImport = document.getElementById('we-memory-snapshot-import');
     const memorySnapshotImportFile = document.getElementById('we-memory-snapshot-import-file');
@@ -4957,10 +4965,10 @@ window.WORLD_ENGINE_UI = (function() {
         const file = memorySnapshotImportFile.files?.[0];
         if (!file) return;
         try {
-          if (memoryCache?.importSnapshot?.(JSON.parse(await file.text()))) { showToast('记忆存档已导入'); refresh(); }
-          else showToast('不是有效的记忆存档文件', true);
+          if (memoryCache?.importSnapshot?.(JSON.parse(await file.text()))) { showToast('Memory save imported'); refresh(); }
+          else showToast('Not a valid memory save file', true);
         } catch (error) {
-          showToast('导入记忆存档失败：' + (error?.message || error), true);
+          showToast('Failed to import memory save: ' + (error?.message || error), true);
         } finally {
           memorySnapshotImportFile.value = '';
         }
@@ -4974,19 +4982,19 @@ window.WORLD_ENGINE_UI = (function() {
         if (!id || !item) return;
         const action = button.dataset.memorySnapAction;
         if (action === 'restore') {
-          if (!confirm('恢复记忆存档「' + item.name + '」？当前记忆数据将被替换。')) return;
-          if (memoryCache.restoreSnapshot(id)) { showToast('记忆存档已恢复'); refresh(); }
-          else showToast('恢复失败', true);
+          if (!confirm('Restore memory save "' + item.name + '"? Current memory data will be replaced.')) return;
+          if (memoryCache.restoreSnapshot(id)) { showToast('Memory save restored'); refresh(); }
+          else showToast('Restore failed', true);
         } else if (action === 'rename') {
-          const name = prompt('新的存档名称：', item.name);
+          const name = prompt('New save name:', item.name);
           if (name == null) return;
-          if (memoryCache.renameSnapshot(id, name)) { showToast('已重命名'); refresh(); }
+          if (memoryCache.renameSnapshot(id, name)) { showToast('Renamed'); refresh(); }
         } else if (action === 'export') {
           const exported = memoryCache.exportSnapshot(id);
           if (exported) setupDownload(JSON.stringify(exported, null, 2), 'memory-snapshot-' + Date.now() + '.json');
         } else if (action === 'delete') {
-          if (!confirm('删除记忆存档「' + item.name + '」？')) return;
-          if (memoryCache.deleteSnapshot(id)) { showToast('已删除'); refresh(); }
+          if (!confirm('Delete memory save "' + item.name + '"?')) return;
+          if (memoryCache.deleteSnapshot(id)) { showToast('Deleted'); refresh(); }
         }
       };
     });
@@ -4994,21 +5002,21 @@ window.WORLD_ENGINE_UI = (function() {
     const memoryArchiveStatus = document.getElementById('we-memory-archive-status');
     if (memoryArchiveStatus && memoryCache?.getStatus) {
       const status = memoryCache.getStatus();
-      if (!status.usable) memoryArchiveStatus.textContent = '当前没有可用聊天（请先打开一个角色/群聊）。';
-      else if (!status.apiAvailable) memoryArchiveStatus.textContent = '当前酒馆版本不支持写入 chat_metadata，酒馆缓存不可用。';
-      else memoryArchiveStatus.textContent = `实时同步${status.syncEnabled ? '已开启' : '已关闭'} · 本地修订 ${status.localRev} / 云端 ${status.liveRev} · 共 ${status.snapshotCount} 条存档`;
+      if (!status.usable) memoryArchiveStatus.textContent = 'No chat available (open a character or group chat first).';
+      else if (!status.apiAvailable) memoryArchiveStatus.textContent = 'This SillyTavern version cannot write chat_metadata, so the SillyTavern cache is unavailable.';
+      else memoryArchiveStatus.textContent = `Live sync ${status.syncEnabled ? 'on' : 'off'} · local revision ${status.localRev} / cloud ${status.liveRev} · ${status.snapshotCount} saves`;
     }
     const memorySyncBox = document.getElementById('we-memory-sync-to-chat');
     if (memorySyncBox) memorySyncBox.onchange = () => {
       window.MEMORY_ENGINE_SETTINGS?.patchSettings({ syncToChat: memorySyncBox.checked });
       if (memorySyncBox.checked) memoryCache?.pushLiveNow?.();
-      showToast(memorySyncBox.checked ? '已开启记忆跨设备同步' : '已关闭记忆跨设备同步');
+      showToast(memorySyncBox.checked ? 'Memory cross-device sync turned on' : 'Memory cross-device sync turned off');
       refresh();
     };
     const memoryAutoBackupBox = document.getElementById('we-memory-auto-backup');
     if (memoryAutoBackupBox) memoryAutoBackupBox.onchange = () => {
       window.MEMORY_ENGINE_SETTINGS?.patchSettings({ autoBackup: memoryAutoBackupBox.checked });
-      showToast(memoryAutoBackupBox.checked ? '已开启记忆自动备份' : '已关闭记忆自动备份');
+      showToast(memoryAutoBackupBox.checked ? 'Memory auto backup turned on' : 'Memory auto backup turned off');
     };
 
     const memoryBackfillStart = document.getElementById('we-memory-backfill-start');
@@ -5016,10 +5024,10 @@ window.WORLD_ENGINE_UI = (function() {
       memoryBackfillStart.onclick = async () => {
         if (window.MEMORY_ENGINE && typeof window.MEMORY_ENGINE.backfill === 'function') {
           try { await window.MEMORY_ENGINE.backfill(); }
-          catch (error) { showToast(`记忆重填失败：${error?.message || error}`, true); }
+          catch (error) { showToast(`Memory refill failed: ${error?.message || error}`, true); }
           return;
         }
-        showToast('记忆引擎尚未加载', true);
+        showToast('Memory Engine not loaded yet', true);
       };
     }
     const memoryRunNow = document.getElementById('we-memory-run-now');
@@ -5036,9 +5044,9 @@ window.WORLD_ENGINE_UI = (function() {
         memoryBigSummaryNow.disabled = true;
         try {
           await window.MEMORY_ENGINE?.manualBigSummary?.();
-          showToast('总述完成');
+          showToast('Overview complete');
           refresh();
-        } catch (error) { showToast(`总述失败：${error?.message || error}`, true); }
+        } catch (error) { showToast(`Overview failed: ${error?.message || error}`, true); }
         finally { memoryBigSummaryNow.disabled = false; }
       };
     }
@@ -5047,7 +5055,7 @@ window.WORLD_ENGINE_UI = (function() {
       memorySummaryBackfillStart.onclick = async () => {
         memorySummaryBackfillStart.disabled = true;
         try { await window.MEMORY_ENGINE?.backfillSummaries?.(); }
-        catch (error) { showToast(`纪要与总述重填失败：${error?.message || error}`, true); }
+        catch (error) { showToast(`Notes and overview refill failed: ${error?.message || error}`, true); }
         finally { memorySummaryBackfillStart.disabled = false; }
       };
     }
@@ -5058,7 +5066,7 @@ window.WORLD_ENGINE_UI = (function() {
           window.MEMORY_ENGINE.stopBackfill();
           return;
         }
-        showToast('当前没有运行中的记忆重填任务');
+        showToast('No memory refill task is running');
       };
     }
 
@@ -5160,7 +5168,7 @@ window.WORLD_ENGINE_UI = (function() {
           const _core = window.WORLD_ENGINE_CORE;
           if (_core && _core.validateFilterRegex) {
             const _v = _core.validateFilterRegex(ns.evolveFilterRegex);
-            renderFilterStatus(_v, '已保存：');
+            renderFilterStatus(_v, 'Saved: ');
             _filterBad = _v.bad.length;
           }
         } catch (e) { /* 校验失败不影响保存 */ }
@@ -5184,7 +5192,7 @@ window.WORLD_ENGINE_UI = (function() {
         }
 
         window.WORLD_ENGINE?.applyInjection?.();
-        showToast(_filterBad > 0 ? `已保存，但有 ${_filterBad} 条正则无效` : '设置已保存', _filterBad > 0);
+        showToast(_filterBad > 0 ? `Saved, but ${_filterBad} regexes are invalid` : 'Settings saved', _filterBad > 0);
       };
     }
 
@@ -5221,15 +5229,15 @@ window.WORLD_ENGINE_UI = (function() {
         const checkboxes = [...worldbookList.querySelectorAll('.we-worldbook-entry-check')];
         const selected = checkboxes.filter(checkbox => checkbox.checked);
         const chars = selected.reduce((total, checkbox) => total + Number(checkbox.dataset.chars || 0), 0);
-        if (summary) summary.textContent = `${selected.length}/${checkboxes.length} 条已选，约 ${chars} 字符`;
+        if (summary) summary.textContent = `${selected.length}/${checkboxes.length} selected, about ${chars} characters`;
       }
 
       async function loadWorldbookEntries() {
         if (!worldbook) {
-          worldbookList.innerHTML = '<div class="we-empty">世界书模块未加载</div>';
+          worldbookList.innerHTML = '<div class="we-empty">World Info module not loaded</div>';
           return;
         }
-        worldbookList.innerHTML = '<div class="we-empty">正在读取当前聊天世界书...</div>';
+        worldbookList.innerHTML = '<div class="we-empty">Reading the current chat\'s World Info...</div>';
         if (reloadBtn) reloadBtn.disabled = true;
         try {
           const entries = await worldbook.loadCurrentEntries();
@@ -5246,7 +5254,7 @@ window.WORLD_ENGINE_UI = (function() {
             const allIds = entries.filter(e => !e.disabled).map(e => e.id);
             worldbook.saveSelectedIds(allIds, worldbookScope);
             _wbCachedSelectedIds = new Set(allIds);
-            showToast(`已自动全选 ${allIds.length} 条世界书条目`);
+            showToast(`Automatically selected all ${allIds.length} World Info entries`);
           } else {
             const enabledIds = new Set(entries.filter(e => !e.disabled).map(e => e.id));
             const validSavedIds = savedIds.filter(id => enabledIds.has(id));
@@ -5259,8 +5267,8 @@ window.WORLD_ENGINE_UI = (function() {
           }
           renderWorldbookList();
         } catch(error) {
-          worldbookList.innerHTML = `<div class="we-empty">读取失败：${u(error.message)}</div>`;
-          if (summary) summary.textContent = '读取失败';
+          worldbookList.innerHTML = `<div class="we-empty">Failed to read: ${u(error.message)}</div>`;
+          if (summary) summary.textContent = 'Failed to read';
           _wbCachedEntries = null;
           _wbCachedSelectedIds = null;
           _wbCachedOverrides = null;
@@ -5279,8 +5287,8 @@ window.WORLD_ENGINE_UI = (function() {
           ? window.MEMORY_ENGINE_SETTINGS?.getSettings()?.worldbookTrigger === true
           : !!(window.WORLD_ENGINE_WORLDBOOK?.triggerEnabled?.());
         if (!entries || !entries.length) {
-          worldbookList.innerHTML = '<div class="we-empty">当前聊天未关联可读取的世界书条目</div>';
-          if (summary) summary.textContent = '0 条可选';
+          worldbookList.innerHTML = '<div class="we-empty">The current chat has no readable World Info entries</div>';
+          if (summary) summary.textContent = '0 available';
           return;
         }
         const groups = new Map();
@@ -5295,25 +5303,25 @@ window.WORLD_ENGINE_UI = (function() {
             <div class="we-worldbook-group-header">
               <span>${expanded ? '▼' : '▶'}</span>
               <div class="we-worldbook-group-title">
-                <div>${u(world)} <span>${worldEntries.length}条</span></div>
+                <div>${u(world)} <span>${worldEntries.length} entries</span></div>
               </div>
               <div class="we-worldbook-group-actions">
-                <button type="button" data-worldbook-group-action="select">全选</button>
-                <button type="button" data-worldbook-group-action="clear">取消全选</button>
+                <button type="button" data-worldbook-group-action="select">Select all</button>
+                <button type="button" data-worldbook-group-action="clear">Deselect all</button>
               </div>
             </div>
             <div class="we-worldbook-group-body" style="${expanded ? '' : 'display:none;'}">
             ${worldEntries.map(entry => {
               const keys = entry.keys || [];
               const badge = entry.constant ? '🔵' : (entry.vectorized ? '🔗' : (keys.length ? '🟢' : '⚪'));
-              const keyHint = keys.length ? ' · 关键词：' + keys.slice(0, 5).join('、') + (keys.length > 5 ? '…' : '') : '';
+              const keyHint = keys.length ? ' · keywords: ' + keys.slice(0, 5).join(', ') + (keys.length > 5 ? '…' : '') : '';
               const ov = overrides[entry.id] || 'auto';
               const overrideSel = (triggerOn && !entry.disabled) ? `
-                <select class="we-wb-override" data-entry-id="${u(entry.id)}" title="该条触发方式">
-                  <option value="auto"${ov === 'auto' ? ' selected' : ''}>跟随酒馆</option>
-                  <option value="const"${ov === 'const' ? ' selected' : ''}>强制常驻</option>
-                  <option value="key"${ov === 'key' ? ' selected' : ''}>强制关键词</option>
-                  <option value="off"${ov === 'off' ? ' selected' : ''}>关闭</option>
+                <select class="we-wb-override" data-entry-id="${u(entry.id)}" title="How this entry triggers">
+                  <option value="auto"${ov === 'auto' ? ' selected' : ''}>Follow SillyTavern</option>
+                  <option value="const"${ov === 'const' ? ' selected' : ''}>Force constant</option>
+                  <option value="key"${ov === 'key' ? ' selected' : ''}>Force keywords</option>
+                  <option value="off"${ov === 'off' ? ' selected' : ''}>Off</option>
                 </select>` : '';
               return `
               <div class="we-worldbook-entry${entry.disabled ? ' is-disabled' : ''}">
@@ -5321,7 +5329,7 @@ window.WORLD_ENGINE_UI = (function() {
                   <input class="we-worldbook-entry-check" type="checkbox" value="${u(entry.id)}" data-chars="${entry.content.length}" ${selectedIds.has(entry.id) && !entry.disabled ? 'checked' : ''} ${entry.disabled ? 'disabled' : ''}>
                   <span>
                     <strong>${badge} ${u(entry.title)}</strong>
-                    <small>${entry.content.length} 字符${u(keyHint)}${entry.disabled ? ' · 世界书内已停用' : ''}</small>
+                    <small>${entry.content.length} characters${u(keyHint)}${entry.disabled ? ' · disabled in World Info' : ''}</small>
                   </span>
                 </label>${overrideSel}
               </div>`;
@@ -5394,7 +5402,7 @@ window.WORLD_ENGINE_UI = (function() {
         const ids = [..._wbCachedSelectedIds];
         if (worldbook.saveSelection) worldbook.saveSelection(ids, _wbCachedOverrides || {}, worldbookScope);
         else worldbook.saveSelectedIds(ids, worldbookScope);
-        showToast(`已保存 ${_wbCachedSelectedIds.size} 条${worldbookScope === 'memory' ? '记忆' : '后台'}世界书条目`);
+        showToast(`Saved ${_wbCachedSelectedIds.size} ${worldbookScope === 'memory' ? 'memory' : 'background'} World Info entries`);
         updateWorldbookSummary();
       };
       const triggerBox = document.getElementById('we-worldbook-trigger');
@@ -5407,7 +5415,7 @@ window.WORLD_ENGINE_UI = (function() {
           window.WORLD_ENGINE_STORE.setItem('world_engine_settings', JSON.stringify({ ...cur, worldbookTrigger: triggerBox.checked }));
           if (wapi && wapi.getSettings) wapi.getSettings(true);
         }
-        showToast(triggerBox.checked ? '已开启蓝绿灯触发' : '已关闭蓝绿灯触发（恢复全部已选注入）');
+        showToast(triggerBox.checked ? 'Blue/green triggers turned on' : 'Blue/green triggers turned off (all selected entries are injected again)');
         renderWorldbookList(); // 重渲染以显示/隐藏每条的触发覆写下拉
       };
       // refresh() 重建 DOM 时，如果 chatId 未变且已有缓存，直接渲染，避免勾选丢失
@@ -5422,11 +5430,11 @@ window.WORLD_ENGINE_UI = (function() {
     const resetBtn = document.getElementById('we-reset-world');
     if (resetBtn) {
       resetBtn.onclick = () => {
-        if (confirm('重置当前聊天所有世界状态和记忆？不可恢复！')) {
+        if (confirm('Reset all world state and memories for the current chat? This cannot be undone!')) {
           core.clearState();
           core.clearCheckpoint();
           core.saveFingerprint(String(core.getChatLayer()));
-          showToast('世界已重置');
+          showToast('World reset');
           refresh();
         }
       };
@@ -5463,7 +5471,7 @@ window.WORLD_ENGINE_UI = (function() {
     if (fetchBtn) {
       fetchBtn.onclick = async () => {
         const api = window.WORLD_ENGINE_API;
-        if (!api) { showToast('API 模块未加载', true); return; }
+        if (!api) { showToast('API module not loaded', true); return; }
         const requestScope = _engineFace;
         const modelListElement = document.getElementById('we-model-list');
         const apiPatch = {
@@ -5493,12 +5501,12 @@ window.WORLD_ENGINE_UI = (function() {
           requestSettings = worldSettings;
         }
         fetchBtn.disabled = true;
-        fetchBtn.textContent = '获取中...';
+        fetchBtn.textContent = 'Fetching...';
         try {
           const models = await api.fetchModelList(requestSettings);
           const select = modelListElement;
           if (select) {
-            select.innerHTML = '<option value="">-- 选择模型 --</option>' +
+            select.innerHTML = '<option value="">-- Choose a model --</option>' +
               models.map(m => '<option value="' + u(m) + '">' + u(m) + '</option>').join('');
             select.style.display = 'block';
             select.onchange = () => {
@@ -5506,12 +5514,12 @@ window.WORLD_ENGINE_UI = (function() {
               if (modelInput) modelInput.value = select.value;
             };
           }
-          showToast('获取到 ' + models.length + ' 个模型');
+          showToast('Fetched ' + models.length + ' models');
         } catch(e) {
           showToast('' + e.message, true);
         }
         fetchBtn.disabled = false;
-        fetchBtn.innerHTML = '获取列表';
+        fetchBtn.innerHTML = 'Fetch list';
       };
     }
 
@@ -5537,7 +5545,7 @@ window.WORLD_ENGINE_UI = (function() {
         a.download = 'world-engine-' + core.getChatId() + '-' + Date.now() + '.json';
         a.click();
         URL.revokeObjectURL(url);
-        showToast('已导出');
+        showToast('Exported');
       };
     }
 
@@ -5569,14 +5577,14 @@ window.WORLD_ENGINE_UI = (function() {
                 _retryType: String(data._retryType || '')
               };
               core.saveState(state);
-              showToast('区域事件导入成功');
+              showToast('Regional incident imported');
               refresh();
               return;
             }
-            if (data.version !== '1.2') { showToast('不支持的存档格式版本', true); return; }
-            if (!data.state) { showToast('无效的导入文件', true); return; }
+            if (data.version !== '1.2') { showToast('Unsupported save format version', true); return; }
+            if (!data.state) { showToast('Invalid import file', true); return; }
             const s = data.state;
-            if (s.round === undefined) { showToast('缺少 round 字段', true); return; }
+            if (s.round === undefined) { showToast('Missing round field', true); return; }
             core.importState(s);
             if (Object.prototype.hasOwnProperty.call(data, 'checkpoint')) {
               if (data.checkpoint) {
@@ -5586,10 +5594,10 @@ window.WORLD_ENGINE_UI = (function() {
               else core.clearCheckpoint();
             }
             core.saveFingerprint(String(core.getChatLayer()));
-            showToast('导入成功！第' + s.round + '轮，' + (s.memories||[]).filter(m=>m.type==='ledger').length + '轮账本');
+            showToast('Import succeeded! Round ' + s.round + ', ' + (s.memories||[]).filter(m=>m.type==='ledger').length + ' rounds of ledger');
             refresh();
           } catch(err) {
-            showToast('解析失败: ' + err.message, true);
+            showToast('Parse failed: ' + err.message, true);
           }
         };
         reader.readAsText(file);
@@ -5611,7 +5619,7 @@ window.WORLD_ENGINE_UI = (function() {
       const el = document.getElementById('we-tone-status');
       if (!el) return;
       const t = getTonePrompt().trim();
-      el.textContent = t ? `当前已设置附加提示词（${t.length} 字）` : '当前未设置附加提示词';
+      el.textContent = t ? `Additional prompt set (${t.length} chars)` : 'No additional prompt set';
     }
     updateToneStatus();
 
@@ -5625,10 +5633,10 @@ window.WORLD_ENGINE_UI = (function() {
         const reader = new FileReader();
         reader.onload = (ev) => {
           const text = String(ev.target.result || '').trim();
-          if (!text) { showToast('文件为空', true); return; }
+          if (!text) { showToast('File is empty', true); return; }
           saveTonePrompt(text);
           updateToneStatus();
-          showToast('附加提示词已导入');
+          showToast('Additional prompt imported');
         };
         reader.readAsText(file);
         toneFile.value = '';
@@ -5639,7 +5647,7 @@ window.WORLD_ENGINE_UI = (function() {
     if (toneExportBtn) {
       toneExportBtn.onclick = () => {
         const t = getTonePrompt();
-        if (!t.trim()) { showToast('当前无附加提示词可导出', true); return; }
+        if (!t.trim()) { showToast('No additional prompt to export', true); return; }
         const blob = new Blob([t], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -5647,17 +5655,17 @@ window.WORLD_ENGINE_UI = (function() {
         a.download = 'world-engine-tone-' + Date.now() + '.txt';
         a.click();
         URL.revokeObjectURL(url);
-        showToast('附加提示词已导出');
+        showToast('Additional prompt exported');
       };
     }
 
     const toneClearBtn = document.getElementById('we-tone-clear');
     if (toneClearBtn) {
       toneClearBtn.onclick = () => {
-        if (!getTonePrompt().trim()) { showToast('当前无附加提示词', true); return; }
+        if (!getTonePrompt().trim()) { showToast('No additional prompt', true); return; }
         saveTonePrompt('');
         updateToneStatus();
-        showToast('附加提示词已清除');
+        showToast('Additional prompt cleared');
       };
     }
 
@@ -5677,23 +5685,23 @@ window.WORLD_ENGINE_UI = (function() {
       function render() {
         const st = cc.getStatus();
         if (statusEl) {
-          if (!st.usable) statusEl.textContent = '当前没有可用聊天（请先打开一个角色/群聊）。';
-          else if (!st.apiAvailable) statusEl.textContent = '当前酒馆版本不支持写入 chat_metadata，酒馆缓存不可用。';
-          else statusEl.textContent = `实时同步${st.syncEnabled ? '已开启' : '已关闭'} · 本地修订 ${st.localRev} / 云端 ${st.liveRev} · 共 ${st.snapshotCount} 条存档`;
+          if (!st.usable) statusEl.textContent = 'No chat available (open a character or group chat first).';
+          else if (!st.apiAvailable) statusEl.textContent = 'This SillyTavern version cannot write chat_metadata, so the SillyTavern cache is unavailable.';
+          else statusEl.textContent = `Live sync ${st.syncEnabled ? 'on' : 'off'} · local revision ${st.localRev} / cloud ${st.liveRev} · ${st.snapshotCount} saves`;
         }
         const snaps = cc.listSnapshots();
-        if (!snaps.length) { listEl.innerHTML = '<div class="we-empty">暂无存档</div>'; return; }
+        if (!snaps.length) { listEl.innerHTML = '<div class="we-empty">No saves yet</div>'; return; }
         listEl.innerHTML = snaps.map(s => `
           <div class="we-snapshot-row" data-snap-id="${u(s.id)}">
             <div class="we-snapshot-main">
-              <div class="we-snapshot-name"><span class="we-snapshot-badge${s.auto ? ' is-auto' : ''}">${s.auto ? '自动' : '手动'}</span>${u(s.name)}</div>
-              <div class="we-snapshot-meta">第 ${s.round || 0} 轮 · ${fmtTime(s.createdAt)}</div>
+              <div class="we-snapshot-name"><span class="we-snapshot-badge${s.auto ? ' is-auto' : ''}">${s.auto ? 'Auto' : 'Manual'}</span>${u(s.name)}</div>
+              <div class="we-snapshot-meta">Round ${s.round || 0} · ${fmtTime(s.createdAt)}</div>
             </div>
             <div class="we-snapshot-actions">
-              <button class="we-icon-btn" data-snap-action="restore" title="恢复到当前聊天"><i class="fa-solid fa-rotate-left"></i></button>
-              <button class="we-icon-btn" data-snap-action="rename" title="重命名"><i class="fa-solid fa-pen"></i></button>
-              <button class="we-icon-btn" data-snap-action="export" title="导出 JSON"><i class="fa-solid fa-download"></i></button>
-              <button class="we-icon-btn" data-snap-action="delete" title="删除"><i class="fa-solid fa-trash"></i></button>
+              <button class="we-icon-btn" data-snap-action="restore" title="Restore to the current chat"><i class="fa-solid fa-rotate-left"></i></button>
+              <button class="we-icon-btn" data-snap-action="rename" title="Rename"><i class="fa-solid fa-pen"></i></button>
+              <button class="we-icon-btn" data-snap-action="export" title="Export JSON"><i class="fa-solid fa-download"></i></button>
+              <button class="we-icon-btn" data-snap-action="delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
             </div>
           </div>`).join('');
         listEl.querySelectorAll('[data-snap-action]').forEach(btn => {
@@ -5704,22 +5712,23 @@ window.WORLD_ENGINE_UI = (function() {
             const action = btn.dataset.snapAction;
             const snap = cc.listSnapshots().find(s => s.id === id);
             if (action === 'restore') {
-              if (!confirm(`恢复存档「${snap ? snap.name : id}」到当前聊天？\n当前状态会先自动备份，可再恢复回来。`)) return;
-              if (cc.restoreSnapshot(id)) { showToast('已恢复存档'); refresh(); }
-              else showToast('恢复失败', true);
+              if (!confirm(`Restore save "${snap ? snap.name : id}" to the current chat?
+The current state is backed up first, so you can restore it again.`)) return;
+              if (cc.restoreSnapshot(id)) { showToast('Save restored'); refresh(); }
+              else showToast('Restore failed', true);
             } else if (action === 'rename') {
-              const name = prompt('新的存档名称：', snap ? snap.name : '');
+              const name = prompt('New save name:', snap ? snap.name : '');
               if (name == null) return;
-              if (cc.renameSnapshot(id, name)) { showToast('已重命名'); render(); }
+              if (cc.renameSnapshot(id, name)) { showToast('Renamed'); render(); }
             } else if (action === 'export') {
               const obj = cc.exportSnapshot(id);
-              if (!obj) { showToast('导出失败', true); return; }
+              if (!obj) { showToast('Export failed', true); return; }
               const safe = String(obj.name || id).replace(/[^\w一-龥-]+/g, '_');
               setupDownload(JSON.stringify(obj, null, 2), 'we-snapshot-' + safe + '-' + Date.now() + '.json');
-              showToast('已导出存档');
+              showToast('Save exported');
             } else if (action === 'delete') {
-              if (!confirm(`删除存档「${snap ? snap.name : id}」？不可恢复。`)) return;
-              if (cc.deleteSnapshot(id)) { showToast('已删除'); render(); }
+              if (!confirm(`Delete save "${snap ? snap.name : id}"? This cannot be undone.`)) return;
+              if (cc.deleteSnapshot(id)) { showToast('Deleted'); render(); }
             }
           };
         });
@@ -5737,21 +5746,21 @@ window.WORLD_ENGINE_UI = (function() {
       if (syncBox) syncBox.onchange = () => {
         persist('syncToChat', syncBox.checked);
         if (syncBox.checked && cc.pushLiveNow) cc.pushLiveNow(); // 开启即把本地播种进聊天
-        showToast(syncBox.checked ? '已开启跨设备同步' : '已关闭跨设备同步');
+        showToast(syncBox.checked ? 'Cross-device sync turned on' : 'Cross-device sync turned off');
         render();
       };
       const autoBox = document.getElementById('we-auto-backup');
       if (autoBox) autoBox.onchange = () => {
         persist('autoBackup', autoBox.checked);
-        showToast(autoBox.checked ? '已开启自动备份' : '已关闭自动备份');
+        showToast(autoBox.checked ? 'Auto backup turned on' : 'Auto backup turned off');
       };
 
       const ccSaveBtn = document.getElementById('we-chatcache-save');
       if (ccSaveBtn) ccSaveBtn.onclick = () => {
-        const name = prompt('给这份存档起个名字：', '存档 ' + fmtTime(Date.now()));
+        const name = prompt('Name this save:', 'Save ' + fmtTime(Date.now()));
         if (name == null) return;
-        if (cc.createSnapshot(name)) { showToast('已存档'); render(); }
-        else showToast('存档失败（当前聊天无世界数据或不可写）', true);
+        if (cc.createSnapshot(name)) { showToast('Saved'); render(); }
+        else showToast('Save failed (the current chat has no world data or cannot be written)', true);
       };
 
       const ccImportBtn = document.getElementById('we-chatcache-import');
@@ -5765,9 +5774,9 @@ window.WORLD_ENGINE_UI = (function() {
           reader.onload = (ev) => {
             try {
               const obj = JSON.parse(ev.target.result);
-              if (cc.importSnapshot(obj)) { showToast('已导入存档'); render(); }
-              else showToast('不是有效的存档文件', true);
-            } catch (err) { showToast('解析失败: ' + err.message, true); }
+              if (cc.importSnapshot(obj)) { showToast('Save imported'); render(); }
+              else showToast('Not a valid save file', true);
+            } catch (err) { showToast('Parse failed: ' + err.message, true); }
           };
           reader.readAsText(file);
           ccImportFile.value = '';
@@ -5798,7 +5807,7 @@ window.WORLD_ENGINE_UI = (function() {
 
       startBtn.onclick = () => runBackfill();
       if (stopBtn) stopBtn.onclick = () => {
-        if (evolution && evolution.abort) { evolution.abort(); showToast('已发送停止信号'); }
+        if (evolution && evolution.abort) { evolution.abort(); showToast('Stop signal sent'); }
       };
     })();
 
@@ -5819,9 +5828,9 @@ window.WORLD_ENGINE_UI = (function() {
         const evo = window.WORLD_ENGINE_EVOLUTION;
         if (!evo || !evo.getLastDebug) return;
         const dbg = evo.getLastDebug();
-        if (!dbg.prompt) { showToast('无 Prompt 可导出', true); return; }
+        if (!dbg.prompt) { showToast('No prompt to export', true); return; }
         setupDownload(dbg.prompt, 'prompt-' + Date.now() + '.txt');
-        showToast('Prompt 已导出');
+        showToast('Prompt exported');
       };
     }
 
@@ -5831,9 +5840,9 @@ window.WORLD_ENGINE_UI = (function() {
         const evo = window.WORLD_ENGINE_EVOLUTION;
         if (!evo || !evo.getLastDebug) return;
         const dbg = evo.getLastDebug();
-        if (!dbg.rawResult) { showToast('无 API 返回可导出', true); return; }
+        if (!dbg.rawResult) { showToast('No API response to export', true); return; }
         setupDownload(dbg.rawResult, 'api-raw-' + Date.now() + '.txt');
-        showToast('API 返回已导出');
+        showToast('API response exported');
       };
     }
 
@@ -5846,21 +5855,21 @@ window.WORLD_ENGINE_UI = (function() {
     if (exportDiagBtn) {
       exportDiagBtn.onclick = () => {
         const diag = window.WORLD_ENGINE_DIAG;
-        if (!diag || !diag.download) { showToast('诊断模块不可用', true); return; }
+        if (!diag || !diag.download) { showToast('Diagnostics module unavailable', true); return; }
         try {
           diag.download();
-          showToast('诊断包已导出');
+          showToast('Diagnostics bundle exported');
         } catch (e) {
-          showToast('诊断包导出失败: ' + (e && e.message || e), true);
+          showToast('Diagnostics bundle export failed: ' + (e && e.message || e), true);
         }
       };
     }
     const memoryExportDiagBtn = document.getElementById('we-memory-export-diag');
     if (memoryExportDiagBtn) memoryExportDiagBtn.onclick = () => {
       const diag = window.WORLD_ENGINE_DIAG;
-      if (!diag?.download) { showToast('记忆诊断模块不可用', true); return; }
-      try { diag.download('memory'); showToast('记忆诊断包已导出'); }
-      catch (error) { showToast('记忆诊断包导出失败: ' + (error?.message || error), true); }
+      if (!diag?.download) { showToast('Memory diagnostics module unavailable', true); return; }
+      try { diag.download('memory'); showToast('Memory diagnostics bundle exported'); }
+      catch (error) { showToast('Memory diagnostics bundle export failed: ' + (error?.message || error), true); }
     };
 
     // [MAP] 引擎预设管理：整页装配后首次绑定（事件委托在 bindPresetEvents 内）。
@@ -6013,7 +6022,7 @@ window.WORLD_ENGINE_UI = (function() {
       s.economy = s.economy || {};
       if (!s.economy.signals) s.economy.signals = [];
       if (s.economy.signals.length < 5) {
-        s.economy.signals.push({ summary: '新信号', scope: '区域' });
+        s.economy.signals.push({ summary: 'New signal', scope: 'Region' });
         saveScopedState(scope, s);
         refresh();
       }
@@ -6097,9 +6106,9 @@ window.WORLD_ENGINE_UI = (function() {
   }
 
   function setMemoryEvolvingUI(active, label) {
-    _memoryRunningLabel = active ? String(label || '记忆任务') : '';
+    _memoryRunningLabel = active ? String(label || 'memory task') : '';
     const status = document.getElementById('we-memory-task-status');
-    if (status) status.textContent = active ? `正在进行${_memoryRunningLabel}` : '当前没有运行中的记忆任务';
+    if (status) status.textContent = active ? `Running ${_memoryRunningLabel}` : 'No memory task is running';
     updateBallControls();
   }
 
@@ -6112,40 +6121,40 @@ window.WORLD_ENGINE_UI = (function() {
   //   向前推进 → 喂当前状态 A（mode 'forward'），面板显示当前状态。
   async function runManualEvolve(mode, scope) {
     if (!window.WORLD_ENGINE || typeof window.WORLD_ENGINE.manualEvolve !== 'function') {
-      showToast('手动推演入口未就绪', true);
+      showToast('Manual evolution entry point not ready', true);
       return;
     }
     const ok = await window.WORLD_ENGINE.manualEvolve(mode, scope);
-    if (ok) showToast('推演完成');
+    if (ok) showToast('Evolution complete');
     else if (evolution.getLastError?.()) showToast(evolution.getLastError(), true);
   }
 
   async function runMemoryExtract() {
-    if (!window.MEMORY_ENGINE?.manualExtract) { showToast('记忆提取入口未就绪', true); return; }
+    if (!window.MEMORY_ENGINE?.manualExtract) { showToast('Memory extraction entry point not ready', true); return; }
     try {
       const result = await window.MEMORY_ENGINE.manualExtract();
-      showToast(`记忆提取完成，写入或更新 ${result?.added || 0} 项`);
+      showToast(`Memory extraction complete; ${result?.added || 0} items written or updated`);
       return result;
     } catch (error) {
-      showToast(`记忆提取失败：${error?.message || error}`, true);
+      showToast(`Memory extraction failed: ${error?.message || error}`, true);
     }
   }
 
   async function runMemoryReextract() {
-    if (!window.MEMORY_ENGINE?.manualReextract) { showToast('记忆推演入口未就绪', true); return; }
+    if (!window.MEMORY_ENGINE?.manualReextract) { showToast('Memory evolution entry point not ready', true); return; }
     try {
       const result = await window.MEMORY_ENGINE.manualReextract();
-      showToast(`记忆重新推演完成，写入或更新 ${result?.added ?? '未知'} 项`);
-    } catch (error) { showToast(`记忆重新推演失败：${error?.message || error}`, true); }
+      showToast(`Memory re-run complete; ${result?.added ?? 'Unknown'} items written or updated`);
+    } catch (error) { showToast(`Memory re-run failed: ${error?.message || error}`, true); }
   }
 
   // 批量「重填世界推演」：清空当前世界状态，从第 1 个 AI 楼层分批推到指定楼层。
   async function runBackfill() {
-    if (isEvolving) { showToast('已有推演进行中，请稍候'); return; }
-    if (evolution?.isRunning?.()) { showToast('已有推演进行中，请稍候'); return; }
+    if (isEvolving) { showToast('An evolution is already in progress; please wait'); return; }
+    if (evolution?.isRunning?.()) { showToast('An evolution is already in progress; please wait'); return; }
 
     const st = window.WORLD_ENGINE_API ? window.WORLD_ENGINE_API.getSettings(true) : {};
-    if (st.engineEnabled === false) { showToast('世界引擎已关闭', true); return; }
+    if (st.engineEnabled === false) { showToast('World Engine is off', true); return; }
     const batchSize = Math.max(1, parseInt(st.backfillBatchSize) || 1);
     const retries = Math.max(0, parseInt(st.backfillRetries) || 0);
     let endLayer = Math.max(0, parseInt(st.backfillEndLayer) || 0);
@@ -6161,7 +6170,7 @@ window.WORLD_ENGINE_UI = (function() {
         if (m && !m.is_user && String(m.mes || '').trim() && !(ignoreFirstLayer && index === 0)) aiCount++;
       }
     } catch (e) {}
-    if (!aiCount) { showToast('当前聊天没有可推演的 AI 楼层', true); return; }
+    if (!aiCount) { showToast('The current chat has no AI messages to evolve', true); return; }
     const effectiveEnd = (endLayer > 0 && endLayer <= aiCount) ? endLayer : aiCount;
     const totalBatches = Math.max(1, Math.ceil(effectiveEnd / batchSize));
 
@@ -6169,67 +6178,69 @@ window.WORLD_ENGINE_UI = (function() {
     const setBfStatus = (t) => { if (statusEl) statusEl.textContent = t; };
 
     if (!confirm(
-      `「重填世界推演」将清空当前世界状态，从第 1 个 AI 楼层重新推演到第 ${effectiveEnd} 层，` +
-      `共约 ${totalBatches} 批、每批 fault 最多重试 ${retries} 次。\n` +
-      `开始前会自动存一份备份快照。\n确定推倒重来？`
+      `"Refill world evolution" clears the current world state and re-evolves from the first AI message up to message ${effectiveEnd}, ` +
+      `about ${totalBatches} batches, with up to ${retries} fault retries per batch.
+` +
+      `A backup snapshot is saved automatically first.
+Start over?`
     )) return;
 
     // 回填前自动备份（chatcache 不可用则静默跳过）
     try {
       const cc = window.WORLD_ENGINE_CHATCACHE;
       if (cc && cc.createSnapshot) {
-        const snap = cc.createSnapshot('回填前自动备份');
-        if (snap) showToast('已存回填前备份快照');
+        const snap = cc.createSnapshot('Auto backup before backfill');
+        if (snap) showToast('Backup snapshot saved before backfill');
       }
-    } catch (e) { console.warn('[世界引擎] 回填前备份失败（不影响回填）', e); }
+    } catch (e) { console.warn('[World Engine] Backup before backfill failed (the backfill is not affected)', e); }
 
     isEvolving = true;
     setEvolvingUI(true, 'state');
     refresh(true);
-    if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('回填中...');
-    setBfStatus('开始回填...');
+    if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('Backfilling...');
+    setBfStatus('Starting backfill...');
 
     try {
       const result = await evolution.backfillEvolve({
         batchSize, retries, endLayer,
         onProgress: (p) => {
           if (p.phase === 'batch-start') {
-            setBfStatus(`第 ${p.batch}/${p.totalBatches} 批（第 ${p.layerFrom}-${p.layerTo} 层）推演中...`);
-            if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus(`回填中 ${p.batch}/${p.totalBatches}`);
+            setBfStatus(`Batch ${p.batch}/${p.totalBatches} (messages ${p.layerFrom}-${p.layerTo}) evolving...`);
+            if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus(`Backfilling ${p.batch}/${p.totalBatches}`);
           } else if (p.phase === 'retry') {
-            setBfStatus(`第 ${p.batch}/${p.totalBatches} 批失败，重试 ${p.attempt}/${retries}...`);
-            if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus(`回填中 ${p.batch}/${p.totalBatches}`);
+            setBfStatus(`Batch ${p.batch}/${p.totalBatches} failed, retry ${p.attempt}/${retries}...`);
+            if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus(`Backfilling ${p.batch}/${p.totalBatches}`);
           } else if (p.phase === 'batch-done') {
-            setBfStatus(`第 ${p.batch}/${p.totalBatches} 批完成（已推进到第 ${p.round} 轮）`);
+            setBfStatus(`Batch ${p.batch}/${p.totalBatches} done (advanced to round ${p.round})`);
             refresh(true);
           }
         }
       });
 
       if (result.done) {
-        setBfStatus(`✅ 回填完成，共 ${result.completedBatches}/${result.totalBatches} 批`);
-        showToast(`回填完成，共 ${result.completedBatches} 批`);
-        if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('回填完成');
+        setBfStatus(`✅ Backfill complete, ${result.completedBatches}/${result.totalBatches} batches`);
+        showToast(`Backfill complete, ${result.completedBatches} batches`);
+        if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('Backfill complete');
         if (window.WORLD_ENGINE?.applyInjection) window.WORLD_ENGINE.applyInjection();
       } else if (result.reason === 'aborted') {
-        setBfStatus(`🛑 已中止，完成 ${result.completedBatches}/${result.totalBatches} 批`);
-        showToast(`回填已中止（完成 ${result.completedBatches} 批）`);
-        if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('回填已中止');
+        setBfStatus(`🛑 Aborted after ${result.completedBatches}/${result.totalBatches} batches`);
+        showToast(`Backfill aborted (${result.completedBatches} batches done)`);
+        if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('Backfill aborted');
         if (window.WORLD_ENGINE?.applyInjection) window.WORLD_ENGINE.applyInjection();
       } else if (result.reason === 'no-ai-layers') {
-        setBfStatus('当前聊天没有可推演的 AI 楼层');
-        showToast('当前聊天没有可推演的 AI 楼层', true);
+        setBfStatus('The current chat has no AI messages to evolve');
+        showToast('The current chat has no AI messages to evolve', true);
       } else if (result.reason === 'busy') {
-        showToast('已有推演进行中，请稍候', true);
+        showToast('An evolution is already in progress; please wait', true);
       } else {
-        setBfStatus(`❌ 第 ${result.failedAt || '?'} 批失败，已停止（完成 ${result.completedBatches || 0} 批）`);
-        showToast(`回填在第 ${result.failedAt || '?'} 批失败已停止`, true);
-        if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('回填失败', true);
+        setBfStatus(`❌ Batch ${result.failedAt || '?'} failed; stopped (${result.completedBatches || 0} batches done)`);
+        showToast(`Backfill failed at batch ${result.failedAt || '?'} and stopped`, true);
+        if (window.__WE_SetExternalStatus) window.__WE_SetExternalStatus('Backfill failed', true);
         if (window.WORLD_ENGINE?.applyInjection) window.WORLD_ENGINE.applyInjection();
       }
     } catch (e) {
-      setBfStatus('❌ 回填异常: ' + (e && e.message || e));
-      showToast('回填异常: ' + (e && e.message || e), true);
+      setBfStatus('❌ Backfill error: ' + (e && e.message || e));
+      showToast('Backfill error: ' + (e && e.message || e), true);
     } finally {
       isEvolving = false;
       setEvolvingUI(false);
@@ -6262,20 +6273,20 @@ window.WORLD_ENGINE_UI = (function() {
     if (fwd) {
       fwd.style.display = face.showForward === true ? '' : 'none';
       fwd.classList.toggle('we-sat-off', active);
-      fwd.title = face.forwardTitle || `向前推进${face.label}`;
+      fwd.title = face.forwardTitle || `Advance ${face.label}`;
     }
     if (redo) {
       redo.classList.toggle('we-sat-off', active);
-      redo.title = `重新推演${face.label}`;
+      redo.title = `Re-evolve ${face.label}`;
     }
     if (abort) {
       abort.classList.toggle('we-sat-off', !active);
-      abort.title = active && runningLabel ? `停止${runningLabel}` : `停止${face.label}推演`;
+      abort.title = active && runningLabel ? `Stop ${runningLabel}` : `Stop ${face.label} evolution`;
     }
     if (power) {
       power.classList.toggle('on', getFaceSettings().engineEnabled === false);
       power.style.display = typeof face.setEnabled === 'function' ? '' : 'none';
-      power.title = `开关${face.label}推演与注入`;
+      power.title = `Turn ${face.label} evolution and injection on/off`;
     }
     if (engineSwitch) {
       const targetId = face.id === 'memory' ? 'world' : 'memory';
@@ -6288,14 +6299,14 @@ window.WORLD_ENGINE_UI = (function() {
       engineSwitch.classList.toggle('we-sat-target-memory', target.id === 'memory');
       engineSwitch.classList.toggle('we-sat-engine-running', targetActive);
       engineSwitch.title = targetActive
-        ? `${target.label}正在${targetRunningLabel || '推演'} · 点击切换查看`
-        : `切换到${target.label}`;
+        ? `${target.label} is running ${targetRunningLabel || 'evolution'} · click to switch and view`
+        : `Switch to ${target.label}`;
       engineSwitch.setAttribute('aria-label', engineSwitch.title);
     }
     ball.classList.toggle('we-ball-evolving', active);
     ball.title = active && runningLabel
-      ? `${face.label}：正在进行${runningLabel}`
-      : `${face.label}：单击打开面板`;
+      ? `${face.label}: running ${runningLabel}`
+      : `${face.label}: click to open the panel`;
     ball.setAttribute('aria-label', ball.title);
     if (active) ball.classList.remove('we-ball-success', 'we-ball-fail');
   }
@@ -6309,7 +6320,7 @@ window.WORLD_ENGINE_UI = (function() {
     }
     if (face.ballClass) ball.classList.add(face.ballClass);
     ball.dataset.engineFace = face.id;
-    ball.title = `${face.label}：单击打开面板`;
+    ball.title = `${face.label}: click to open the panel`;
     ball.setAttribute('aria-label', ball.title);
     updateBallControls();
   }
@@ -6465,7 +6476,7 @@ window.WORLD_ENGINE_UI = (function() {
       if (ring) ring.style.setProperty('--we-ring-pct', '0deg');
     };
 
-    if (/回填中/.test(text)) {
+    if (/Backfilling/.test(text)) {
       // 批量回填：地球持续旋转 + 右下角显示「批/总」进度
       ball.classList.add('we-ball-evolving');
       if (badge) badge.textContent = '';
@@ -6479,15 +6490,15 @@ window.WORLD_ENGINE_UI = (function() {
       } else {
         clearCount();
       }
-    } else if (/推演中/.test(text)) {
+    } else if (/Evolving/.test(text)) {
       ball.classList.add('we-ball-evolving');
       if (badge) badge.textContent = '';
       clearCount(); // 推演进行中不展示轮次计数，避免残留旧的 N/X
-    } else if (isError || /失败|异常/.test(text)) {
+    } else if (isError || /failed|error/i.test(text)) {
       ball.classList.add('we-ball-fail');
       if (badge) badge.textContent = '✕';
       _ballStatusTimer = setTimeout(() => clearBallBadge(), 6000);
-    } else if (/完成/.test(text)) {
+    } else if (/\bcomplete\b/i.test(text)) {
       ball.classList.add('we-ball-success');
       if (badge) badge.textContent = '✓';
       clearCount(); // 推演完成 → 计数已归零，清掉进度环与数字
@@ -6495,7 +6506,7 @@ window.WORLD_ENGINE_UI = (function() {
     }
 
     // 解析「第 N/X 轮」→ 进度环 + 数字（仅未到推演的提示态才显示）
-    const m = /第\s*(\d+)\s*\/\s*(\d+)\s*轮/.exec(text || '');
+    const m = /Round\s*(\d+)\s*\/\s*(\d+)/.exec(text || '');
     if (ring && m) {
       const cur = Number(m[1]), total = Number(m[2]) || 1;
       const pct = Math.max(0, Math.min(1, cur / total));
@@ -6552,7 +6563,7 @@ window.WORLD_ENGINE_UI = (function() {
     });
     wire('we-sat-abort', () => {
       const face = getEngineFace();
-      const done = result => { if (result !== ENGINE_ACTION_FAILED) showToast('已发送停止信号'); };
+      const done = result => { if (result !== ENGINE_ACTION_FAILED) showToast('Stop signal sent'); };
       const result = callEngineFaceAction(face, 'abort');
       if (result && typeof result.then === 'function') result.then(done);
       else done(result);
@@ -6567,7 +6578,7 @@ window.WORLD_ENGINE_UI = (function() {
       const finish = result => {
         if (result === ENGINE_ACTION_FAILED) return;
         updateBallControls();
-        showToast(turnOff ? `已关闭${face.label}推演与注入` : `已开启${face.label}推演与注入`);
+        showToast(turnOff ? `${face.label} evolution and injection turned off` : `${face.label} evolution and injection turned on`);
         if (typeof _currentView !== 'undefined' && _currentView === 'settings') refresh();
       };
       const result = callEngineFaceAction(face, 'setEnabled', !turnOff);
@@ -6588,8 +6599,8 @@ window.WORLD_ENGINE_UI = (function() {
       btn = document.createElement('button');
       btn.id = 'we-input-btn';
       btn.type = 'button';
-      btn.title = '世界引擎';
-      btn.setAttribute('aria-label', '世界引擎');
+      btn.title = 'World Engine';
+      btn.setAttribute('aria-label', 'World Engine');
       btn.className = 'we-ball';
       btn.innerHTML =
         '<span class="we-ball-orbit"></span>' +
@@ -6598,10 +6609,10 @@ window.WORLD_ENGINE_UI = (function() {
         '<span class="we-ball-count"></span>' +
         '<span class="we-ball-badge"></span>' +
         '<span class="we-ball-tip"></span>' +
-        '<span class="we-sat we-sat-up" id="we-sat-forward" role="button" title="向前推进"><i class="fa-solid fa-forward"></i></span>' +
-        '<span class="we-sat we-sat-right we-sat-off" id="we-sat-abort" role="button" title="停止推演"><i class="fa-solid fa-stop"></i></span>' +
-        '<span class="we-sat we-sat-down" id="we-sat-redo" role="button" title="重新推进"><i class="fa-solid fa-rotate-right"></i></span>' +
-        '<span class="we-sat we-sat-left" id="we-sat-power" role="button" title="插上=关闭推演与注入 / 拔下=开启"><i class="fa-solid fa-power-off"></i></span>' +
+        '<span class="we-sat we-sat-up" id="we-sat-forward" role="button" title="Advance"><i class="fa-solid fa-forward"></i></span>' +
+        '<span class="we-sat we-sat-right we-sat-off" id="we-sat-abort" role="button" title="Stop evolution"><i class="fa-solid fa-stop"></i></span>' +
+        '<span class="we-sat we-sat-down" id="we-sat-redo" role="button" title="Redo"><i class="fa-solid fa-rotate-right"></i></span>' +
+        '<span class="we-sat we-sat-left" id="we-sat-power" role="button" title="Plugged in = evolution and injection off / unplugged = on"><i class="fa-solid fa-power-off"></i></span>' +
         '<span class="we-sat we-sat-lower-right we-sat-engine-switch" id="we-sat-engine-switch" role="button"></span>';
       btn.onclick = () => togglePanel();
       document.body.appendChild(btn);
@@ -6630,7 +6641,7 @@ window.WORLD_ENGINE_UI = (function() {
       if (el) el.textContent = text;
       setBallState(text || '', !!isError);
       // 进度类（第 N/X 轮/天、回填中 i/M）只在悬浮球上显示；其余状态走屏幕顶部横幅
-      if (text && !/第\s*\d+\s*\/\s*\d+\s*[轮天]/.test(text) && !/回填中/.test(text)) {
+      if (text && !/(?:Round|Day)\s*\d+\s*\/\s*\d+/.test(text) && !/Backfilling/.test(text)) {
         showTopStatus(text, !!isError);
       }
     };

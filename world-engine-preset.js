@@ -25,10 +25,10 @@
   var EDITABLE_SEG_KEYS = ['engine-role', 'causal-steps', 'output-format', 'json-example'];
 
   var SEG_LABELS = {
-    'engine-role':   '① 引擎角色指令',
-    'causal-steps':  '② 因果检查（10 步）',
-    'output-format': '⑦ JSON 输出字段说明',
-    'json-example':  '⑧ JSON 示例'
+    'engine-role':   '① Engine role instructions',
+    'causal-steps':  '② Causal check (10 steps)',
+    'output-format': '⑦ JSON output field reference',
+    'json-example':  '⑧ JSON example'
   };
 
   // ── 工具 ───────────────────────────────────────
@@ -36,8 +36,8 @@
     return window.WORLD_ENGINE_STORE;
   }
 
-  function log(msg) { console.log('[世界引擎][预设] ' + msg); }
-  function warn(msg) { console.warn('[世界引擎][预设] ' + msg); }
+  function log(msg) { console.log('[World Engine][Preset] ' + msg); }
+  function warn(msg) { console.warn('[World Engine][Preset] ' + msg); }
 
   function deepClone(obj) {
     if (obj == null || typeof obj !== 'object') return obj;
@@ -48,7 +48,7 @@
   function getDefaultSegTexts() {
     var src = window.WORLD_ENGINE_EVOLUTION_DEFAULT_SEGS;
     if (src && typeof src === 'object') return src;
-    warn('WORLD_ENGINE_EVOLUTION_DEFAULT_SEGS 未就绪，默认段文本暂不可用');
+    warn('WORLD_ENGINE_EVOLUTION_DEFAULT_SEGS is not ready; default segment text is unavailable for now');
     return {};
   }
 
@@ -69,7 +69,7 @@
   // 把任意输入规整成合法预设对象。segments 里某段为 null/空串/非字符串 → 视作「无覆写」存 null。
   function normalizePreset(obj) {
     if (!obj || typeof obj !== 'object') obj = {};
-    var name = (obj.name == null ? '' : String(obj.name)).trim() || '未命名预设';
+    var name = (obj.name == null ? '' : String(obj.name)).trim() || 'Unnamed preset';
     var description = (obj.description == null ? '' : String(obj.description)).trim();
 
     var segments = {};
@@ -99,8 +99,8 @@
   function buildDefaultPreset() {
     return {
       id: DEFAULT_PRESET_ID,
-      name: '默认（硬编码）',
-      description: '世界引擎内置默认推演提示词，4 段均为硬编码原文。编辑或另存为即可自定义。',
+      name: 'Default (built-in)',
+      description: 'World Engine\'s built-in default evolution prompt; all 4 segments are the built-in originals. Edit it or save as a new preset to customize.',
       builtin: true,
       segments: { 'engine-role': null, 'causal-steps': null, 'output-format': null, 'json-example': null },
       createdAt: 0,
@@ -126,13 +126,13 @@
 
   function setActivePresetId(id) {
     var s = store();
-    if (!s) { warn('store 未就绪，无法保存激活预设'); return; }
+    if (!s) { warn('store not ready; cannot save the active preset'); return; }
     s.setItem(STORAGE_KEY_ACTIVE, id || DEFAULT_PRESET_ID);
   }
 
   function setActivePreset(id) {
     setActivePresetId(id);
-    log('已切换激活预设：' + (id || DEFAULT_PRESET_ID));
+    log('Switched active preset: ' + (id || DEFAULT_PRESET_ID));
   }
 
   function loadCustomPresets() {
@@ -146,15 +146,15 @@
       // 逐个规整，丢弃彻底无法解析的项。
       var out = [];
       for (var i = 0; i < arr.length; i++) {
-        try { out.push(normalizePreset(arr[i])); } catch (e) { warn('丢弃无法规整的自定义预设 #' + i); }
+        try { out.push(normalizePreset(arr[i])); } catch (e) { warn('Dropped a custom preset that could not be normalized #' + i); }
       }
       return out;
-    } catch (e) { warn('自定义预设存储损坏，当作空：' + e.message); return []; }
+    } catch (e) { warn('Custom preset storage is corrupted; treating it as empty: ' + e.message); return []; }
   }
 
   function saveCustomPresetsArray(arr) {
     var s = store();
-    if (!s) { warn('store 未就绪，无法保存预设列表'); return; }
+    if (!s) { warn('store not ready; cannot save the preset list'); return; }
     s.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(arr || []));
   }
 
@@ -189,7 +189,7 @@
     if (p.createdAt === 0) p.createdAt = now;
     if (idx >= 0) customs[idx] = p; else customs.push(p);
     saveCustomPresetsArray(customs);
-    log((idx >= 0 ? '更新' : '新增') + '自定义预设：' + p.name + ' (' + p.id + ')');
+    log((idx >= 0 ? 'Updated' : 'Added') + ' custom preset: ' + p.name + ' (' + p.id + ')');
     return p;
   }
 
@@ -203,19 +203,19 @@
     var customs = loadCustomPresets();
     customs.push(p);
     saveCustomPresetsArray(customs);
-    log('另存为新预设：' + p.name + ' (' + p.id + ')');
+    log('Saved as new preset: ' + p.name + ' (' + p.id + ')');
     return p;
   }
 
   function deleteCustomPreset(id) {
-    if (!id || id === DEFAULT_PRESET_ID) { warn('内置预设不可删除'); return false; }
+    if (!id || id === DEFAULT_PRESET_ID) { warn('Built-in presets cannot be deleted'); return false; }
     var customs = loadCustomPresets();
     var next = customs.filter(function (p) { return p.id !== id; });
-    if (next.length === customs.length) { warn('未找到要删除的预设：' + id); return false; }
+    if (next.length === customs.length) { warn('Preset to delete not found: ' + id); return false; }
     saveCustomPresetsArray(next);
     // 删的是当前激活的 → 回退默认。
     if (getActivePresetId() === id) setActivePresetId(DEFAULT_PRESET_ID);
-    log('已删除自定义预设：' + id);
+    log('Deleted custom preset: ' + id);
     return true;
   }
 
@@ -267,7 +267,7 @@
   // 导出：返回预设的 JSON 字符串（去掉内部时间戳可选，这里保留便于追溯）。
   function exportPreset(id) {
     var p = getPresetById(id || getActivePresetId());
-    if (!p) { warn('导出失败：未找到预设 ' + id); return null; }
+    if (!p) { warn('Export failed: preset not found ' + id); return null; }
     var out = {
       __worldEnginePreset: true,
       version: 1,
@@ -282,10 +282,10 @@
 
   // 导入：解析 JSON 字符串、校验、规整、存为自定义预设。返回新预设或抛错。
   function importPreset(jsonStr) {
-    if (!jsonStr || typeof jsonStr !== 'string') throw new Error('导入内容为空');
+    if (!jsonStr || typeof jsonStr !== 'string') throw new Error('Import content is empty');
     var obj;
     try { obj = JSON.parse(jsonStr); }
-    catch (e) { throw new Error('不是有效的 JSON：' + e.message); }
+    catch (e) { throw new Error('Not valid JSON: ' + e.message); }
     var src = (obj && obj.__worldEnginePreset && obj.preset) ? obj.preset : obj;
     var p = normalizePreset(src);
     p.id = genId();
@@ -294,7 +294,7 @@
     var customs = loadCustomPresets();
     customs.push(p);
     saveCustomPresetsArray(customs);
-    log('导入预设：' + p.name + ' (' + p.id + ')');
+    log('Imported preset: ' + p.name + ' (' + p.id + ')');
     return p;
   }
 
@@ -346,5 +346,5 @@
     normalizePreset: normalizePreset
   };
 
-  log('模块已加载。默认预设 id=' + DEFAULT_PRESET_ID + '，可编辑段：' + EDITABLE_SEG_KEYS.join(', '));
+  log('Module loaded. Default preset id=' + DEFAULT_PRESET_ID + ', editable segments: ' + EDITABLE_SEG_KEYS.join(', '));
 })();

@@ -21,9 +21,9 @@ window.WORLD_ENGINE_DIAG = (function() {
     for (const k in s) {
       if (k === 'apiKey') {
         const v = s[k];
-        out[k] = (v && String(v).length) ? ('***已设置(len=' + String(v).length + ')') : '(空)';
+        out[k] = (v && String(v).length) ? ('***set(len=' + String(v).length + ')') : '(empty)';
       } else if (k === 'apiUrl') {
-        out[k] = (s[k] && String(s[k]).length) ? '(已填)' : '(空)';
+        out[k] = (s[k] && String(s[k]).length) ? '(filled)' : '(empty)';
       } else {
         out[k] = s[k];
       }
@@ -44,7 +44,7 @@ window.WORLD_ENGINE_DIAG = (function() {
 
   function collect(scope) {
     if (scope === 'memory') return collectMemory();
-    if (scope != null && scope !== '' && scope !== 'world') throw new Error(`未知诊断 scope: ${scope}`);
+    if (scope != null && scope !== '' && scope !== 'world') throw new Error(`Unknown diagnostics scope: ${scope}`);
     const core = window.WORLD_ENGINE_CORE;
     const api = window.WORLD_ENGINE_API;
     const store = window.WORLD_ENGINE_STORE;
@@ -60,9 +60,9 @@ window.WORLD_ENGINE_DIAG = (function() {
     // —— 元信息 ——
     diag.meta = safe(function () {
       return {
-        extVersion: window.WORLD_ENGINE_VERSION || '未知（未读到 manifest 版本）',
+        extVersion: window.WORLD_ENGINE_VERSION || 'Unknown (manifest version not read)',
         collectedAt: new Date().toISOString(),
-        userAgent: (typeof navigator !== 'undefined' && navigator.userAgent) || '未知'
+        userAgent: (typeof navigator !== 'undefined' && navigator.userAgent) || 'Unknown'
       };
     });
 
@@ -88,13 +88,13 @@ window.WORLD_ENGINE_DIAG = (function() {
 
     // —— 设置（脱敏）——
     diag.settings = safe(function () {
-      if (!api || !api.getSettings) return { error: 'api 模块不可用' };
+      if (!api || !api.getSettings) return { error: 'api module unavailable' };
       return sanitizeSettings(api.getSettings(true));
     });
 
     // —— 世界状态摘要 ——
     diag.worldState = safe(function () {
-      if (!core || !core.loadState) return { error: 'core 模块不可用' };
+      if (!core || !core.loadState) return { error: 'core module unavailable' };
       const st = core.loadState() || {};
       const len = function (a) { return Array.isArray(a) ? a.length : 0; };
       return {
@@ -122,7 +122,7 @@ window.WORLD_ENGINE_DIAG = (function() {
 
     // —— 存档点 ——
     diag.checkpoint = safe(function () {
-      if (!core || !core.restoreCheckpoint) return { error: 'core 模块不可用' };
+      if (!core || !core.restoreCheckpoint) return { error: 'core module unavailable' };
       const cp = core.restoreCheckpoint();
       if (!cp) return { exists: false };
       return { exists: true, round: cp.round, chatLayer: cp.chatLayer };
@@ -130,7 +130,7 @@ window.WORLD_ENGINE_DIAG = (function() {
 
     // —— 指纹 / 层数 ——
     diag.fingerprint = safe(function () {
-      if (!core) return { error: 'core 模块不可用' };
+      if (!core) return { error: 'core module unavailable' };
       return {
         fingerprint: core.loadFingerprint ? core.loadFingerprint() : null,
         chatLayer: core.getChatLayer ? core.getChatLayer() : null,
@@ -142,7 +142,7 @@ window.WORLD_ENGINE_DIAG = (function() {
 
     // —— 推演状态（含完整 prompt / 原始返回，用户已同意含对话原文）——
     diag.evolution = safe(function () {
-      if (!evo) return { error: 'evolution 模块不可用' };
+      if (!evo) return { error: 'evolution module unavailable' };
       const dbg = evo.getLastDebug ? evo.getLastDebug() : {};
       // [FIX] 补采 PR#12 的 prompt 分段结构：只存 key/label/长度，不重复存完整文本
       //   （完整内容已在 lastPrompt；分段用于核对哪段被预设覆盖、各段占比）。
@@ -163,7 +163,7 @@ window.WORLD_ENGINE_DIAG = (function() {
 
     // —— 酒馆缓存 ——
     diag.chatcache = safe(function () {
-      if (!chatcache || !chatcache.getStatus) return { error: 'chatcache 模块不可用' };
+      if (!chatcache || !chatcache.getStatus) return { error: 'chatcache module unavailable' };
       const status = chatcache.getStatus();
       const snaps = chatcache.listSnapshots ? chatcache.listSnapshots() : [];
       return {
@@ -176,7 +176,7 @@ window.WORLD_ENGINE_DIAG = (function() {
 
     // —— 世界书 ——
     diag.worldbook = safe(function () {
-      if (!worldbook) return { error: 'worldbook 模块不可用' };
+      if (!worldbook) return { error: 'worldbook module unavailable' };
       const ids = worldbook.getSelectedIds ? worldbook.getSelectedIds() : [];
       return {
         selectedCount: Array.isArray(ids) ? ids.length : 0,
@@ -187,20 +187,20 @@ window.WORLD_ENGINE_DIAG = (function() {
 
     // —— 存储键（仅 key 名，不导 value：避免泄露与体积膨胀）——
     diag.store = safe(function () {
-      if (!store || !store.keys) return { error: 'store 模块不可用' };
+      if (!store || !store.keys) return { error: 'store module unavailable' };
       const keys = store.keys();
       return { count: keys.length, keys: keys };
     });
 
     // —— 规则 ——
     diag.rules = safe(function () {
-      if (!rules || !rules.getRuleCount) return { error: 'rules 模块不可用' };
+      if (!rules || !rules.getRuleCount) return { error: 'rules module unavailable' };
       return { ruleCount: rules.getRuleCount() };
     });
 
     // —— 引擎预设（PR#13 引入；诊断包此前未采集——排错时看不到当前预设与覆盖段）——
     diag.preset = safe(function () {
-      if (!preset) return { error: 'preset 模块不可用' };
+      if (!preset) return { error: 'preset module unavailable' };
       const active = preset.getActivePreset ? preset.getActivePreset() : null;
       const overridden = preset.getOverriddenSegKeys ? preset.getOverriddenSegKeys() : [];
       const custom = preset.getCustomPresets ? preset.getCustomPresets() : [];
@@ -223,7 +223,7 @@ window.WORLD_ENGINE_DIAG = (function() {
     // —— 注入自检快照（解耦只读模块；排错时直接看上轮世界状态有没有真进最终 prompt）——
     //   客户报「注入失败」时，这里能区分 SUCCESS / MISSING（真失败）/ SKIPPED_*（按设计跳过/自己关了）。
     diag.injectInspector = safe(function () {
-      if (!inspector || !inspector.getLastSnapshot) return { error: 'inspector 模块不可用' };
+      if (!inspector || !inspector.getLastSnapshot) return { error: 'inspector module unavailable' };
       const snap = inspector.getLastSnapshot();
       if (!snap) return { hasSnapshot: false, status: 'NOT_YET' };
       const out = {
@@ -256,7 +256,7 @@ window.WORLD_ENGINE_DIAG = (function() {
     // —— 过滤正则诊断（复用 core.validateFilterRegex：支持 /pat/flags 与纯 pattern 两种写法）——
     //   排错时无需猜测用户填的正则是否生效——这里逐行报出合法/非法条目与原因。
     diag.filterRegex = safe(function () {
-      if (!core || !core.validateFilterRegex) return { error: 'core.validateFilterRegex 不可用' };
+      if (!core || !core.validateFilterRegex) return { error: 'core.validateFilterRegex unavailable' };
       const s = (api && api.getSettings) ? api.getSettings(true) : {};
       let raw = '';
       try { raw = s && s.evolveFilterRegex ? String(s.evolveFilterRegex) : ''; } catch (e) { raw = ''; }
@@ -316,7 +316,7 @@ window.WORLD_ENGINE_DIAG = (function() {
       filterRegex: safe(function () {
         const raw = window.MEMORY_ENGINE_SETTINGS?.getSettings?.().filterRegex || '';
         const result = window.WORLD_ENGINE_CORE?.validateFilterRegex?.(raw);
-        return result ? { validCount: result.ok, invalidCount: result.bad.length, invalidList: result.bad, rawPreview: raw.slice(0, 200) } : { error: '校验器不可用' };
+        return result ? { validCount: result.ok, invalidCount: result.bad.length, invalidList: result.bad, rawPreview: raw.slice(0, 200) } : { error: 'Validator unavailable' };
       })
     };
   }

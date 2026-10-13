@@ -23,8 +23,8 @@ window.WORLD_ENGINE_INJECT_INSPECTOR = (function() {
   // 着陆哨兵：buildContext() 输出永远以「【世界信息】」开头（world-engine-inject.js），
   //   该子串无任何 {{...}} 宏，不被 ST substituteParams 改写 → 拿它判「注入是否进了最终 prompt」最稳。
   //   （注：拿完整注入串做 indexOf 会因 {{user}} 等宏被展开而假阴性，故只认这个无宏哨兵。）
-  const SENTINEL = '【世界信息】';
-  const MEMORY_SENTINEL = '【记忆信息】';
+  const SENTINEL = '[World state]';
+  const MEMORY_SENTINEL = '[Memory info]';
 
   // 事件名（字面量；运行时优先用 ctx.event_types 的常量，取不到再回退字面量）。
   const EV_TEXT = 'generate_after_combine_prompts';   // 文本补全/经典 API：eventData={prompt,dryRun}
@@ -166,16 +166,16 @@ window.WORLD_ENGINE_INJECT_INSPECTOR = (function() {
     try {
       const ctx = getCtx();
       if (!ctx || !ctx.eventSource || typeof ctx.eventSource.on !== 'function') {
-        console.warn('[世界引擎] 注入自检：eventSource 不可用，跳过订阅');
+        console.warn('[World Engine] Injection self-check: eventSource unavailable, skipping the subscription');
         return;
       }
       const et = ctx.event_types || {};
       ctx.eventSource.on(et.CHAT_COMPLETION_PROMPT_READY || EV_CHAT, onChatPromptReady);
       ctx.eventSource.on(et.GENERATE_AFTER_COMBINE_PROMPTS || EV_TEXT, onTextPromptReady);
       _subscribed = true;
-      console.log('[世界引擎] 注入自检查看器就绪（只读订阅 prompt-ready 事件）');
+      console.log('[World Engine] Injection self-check viewer ready (read-only subscription to the prompt-ready event)');
     } catch (e) {
-      console.warn('[世界引擎] 注入自检订阅失败（非致命）:', e && e.message);
+      console.warn('[World Engine] Injection self-check subscription failed (non-fatal):', e && e.message);
     }
   }
 
@@ -183,21 +183,21 @@ window.WORLD_ENGINE_INJECT_INSPECTOR = (function() {
   function getLastSnapshot(scope) {
     if (scope === 'memory') return _lastMemory;
     if (scope == null || scope === '' || scope === 'world') return _last;
-    throw new Error(`未知注入检查 scope: ${scope}`);
+    throw new Error(`Unknown injection check scope: ${scope}`);
   }
 
   // 状态码 → 大白话（UI 与 diag 共用，单一真相源）。
   const STATUS_TEXT = {
-    NOT_YET: '尚未生成，暂无注入记录',
-    SKIPPED_DISABLED: '本轮未注入：注入正文已关闭（插头/设置）',
-    SKIPPED_REROLL: '本轮按设计未注入：同层重 roll（swipe/重新生成）',
-    SKIPPED_OTHER: '本轮未注入：尚未触发推演或无世界状态',
-    SUCCESS: '✅ 本轮世界状态已进入正文',
-    MISSING: '❌ 已注册却没进最终 prompt——这才是真正的注入失败（疑被其它扩展清除/深度越界）',
+    NOT_YET: 'Not generated yet; no injection record',
+    SKIPPED_DISABLED: 'Not injected this round: story injection is off (plug/settings)',
+    SKIPPED_REROLL: 'Not injected this round by design: reroll of the same message (swipe/regenerate)',
+    SKIPPED_OTHER: 'Not injected this round: no evolution triggered yet or no world state',
+    SUCCESS: '✅ This round\'s world state reached the story prompt',
+    MISSING: '❌ Registered but missing from the final prompt — this is a real injection failure (possibly removed by another extension / depth out of range)',
   };
   function statusText(status, scope) {
     const text = STATUS_TEXT[status] || STATUS_TEXT.NOT_YET;
-    return scope === 'memory' ? text.replace(/世界状态/g, '记忆信息').replace(/无世界状态/g, '无记忆信息') : text;
+    return scope === 'memory' ? text.replace(/world state/g, 'memory info').replace(/[Nn]o world state/g, 'no memory info') : text;
   }
 
   return { init, getLastSnapshot, statusText, SENTINEL, MEMORY_SENTINEL };

@@ -181,7 +181,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
     try {
       const size = nsSize(ns);
       if (size > SIZE_WARN_BYTES) {
-        console.warn(`[世界引擎] 酒馆缓存体积偏大（约 ${(size / 1024).toFixed(0)}KB），可能拖慢聊天保存，建议减少存档条数。`);
+        console.warn(`[World Engine] The SillyTavern cache is large (about ${(size / 1024).toFixed(0)}KB) and may slow chat saving; consider keeping fewer saves.`);
       }
       if (typeof ctx.updateChatMetadata === 'function') {
         ctx.updateChatMetadata({ [NS]: ns });
@@ -196,7 +196,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
       else if (typeof ctx.saveChat === 'function') ctx.saveChat();
       return true;
     } catch (e) {
-      console.warn('[世界引擎] 写 chat_metadata 失败', e);
+      console.warn('[World Engine] Failed to write chat_metadata', e);
       return false;
     }
   }
@@ -270,7 +270,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
 
   function onStoreWrite(key, value) {
     try { memoryScope.onStoreWrite(key); }
-    catch (e) { console.warn('[记忆引擎] 酒馆缓存写入调度失败（已隔离）', e); }
+    catch (e) { console.warn('[Memory Engine] Failed to schedule the SillyTavern cache write (isolated)', e); }
     if (_suspend) return;
     const ctx = getCtx();
     if (!ctx || !chatUsable(ctx)) return;
@@ -283,7 +283,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
 
   function onChatLoaded() {
     try { memoryScope.onChatLoaded(); }
-    catch (e) { console.warn('[记忆引擎] 酒馆缓存恢复失败（已隔离）', e); }
+    catch (e) { console.warn('[Memory Engine] Failed to restore the SillyTavern cache (isolated)', e); }
     // 丢弃上一个聊天遗留的 pending tick，避免它在 B 上下文意外写盘 / 生成自动备份
     if (_tickTimer) { clearTimeout(_tickTimer); _tickTimer = null; }
     const ctx = getCtx();
@@ -304,7 +304,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
     if (remoteRev > lr) {
       installPack(remoteData, id, true); // 远端较新 → 采用
       setLocalRev(id, remoteRev);
-      console.log(`[世界引擎] 酒馆缓存：采用云端较新存档 rev ${remoteRev}（本地 ${lr}）`);
+      console.log(`[World Engine] SillyTavern cache: using the newer cloud save rev ${remoteRev} (local ${lr})`);
     } else if (remoteRev < lr) {
       pushLiveNow(); // 本地较新 → 推上去收敛
     }
@@ -344,7 +344,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
       _lastAutoRound = round; // 与最新自动备份内容相同 → 跳过，但更新基线
       return false;
     }
-    addSnapshot(ns, { name: `自动备份 · 第${round}轮`, auto: true, round, data: packed }, id);
+    addSnapshot(ns, { name: `Auto backup · round ${round}`, auto: true, round, data: packed }, id);
     _lastAutoRound = round;
     return true;
   }
@@ -365,7 +365,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
     const ns = ensureNamespace();
     const round = currentRound(id);
     const snap = addSnapshot(ns, {
-      name: String(name || `存档 · 第${round}轮`).trim().slice(0, 60) || `存档 · 第${round}轮`,
+      name: String(name || `Save · round ${round}`).trim().slice(0, 60) || `Save · round ${round}`,
       auto: false, round, data: packChat(id)
     }, id);
     return writeNamespace(ns) ? snap : null;
@@ -381,7 +381,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
     if (!snap) return false;
     if (hasAnyLocal(id)) {
       addSnapshot(ns, {
-        name: `恢复前自动备份 · 第${currentRound(id)}轮`, auto: true, round: currentRound(id), data: packChat(id)
+        name: `Auto backup before restore · round ${currentRound(id)}`, auto: true, round: currentRound(id), data: packChat(id)
       }, id);
     }
     installPack(snap.data, id, true);
@@ -411,7 +411,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
       }
       store().setItem(SLOTS.fingerprint(id), String(layer));
     } catch (e) {
-      console.warn('[世界引擎] 恢复后归一化失败', e);
+      console.warn('[World Engine] Normalization after restore failed', e);
     } finally {
       _suspend = false;
     }
@@ -452,7 +452,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
     if (!obj || obj.type !== 'world-engine-chat-snapshot' || !obj.data || typeof obj.data !== 'object') return null;
     const ns = ensureNamespace();
     const snap = addSnapshot(ns, {
-      name: (String(obj.name || '导入存档').trim().slice(0, 52) || '导入存档') + '（导入）',
+      name: (String(obj.name || 'Imported save').trim().slice(0, 52) || 'Imported save') + ' (imported)',
       auto: false, round: obj.round || 0, data: obj.data
     }, ctx.chatId);
     return writeNamespace(ns) ? snap : null;
@@ -534,7 +534,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
         else if (typeof ctx.saveMetadata === 'function') ctx.saveMetadata();
         else if (typeof ctx.saveChat === 'function') ctx.saveChat();
         return true;
-      } catch (e) { console.warn('[记忆引擎] 写聊天缓存失败', e); return false; }
+      } catch (e) { console.warn('[Memory Engine] Failed to write the chat cache', e); return false; }
     }
     function add(ns, input, id) {
       const info = meta(id);
@@ -563,7 +563,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
       const stateRaw = store().getItem(MSLOTS.state(ctx.chatId));
       if (backupOn() && stateRaw && stateRaw !== lastAutoState) {
         const data = mpack(ctx.chatId), newest = ns.snapshots.find(s => s.auto);
-        if (!newest || !sameData(newest.data, data)) { const info = meta(ctx.chatId); add(ns, { name: `自动备份 · 第${info.round}轮`, auto: true, data }, ctx.chatId); changed = true; }
+        if (!newest || !sameData(newest.data, data)) { const info = meta(ctx.chatId); add(ns, { name: `Auto backup · round ${info.round}`, auto: true, data }, ctx.chatId); changed = true; }
         lastAutoState = stateRaw;
       }
       if (changed && write(ns) && rev != null) setMrev(ctx.chatId, rev);
@@ -585,13 +585,13 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
     function listSnapshots() { return (read()?.snapshots || []).slice(); }
     function createSnapshot(name) {
       const ctx = getCtx(); if (!chatUsable(ctx) || !hasLocal(ctx.chatId)) return null;
-      const ns = ensure(), snap = add(ns, { name: String(name || '记忆存档').slice(0, 60), auto: false, data: mpack(ctx.chatId) }, ctx.chatId);
+      const ns = ensure(), snap = add(ns, { name: String(name || 'Memory save').slice(0, 60), auto: false, data: mpack(ctx.chatId) }, ctx.chatId);
       return write(ns) ? snap : null;
     }
     function restoreSnapshot(id) {
       const ctx = getCtx(); if (!chatUsable(ctx)) return false;
       const ns = ensure(), snap = ns.snapshots.find(s => s.id === id); if (!snap) return false;
-      if (hasLocal(ctx.chatId)) add(ns, { name: '恢复前自动备份', auto: true, data: mpack(ctx.chatId) }, ctx.chatId);
+      if (hasLocal(ctx.chatId)) add(ns, { name: 'Auto backup before restore', auto: true, data: mpack(ctx.chatId) }, ctx.chatId);
       minstall(snap.data, ctx.chatId, true);
       // 从其它聊天导入/恢复的记忆链不能继续沿用旧楼层游标；折叠为当前聊天 Root 后再向前累计。
       try {
@@ -600,7 +600,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
         if (restored?.timeline?.originChatId && restored.timeline.originChatId !== ctx.chatId) {
           memoryData.saveState(memoryData.rebaseToCurrentChat(restored));
         }
-      } catch (e) { console.warn('[记忆引擎] 跨聊天存档重定位失败', e); }
+      } catch (e) { console.warn('[Memory Engine] Failed to relocate the cross-chat save', e); }
       const rev = syncOn() ? pushLiveNow(ns, true) : null;
       if (!write(ns)) return false; if (rev != null) setMrev(ctx.chatId, rev); return true;
     }
@@ -609,7 +609,7 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
     function exportSnapshot(id) { const s = listSnapshots().find(x => x.id === id); return s ? { type: 'memory-engine-chat-snapshot', v: SCHEMA_VERSION, name: s.name, round: s.round, characters: s.characters, entities: s.entities, createdAt: s.createdAt, data: s.data } : null; }
     function importSnapshot(obj) {
       const ctx = getCtx(); if (!chatUsable(ctx) || obj?.type !== 'memory-engine-chat-snapshot' || !obj.data) return null;
-      const ns = ensure(), snap = add(ns, { name: String(obj.name || '导入存档') + '（导入）', auto: false, round: obj.round, characters: obj.characters, entities: obj.entities, data: obj.data }, ctx.chatId);
+      const ns = ensure(), snap = add(ns, { name: String(obj.name || 'Imported save') + ' (imported)', auto: false, round: obj.round, characters: obj.characters, entities: obj.entities, data: obj.data }, ctx.chatId);
       return write(ns) ? snap : null;
     }
     function getStatus() { const ctx = getCtx(), ns = read(); return { usable: chatUsable(ctx), apiAvailable: !!(ctx && (typeof ctx.updateChatMetadata === 'function' || ctx.chatMetadata)), syncEnabled: syncOn(), autoBackupEnabled: backupOn(), localRev: chatUsable(ctx) ? mrev(ctx.chatId) : 0, liveRev: Number(ns?.live?.rev) || 0, snapshotCount: ns?.snapshots?.length || 0 }; }
@@ -630,18 +630,18 @@ window.WORLD_ENGINE_CHATCACHE = (function() {
       const eventName = ctx.event_types?.CHAT_LOADED || 'chat_loaded';
       const guard = window.WORLD_ENGINE_GUARD_EVENT;
       const handler = typeof guard === 'function'
-        ? guard('共用缓存', '聊天加载', onChatLoaded)
-        : function() { try { onChatLoaded(); } catch (e) { console.error('[共用缓存] 聊天加载事件处理失败', e); } };
+        ? guard('Shared cache', 'chat loaded', onChatLoaded)
+        : function() { try { onChatLoaded(); } catch (e) { console.error('[Shared cache] Chat load event handling failed', e); } };
       ctx.eventSource.on(eventName, handler);
     }
     // 扩展加载时聊天通常已就绪（页面刷新、扩展中途启用）：对当前聊天做一次恢复 / 收敛
-    try { onChatLoaded(); } catch (e) { console.warn('[世界引擎] 酒馆缓存初始化恢复失败', e); }
+    try { onChatLoaded(); } catch (e) { console.warn('[World Engine] Failed to restore the SillyTavern cache on startup', e); }
   }
 
   function forScope(scope) {
     if (scope === 'memory') return memoryScope;
     if (scope == null || scope === '' || scope === 'world') return null;
-    throw new Error(`未知聊天缓存 scope: ${scope}`);
+    throw new Error(`Unknown chat cache scope: ${scope}`);
   }
 
   return {

@@ -28,7 +28,7 @@ window.WORLD_ENGINE_API = (function() {
       // [FIX] 连接方式：'direct'=浏览器直连（默认，原有行为）；'proxy'=经酒馆服务端转发，绕过第三方 API 的 CORS 限制
       connectionMode: 'direct',
       injectIntoPrompt: true,
-      injectMaxChars: 5000,
+      injectMaxChars: 18000,
       // 正文注入等级筛选：false=仅注入高等级信息（兼容旧行为），true=事件链与风声不按等级过滤
       injectAllLevels: false,
       // 世界 API 成功后，把本轮世界信息联动到记忆引擎。
@@ -144,11 +144,11 @@ window.WORLD_ENGINE_API = (function() {
         return h;
       }
     } catch (e) {}
-    throw new Error('经酒馆代理需要在酒馆环境中运行（未取到酒馆请求头）');
+    throw new Error('The SillyTavern proxy must run inside SillyTavern (no SillyTavern request headers found)');
   }
 
   function timeoutError(timeoutMs) {
-    return new Error('API 请求超时（' + Math.max(1, Math.ceil(timeoutMs / 1000)) + 's 无响应），已中止本次请求');
+    return new Error('API request timed out (' + Math.max(1, Math.ceil(timeoutMs / 1000)) + 's without response); this request was aborted');
   }
 
   function timeoutSeconds(timeoutMs) {
@@ -161,7 +161,7 @@ window.WORLD_ENGINE_API = (function() {
   }
 
   function logRequestParams(label, target, settings, body) {
-    console.log('[世界引擎] API 请求参数:', {
+    console.log('[World Engine] API request parameters:', {
       connectionMode: settings.connectionMode === 'proxy' ? 'proxy' : 'direct',
       transport: label,
       target,
@@ -195,7 +195,7 @@ window.WORLD_ENGINE_API = (function() {
 
   function requireJson(result, label) {
     if (result.parseError) {
-      throw new Error((label || 'API') + ' 返回不是有效 JSON：' + result.parseError.message);
+      throw new Error((label || 'API') + ' returned invalid JSON: ' + result.parseError.message);
     }
     return result.data || {};
   }
@@ -231,7 +231,7 @@ window.WORLD_ENGINE_API = (function() {
   // 走 OpenAI source + reverse_proxy 路线，这样可把我们自己的 URL/KEY 透传给上游。
   async function callApiViaProxy(settings, body, signal) {
     const base = getProxyBase(settings);
-    if (!base) throw new Error('未配置 API URL，请在设置中填写');
+    if (!base) throw new Error('No API URL configured; fill it in under settings');
     const payload = {
       chat_completion_source: 'openai',
       reverse_proxy: base,
@@ -252,14 +252,14 @@ window.WORLD_ENGINE_API = (function() {
     if (!resp.ok) {
       throw new Error(`HTTP ${resp.status}: ${responseDetail(result)}`);
     }
-    const data = requireJson(result, '酒馆代理');
+    const data = requireJson(result, 'SillyTavern proxy');
     if (data && data.error) {
-      throw new Error('酒馆代理返回错误：' + (data.error.message || JSON.stringify(data.error)));
+      throw new Error('SillyTavern proxy returned an error: ' + (data.error.message || JSON.stringify(data.error)));
     }
     const choice = data.choices?.[0];
-    if (!choice) throw new Error('API 返回缺少 choices[0]');
+    if (!choice) throw new Error('API response is missing choices[0]');
     if (choice.finish_reason === 'length') {
-      console.warn('[世界引擎] API 输出达到长度上限，将读取截断前已完整返回的字段');
+      console.warn('[World Engine] API output hit the length limit; fields fully returned before the cut will be read');
     }
     return choice.message?.content || '';
   }
@@ -289,7 +289,7 @@ window.WORLD_ENGINE_API = (function() {
     }
 
     const url = normalizeUrl(settings.apiUrl);
-    if (!url) throw new Error('未配置 API URL，请在设置中填写');
+    if (!url) throw new Error('No API URL configured; fill it in under settings');
 
     const headers = {
       'Content-Type': 'application/json'
@@ -313,9 +313,9 @@ window.WORLD_ENGINE_API = (function() {
 
     const data = requireJson(result, 'API');
     const choice = data.choices?.[0];
-    if (!choice) throw new Error('API 返回缺少 choices[0]');
+    if (!choice) throw new Error('API response is missing choices[0]');
     if (choice.finish_reason === 'length') {
-      console.warn('[世界引擎] API 输出达到长度上限，将读取截断前已完整返回的字段');
+      console.warn('[World Engine] API output hit the length limit; fields fully returned before the cut will be read');
     }
     return choice.message?.content || '';
   }
@@ -414,7 +414,7 @@ window.WORLD_ENGINE_API = (function() {
 
     // [FIX] 经酒馆代理：用酒馆 /status 端点拉模型列表，绕过 CORS
     if (settings.connectionMode === 'proxy') {
-      if (!baseUrl) throw new Error('未配置 API URL，请在设置中填写');
+      if (!baseUrl) throw new Error('No API URL configured; fill it in under settings');
       const result = await fetchResponseWithTimeout('/api/backends/chat-completions/status', {
         method: 'POST',
         headers: tavernHeaders(),
@@ -425,12 +425,12 @@ window.WORLD_ENGINE_API = (function() {
         })
       }, null, settings.apiTimeoutMs);
       if (!result.resp.ok) throw new Error(`HTTP ${result.resp.status}: ${responseDetail(result)}`);
-      const data = requireJson(result, '酒馆代理');
-      if (data && data.error) throw new Error('酒馆代理拉取模型失败（请检查 URL/密钥是否正确）');
+      const data = requireJson(result, 'SillyTavern proxy');
+      if (data && data.error) throw new Error('SillyTavern proxy failed to fetch models (check that the URL/key is correct)');
       if (data.data && Array.isArray(data.data)) {
         return data.data.map(m => m.id);
       }
-      throw new Error('无法解析模型列表');
+      throw new Error('Could not parse the model list');
     }
 
     const url = baseUrl + '/models';
@@ -443,7 +443,7 @@ window.WORLD_ENGINE_API = (function() {
     if (data.data && Array.isArray(data.data)) {
       return data.data.map(m => m.id);
     }
-    throw new Error('无法解析模型列表');
+    throw new Error('Could not parse the model list');
   }
 
   return { callApi, parseJSON, getSettings, fetchModelList };

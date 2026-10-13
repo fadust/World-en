@@ -144,8 +144,9 @@ window.MEMORY_ENGINE_TIMELINE = (function() {
       const found = map.get(clean(ref.messageId));
       if (!found) return '';
       const message = found.message;
-      const fallback = message?.is_user ? (ctx?.name1 || '用户') : (ctx?.name2 || '角色');
-      return `[楼层 ${found.layer}]【${clean(message?.name) || fallback}】\n${clean(message?.mes)}`;
+      const fallback = message?.is_user ? (ctx?.name1 || 'User') : (ctx?.name2 || 'Character');
+      return `[Message ${found.layer}][${clean(message?.name) || fallback}]
+${clean(message?.mes)}`;
     }).filter(Boolean).join('\n\n');
   }
 
