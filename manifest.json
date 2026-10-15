@@ -3,6 +3,7 @@
   "author": "Disnight · English port by fadust",
   "description": "Standalone-API world simulation: after each reply it evolves events, factions, news, economy and reputation, then injects the world state into the prompt. Includes a character memory engine, World Info triggers, chat-synced saves and batch backfill. English adaptation.",
   "version": "3.0.2",
+  "loading_order": 95,
   "license": "MIT",
   "type": "extension",
   "js": "world-engine.js",
