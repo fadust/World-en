@@ -875,32 +875,19 @@ Only secret actions and assets that need knowledge boundaries protected across r
   status shows whether the asset is still usable: Active = still usable, Stale = intelligence outdated, Exposed = discovered, Void = no longer usable.
 `;
 
-  const JSON_EXAMPLE = `{
-  "events": [
-    { "id": "event_1", "name": "Redblade Clan's Revenge", "type": "conflict", "level": 2, "stage": "Escalating", "stageRound": 5, "desc": "The Redblade Clan sent trackers, who set up a hidden lookout at Three-Mile Pavilion outside Greystone Pass" },
-    { "id": null, "name": "Bluefurnace Bureau Improves Gunpowder", "type": "progress", "level": 3, "stage": "Underway", "stageRound": 4, "desc": "The Bluefurnace Bureau has gathered saltpeter and fine charcoal and is testing small batches; the formula is not settled yet" }
-  ],
-  "factions": [
-    { "id": "faction_1", "name": "Redblade Clan", "scope": "Redblade Ridge and the three nearby towns", "status": "Stable", "relation": "Hostile", "currentGoal": "Revenge", "core_person": "Old Master Redblade", "powerPillars": ["Military deterrence","Spy network"] }
-  ],
-  "worldTrends": [
-    { "id": "trend_1", "name": "Northern War", "scope": "The three northern provinces and neighboring states", "status": "Ongoing", "description": "The border army and the northern tribes are locked in a long war; grain levies, conscription and blocked trade routes keep reshaping everyone's actions", "source": "Lv4 conflict event \\"Northern War\\" reached Erupted" }
-  ],
-  "winds": [
-    { "id": "wind_1", "topic": "Checkpoint at Greystone Pass", "type": "report", "level": 2, "content": "Soldiers have set up a checkpoint at Greystone Pass's north gate and are searching travelers", "scope": "Greystone Pass and nearby villages", "source": "Peddlers who saw it → passing caravans" }
-  ],
-  "economy": { "climate": "Steady", "signals": [] },
-  "reputation": { "authority": "Unknown", "common": "Unknown", "shadow": "Unknown", "circuit": "Unknown", "lastChange": "No change" },
-  "world_digest": "Redblade trackers set up a hidden lookout at Three-Mile Pavilion outside Greystone Pass; Lady Corwin, head of the Skywatch Society, recalled three outer agents by secret letter; the kitchen of the Drunken Sage Inn switched suppliers after grain merchants raised prices.",
-  "enemies": [
-    { "id": "enemy_1", "name": "Redblade Clan", "reason": "{{user}} killed the Redblade Clan's young master", "type": "blood", "status": "Striking" }
-  ],
-  "influenceChain": [
-    { "trigger": "Redblade Clan posts a bounty", "impact": "Outlaws began watching for {{user}}'s movements", "fallout": "Probing strangers and secret informants appear at inns and ferry crossings" }
-  ],
+  const JSON_EXAMPLE = `Format example only; this is not world state or history. Empty fields illustrate JSON structure, not a requirement to suppress autonomous developments. Generate actual updates from the current world, conversation and evolution rules.
+{
+  "events": [],
+  "factions": [],
+  "worldTrends": [],
+  "winds": [],
+  "economy": {},
+  "reputation": {},
+  "world_digest": "",
+  "enemies": [],
+  "influenceChain": [],
   "blackbox": { "secretActions": [], "secretAssets": [] }
 }`;
-
   // [MAP] 引擎预设：把引擎角色指令、因果检查10步提成模块级 const（内容与原函数内常量逐字一致），
   // 作为「默认预设」的单一真相源，供 world-engine-preset.js 引用（避免双份拷贝漂移）。
   // callEvolutionAPI 内不再重新定义，直接引用此处；覆写层用 Final 变量区分默认值与用户覆写。
