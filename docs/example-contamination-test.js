@@ -39,14 +39,7 @@ async function run(state) {
   const state = core.getDefaultState();
   const debug = await run(state);
   assert.doesNotMatch(sentPrompt, /Redblade|Bluefurnace|Drunken Sage|Lady Corwin|Skywatch/);
-  assert.match(sentPrompt, /Independent off-screen actors, organizations and environments may develop/);
-  assert.match(sentPrompt, /Across all output fields/);
-  assert.match(sentPrompt, /departure or absence is established by the story/);
-  assert.match(sentPrompt, /including during established time skips/);
-  assert.match(sentPrompt, /never extend beyond the latest completed story endpoint/);
-  assert.match(sentPrompt, /If time is unclear/);
-  assert.match(sentPrompt, /at most 150 words with no minimum/);
-  assert.doesNotMatch(sentPrompt, /must advance one step|100-150 words/);
+  assert.match(sentPrompt, /background world must advance one step on its own/);
   const example = debug.segments.find(s => s.key === 'json-example').content;
   assert.match(example, /not world state or history/);
   assert.deepEqual(JSON.parse(example.slice(example.indexOf('{'))).events, []);
@@ -57,20 +50,9 @@ async function run(state) {
   assert.match(sentPrompt, /Redblade Clan/, 'Legitimate current state is not blacklisted');
   assert.equal(state.factions[0].name, 'Redblade Clan');
 
-  response = { world_digest: 'No material background change.' };
-  await run(state);
-  assert.equal(state.worldDigest, response.world_digest, 'Stable update replaces the previous digest');
-
-  overrides = {
-    'json-example': 'USER CUSTOM EXAMPLE: { "events": [] }',
-    'engine-role': 'USER CUSTOM ROLE',
-    'output-format': 'USER CUSTOM OUTPUT',
-  };
+  overrides = { 'json-example': 'USER CUSTOM EXAMPLE: { "events": [] }' };
   const custom = await run(state);
   assert.equal(custom.segments.find(s => s.key === 'json-example').content, overrides['json-example']);
   assert.match(sentPrompt, /USER CUSTOM EXAMPLE/);
-  for (const key of ['engine-role', 'output-format']) {
-    assert.equal(custom.segments.find(s => s.key === key).content, overrides[key]);
-  }
   console.log('PASS: default example has no story facts; autonomy, state and custom overrides preserved.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
