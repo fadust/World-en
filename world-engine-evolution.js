@@ -597,6 +597,8 @@ Mandatory requirements:
 
       // 终局事件跳过
       if (terminalStages.includes(ev.stage)) continue;
+      // Unclassified/scene-dependent chains are not autonomous jobs.
+      if (ev.resolution !== 'world') continue;
       if (!ev.stage || !stageOrder.includes(ev.stage)) ev.stage = stageOrder[0];
 
       // 保底：连续非成功达到上限则强制成功
@@ -717,6 +719,9 @@ The limits below count words. Keep the writing concise; do not get around the li
 - worldTrends.description: at most 70 words.
 
 ### events (array of event chains)
+World Engine may create nearby pressures, arrivals and interruptions, but the story resolves their impact on the active scene. Do not turn unfinished foreground tasks into autonomous jobs. Across all output fields, stop at the external stimulus: never invent a scene participant's response, completed action, injury, departure or knowledge transfer. Independent off-screen developments remain autonomous within the elapsed story interval.
+Every event update requires resolution: "world" only for development independent of unresolved foreground actions, or "story" for progress/outcomes dependent on the active scene. Reassess against the latest conversation, not the previous label. Nearby pressure can be world-owned up to contact; resolving its effect on scene participants is story-owned. Missing/invalid resolution rejects the update and its provisional dice advance.
+For resolution="story", also supply storyEvidence: a verbatim quote from the latest AI story reply supporting the reported change. If no completed change is supported, return only id, name and resolution="story" to hold the existing chain unchanged. A plan or attempt is not completion; never use an unrelated quote. New foreground tasks need no event chain.
 Before creating or updating events, first match existing main matters by core goal or conflict, main parties and continuous process; steps, obstacles, costs, partial results and aftermath of the same matter must keep the original id. A matter that already shows concrete signs and still has room to develop may be created with id:null; it need not be mature yet, and you need not prove in advance that it will span several rounds. Planning, probing, the start of an investigation or a conflict first appearing can all be the early stages of an event chain. If the content clearly belongs to an existing matter as a step, obstacle or direct consequence, keep the original id. A different event type is not by itself a reason to split a chain; create separate chains only when they form conflicts or undertakings that can evolve independently.
 Each item contains:
 - id: existing events must return their current id unchanged; new events must explicitly use null, never omit it
@@ -950,7 +955,7 @@ ${tonePrompt}`
     const segStateBlock = `## Current world state (round ${state.round})
 ${JSON.stringify({
   round: state.round,
-  events: (state.events || []).map(e => ({ id: e.id, name: e.name, type: e.type || 'conflict', stage: e.stage, stageRound: e.stageRound, level: e.level, desc: e.desc, evolveResult: e.evolveResult, stall: e.stall })),
+  events: (state.events || []).map(e => ({ id: e.id, name: e.name, type: e.type || 'conflict', stage: e.stage, stageRound: e.stageRound, level: e.level, desc: e.desc, evolveResult: e.evolveResult, stall: e.stall, resolution: e.resolution || 'story' })),
   factions: (state.factions || []).map(f => ({ id: f.id, name: f.name, scope: f.scope, status: f.status, relation: f.relation, currentGoal: f.currentGoal, core_person: f.core_person, powerPillars: f.powerPillars })),
   worldTrends: state.worldTrends || [],
   winds: (state.winds || []).map(({ quietRounds, ...wind }) => wind),
@@ -1120,7 +1125,11 @@ AI: ${aiMsg || ''}`}`;
 
     try {
       // 第1步：本地骰子推进事件链（全部在 b 上操作）
+      const eventsBeforeDice = JSON.parse(JSON.stringify(state.events || []));
       forceTriggerEvents(state);
+      const rolledEvents = state.events;
+      // Dice are proposals until this round confirms independent world ownership.
+      state.events = eventsBeforeDice;
 
       // 第2步：风声沉寂累积与消散判定
       decayWinds(state);
@@ -1136,7 +1145,7 @@ AI: ${aiMsg || ''}`}`;
 
       // 第6步：喂给 API 做叙事更新
       const extraInstructions = [regionalIncidentRoll.injectPrompt, distantEventRoll.injectPrompt, nearEventRoll.injectPrompt].filter(Boolean).join('\n\n');
-      const update = await callEvolutionAPI(state, userMsg, aiMsg, extraInstructions, (opts && opts.dialogueText) || '');
+      const update = await callEvolutionAPI({ ...state, events: rolledEvents }, userMsg, aiMsg, extraInstructions, (opts && opts.dialogueText) || '');
 
       // 随机对象先识别并清洗临时标记，再进入既有实体 ID 分配与合并流程。
       acceptDistantEventResult(state, update);
@@ -1146,7 +1155,19 @@ AI: ${aiMsg || ''}`}`;
       for (const ev of update.events) {
         const existingIndex = core.findEntityIndex(state.events, ev, core.ENTITY_ID_PREFIXES.events, 'name');
         const existing = existingIndex !== -1 ? state.events[existingIndex] : null;
+        if (ev.resolution !== 'world' && ev.resolution !== 'story') continue;
+        if (ev.resolution === 'story') {
+          if (existing) existing.resolution = 'story';
+          const quote = typeof ev.storyEvidence === 'string' ? ev.storyEvidence.trim() : '';
+          // shortcut: quotes prove provenance, not entailment; assess semantic failures in the final live trial.
+          if (!quote || !(aiMsg || '').includes(quote)) continue;
+        } else if (existing) {
+          const rolled = rolledEvents.find(e => e.id === existing.id);
+          if (rolled) Object.assign(existing, rolled);
+        }
+        delete ev.storyEvidence; // Evidence stays in debug output, not repeated story inputs.
         if (existing) {
+          existing.resolution = ev.resolution;
           // API 的未知/错误 ID 不得污染本地身份；兼容同名认领时也强制继承本地 ID。
           ev.id = existing.id;
           // 事件类型一旦确定不可由 API 改动

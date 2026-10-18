@@ -193,6 +193,7 @@ window.WORLD_ENGINE_INJECT = (function() {
 
     const context = `
 [World state]
+Nearby developments supply external pressure; resolve their impact through the active story. Do not treat them as proof of an unplayed response, completed action, injury, departure or knowledge transfer by scene participants.
 Update round: ${worldState.round}
 Digest: ${worldState.worldDigest}
 Global trends: ${trendsText}
