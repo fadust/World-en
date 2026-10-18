@@ -84,7 +84,6 @@ window.WORLD_ENGINE_INJECT = (function() {
   };
 
   function buildContext(worldState, tags) {
-    if (worldState.offscreenOnly !== true) return ''; // Legacy nearby state remains saved, never injected.
     const rulesLoader = window.WORLD_ENGINE_RULES;
     const rulesSummary = rulesLoader ? rulesLoader.getCoreRulesSummary() : '';
     let injectAllLevels = false;
@@ -194,7 +193,7 @@ window.WORLD_ENGINE_INJECT = (function() {
 
     const context = `
 [World state]
-Off-screen background only. Do not turn these records into nearby arrivals, summons, encounters, private knowledge or changes to the current scene. Scene developments belong to the story and require its own established causes.
+Nearby developments supply external pressure; resolve their impact through the active story. Do not treat them as proof of an unplayed response, completed action, injury, departure or knowledge transfer by scene participants.
 Update round: ${worldState.round}
 Digest: ${worldState.worldDigest}
 Global trends: ${trendsText}
