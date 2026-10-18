@@ -719,9 +719,8 @@ The limits below count words. Keep the writing concise; do not get around the li
 - worldTrends.description: at most 70 words.
 
 ### events (array of event chains)
-World Engine may create nearby pressures, arrivals and interruptions, but the story resolves their impact on the active scene. Do not turn unfinished foreground tasks into autonomous jobs. Across all output fields, stop at the external stimulus: never invent a scene participant's response, completed action, injury, departure or knowledge transfer. Independent off-screen developments remain autonomous within the elapsed story interval.
-Every event update requires resolution: "world" only for development independent of unresolved foreground actions, or "story" for progress/outcomes dependent on the active scene. Reassess against the latest conversation, not the previous label. Nearby pressure can be world-owned up to contact; resolving its effect on scene participants is story-owned. Missing/invalid resolution rejects the update and its provisional dice advance.
-For resolution="story", also supply storyEvidence: a verbatim quote from the latest AI story reply supporting the reported change. If no completed change is supported, return only id, name and resolution="story" to hold the existing chain unchanged. A plan or attempt is not completion; never use an unrelated quote. New foreground tasks need no event chain.
+Nearby impact is disabled. Only independent off-screen developments may be created or updated; do not produce arrivals, interruptions, reactions to the active scene or outcomes for its participants in any output field.
+Every event update requires resolution: "world" for an independent background development. Missing/invalid resolution and all story-owned updates are rejected, including their provisional dice progress. Foreground actions and contact outcomes belong entirely to the story.
 Before creating or updating events, first match existing main matters by core goal or conflict, main parties and continuous process; steps, obstacles, costs, partial results and aftermath of the same matter must keep the original id. A matter that already shows concrete signs and still has room to develop may be created with id:null; it need not be mature yet, and you need not prove in advance that it will span several rounds. Planning, probing, the start of an investigation or a conflict first appearing can all be the early stages of an event chain. If the content clearly belongs to an existing matter as a step, obstacle or direct consequence, keep the original id. A different event type is not by itself a reason to split a chain; create separate chains only when they form conflicts or undertakings that can evolve independently.
 Each item contains:
 - id: existing events must return their current id unchanged; new events must explicitly use null, never omit it
@@ -923,15 +922,9 @@ Update the world state based on the world rules and this round's conversation. O
     const rulesLoader = window.WORLD_ENGINE_RULES;
     const fullRules = rulesLoader ? rulesLoader.getAllRulesText() : '[Failed to load rules]';
     // 蓝绿灯触发：扫描本扩展自己喂给推演的近期对话（解耦，不读酒馆的聊天扫描）
-    const worldbookScanText = dialogueText || `${userMsg || ''}\n${aiMsg || ''}`;
+    const worldbookScanText = JSON.stringify({ events: state.events, factions: state.factions, worldTrends: state.worldTrends });
     const worldbookSection = await window.WORLD_ENGINE_WORLDBOOK?.buildPromptSection?.(worldbookScanText) || '';
-    let memoryEngineSection = '';
-    try {
-      memoryEngineSection = window.MEMORY_ENGINE?.buildWorldEngineContext?.(state) || '';
-    } catch (error) {
-      // 可选跨引擎上下文必须故障隔离：记忆引擎异常不能中断世界推演。
-      console.error('[World Engine] Failed to read the Memory Engine context (isolated)', error);
-    }
+    const memoryEngineSection = ''; // Foreground memories cannot re-enter through the optional link.
     const tonePrompt = ((api.getSettings ? api.getSettings() : {}).tonePrompt || '').trim();
     const toneSection = tonePrompt
       ? `
@@ -966,9 +959,11 @@ ${JSON.stringify({
   blackbox: state.blackbox || { secretActions: [], secretAssets: [] }
 }, null, 2)}`;
 
-    const segDialogue = `## Recent conversation
-${dialogueText ? dialogueText : `User: ${userMsg || ''}
-AI: ${aiMsg || ''}`}`;
+    // The nearby-impact fallback removes scene content, rather than asking the model to classify it.
+    const timeMarkers = [...String(aiMsg || '').matchAll(/<bbs_(?:start|end)>\s*([\d/.: -]+)\s*<\/bbs_(?:start|end)>/g)].map(m => m[1].trim());
+    const segDialogue = `## Background-only simulation boundary
+The active conversation is intentionally withheld. Evolve independent off-screen affairs only. Never create contact with the active scene, summons by its participants, local reactions to it, player reputation changes or scene outcomes. Do not infer a nearby incident from missing information. Nearby impact is disabled in this fork. World state is background context, not permission to stage an encounter.
+Story-time markers: ${timeMarkers.length ? timeMarkers.join(' → ') : 'unknown; no elapsed duration established'}. Markers alone do not establish a time skip. Without an established interval, hold time-dependent progress. No foreground actions or private disclosures are supplied.`;
 
     const segExtraInstruction = extraInstruction ? extraInstruction : '';
     // toneSection 已含前导 \n\n；segments 存原始 toneSection，与实际发出一致
@@ -1097,6 +1092,8 @@ AI: ${aiMsg || ''}`}`;
       const cp = core.restoreCheckpoint();
       if (cp) {
         Object.assign(state, cp);
+        state.offscreenOnly = cp.offscreenOnly === true;
+        if (!Object.prototype.hasOwnProperty.call(cp, 'nearbyArchive')) delete state.nearbyArchive;
         state.memories = cp.memories || [];
         state.events = cp.events || [];
         state.factions = cp.factions || [];
@@ -1124,6 +1121,12 @@ AI: ${aiMsg || ''}`}`;
     _abortController = new AbortController();
 
     try {
+      if (state.offscreenOnly !== true) {
+        // Retain old worlds intact, but never feed their scene-derived facts back into this simulation.
+        const archive = JSON.parse(JSON.stringify(state));
+        const round = state.round;
+        Object.assign(state, core.getDefaultState(), { round, offscreenOnly: true, nearbyArchive: archive });
+      }
       // 第1步：本地骰子推进事件链（全部在 b 上操作）
       const eventsBeforeDice = JSON.parse(JSON.stringify(state.events || []));
       forceTriggerEvents(state);
@@ -1141,7 +1144,7 @@ AI: ${aiMsg || ''}`}`;
       const distantEventRoll = rollDistantEvent(state);
 
       // 第5步：当前剧情驱动的近端随机事件骰子
-      const nearEventRoll = rollNearEvent(state);
+      const nearEventRoll = { injectPrompt: '' }; // Nearby generation is disconnected, including pending jobs.
 
       // 第6步：喂给 API 做叙事更新
       const extraInstructions = [regionalIncidentRoll.injectPrompt, distantEventRoll.injectPrompt, nearEventRoll.injectPrompt].filter(Boolean).join('\n\n');
@@ -1149,19 +1152,18 @@ AI: ${aiMsg || ''}`}`;
 
       // 随机对象先识别并清洗临时标记，再进入既有实体 ID 分配与合并流程。
       acceptDistantEventResult(state, update);
-      acceptNearEventResult(state, update);
+      update.reputation = {}; // No player-facing social consequences without scene authority.
+      update.enemies = [];
 
       // 第7步：合并 API 返回
       for (const ev of update.events) {
+        const archivedTerminal = state.nearbyArchive?.events?.some(old => old.name === ev.name &&
+          (EVENT_TERMINAL_STAGES[old.type] || EVENT_TERMINAL_STAGES.conflict).includes(old.stage));
+        if (archivedTerminal) continue; // Quarantining history must not reopen its terminal outcomes.
         const existingIndex = core.findEntityIndex(state.events, ev, core.ENTITY_ID_PREFIXES.events, 'name');
         const existing = existingIndex !== -1 ? state.events[existingIndex] : null;
-        if (ev.resolution !== 'world' && ev.resolution !== 'story') continue;
-        if (ev.resolution === 'story') {
-          if (existing) existing.resolution = 'story';
-          const quote = typeof ev.storyEvidence === 'string' ? ev.storyEvidence.trim() : '';
-          // shortcut: quotes prove provenance, not entailment; assess semantic failures in the final live trial.
-          if (!quote || !(aiMsg || '').includes(quote)) continue;
-        } else if (existing) {
+        if (ev.resolution !== 'world') continue;
+        if (existing) {
           const rolled = rolledEvents.find(e => e.id === existing.id);
           if (rolled) Object.assign(existing, rolled);
         }
@@ -1213,7 +1215,11 @@ AI: ${aiMsg || ''}`}`;
           core.addEvent(state, ev);
         }
       }
-      for (const fac of update.factions) core.addFaction(state, fac);
+      for (const fac of update.factions) {
+        const index = core.findEntityIndex(state.factions, fac, core.ENTITY_ID_PREFIXES.factions, 'name');
+        fac.relation = index < 0 ? 'Neutral' : state.factions[index].relation;
+        core.addFaction(state, fac);
+      }
       for (const trend of update.worldTrends) core.addWorldTrend(state, trend);
       for (const wind of update.winds) core.addWind(state, wind);
       if (Object.keys(update.economy).length) Object.assign(state.economy, update.economy);
@@ -1370,6 +1376,8 @@ AI: ${aiMsg || ''}`}`;
       // 恢复前状态；恢复语句本身可能抛错（如 IDB 在内存压力下写失败），吞掉以免跳过 finally 复位
       try {
         Object.assign(state, backup);
+        if (!Object.prototype.hasOwnProperty.call(backup, 'offscreenOnly')) delete state.offscreenOnly;
+        if (!Object.prototype.hasOwnProperty.call(backup, 'nearbyArchive')) delete state.nearbyArchive;
         if (pendingDistant) state.distantEvent = pendingDistant;
         if (pendingNear) state.nearEvent = pendingNear;
         core.saveState(state);

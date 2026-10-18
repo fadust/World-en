@@ -27,6 +27,7 @@ const core = sandbox.WORLD_ENGINE_CORE;
 const engine = sandbox.WORLD_ENGINE_EVOLUTION;
 function fixture(resolution = 'world') {
   const state = core.getDefaultState();
+  state.offscreenOnly = true;
   core.addEvent(state, { id: null, name: 'A patrol approaches', type: 'progress', stage: 'Critical', stageRound: 8,
     consecutiveFails: 99, level: 1, desc: 'The patrol approaches the riverbank.', resolution });
   return state;
@@ -42,15 +43,16 @@ async function run(state, events, story = 'The patrol calls out. Kai has not ans
   assert.equal(event.stage, 'Critical', 'Scene handoff discards even a terminal dice proposal');
   assert.equal(event.stageRound, 8);
   assert.equal(event.desc, 'The patrol approaches the riverbank.', 'Unsupported prose is rejected with progress');
-  assert.equal(event.resolution, 'story');
+  assert.equal(event.resolution, 'world', 'Nearby updates cannot change background ownership');
   assert.equal(event.consecutiveFails, 99);
 
   const id = event.id;
   event = await run(state, [{ id, resolution: 'story', storyEvidence: 'Kai answers.', stage: 'Completed', desc: 'Kai answers.' }]);
   assert.equal(event.stage, 'Critical', 'Nonmatching quote cannot authorize a scene outcome');
   event = await run(state, [{ id, resolution: 'story', storyEvidence: 'Kai answers the patrol.', stage: 'Completed', desc: 'Kai answers the patrol.' }], 'Kai answers the patrol.');
-  assert.equal(event.stage, 'Completed', 'Actual story completion can be recorded');
+  assert.equal(event.stage, 'Critical', 'Even quoted foreground completion is outside the background engine');
   assert.equal(event.storyEvidence, undefined, 'Evidence is not duplicated in persistent state');
+  event = await run(state, [{ id, resolution: 'world', stage: 'Completed', desc: 'Independent background route completed.' }]);
   event = await run(state, [{ id, resolution: 'world', stage: 'Underway' }]);
   assert.equal(event.stage, 'Completed', 'Existing terminal protection survives');
 
@@ -72,10 +74,10 @@ async function run(state, events, story = 'The patrol calls out. Kai has not ans
   state = core.getDefaultState();
   await run(state, [{ id: null, name: 'Invented treatment', resolution: 'story', stage: 'Completed' }]);
   assert.equal(state.events.length, 0);
-  await run(state, [{ id: null, name: 'Patrol arrival', type: 'progress', resolution: 'world', stage: 'Underway', desc: 'A patrol approaches and calls out; the response is unresolved.' }]);
-  assert.equal(state.events.length, 1, 'Nearby external pressure remains allowed');
-  assert.match(prompt, /story resolves their impact/);
+  await run(state, [{ id: null, name: 'Distant bridge repair', type: 'progress', resolution: 'world', stage: 'Underway', desc: 'A distant crew works on its bridge.' }]);
+  assert.equal(state.events.length, 1, 'Independent background development remains allowed');
+  assert.match(prompt, /Nearby impact is disabled/);
   assert.match(prompt, /resolution/);
-  assert.match(sandbox.WORLD_ENGINE_INJECT.buildContext(state), /resolve their impact through the active story/);
-  console.log('PASS: ownership gates dice and merge; nearby pressure, grounded story updates and terminal protection retained.');
+  assert.match(sandbox.WORLD_ENGINE_INJECT.buildContext(state), /Off-screen background only/);
+  console.log('PASS: ownership gates dice and merge; foreground updates excluded, background and terminal protection retained.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
