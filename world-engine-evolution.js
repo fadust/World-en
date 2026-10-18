@@ -818,7 +818,7 @@ Four dimensions of reputation, five levels each (low to high; only these five va
 - lastChange: a short note on this round's change (e.g. "no change" or "authority rating rose for helping make an arrest")
 
 ### world_digest (string)
-This round's background world-evolution narrative, 100-150 words. First sense roughly how much story time has passed since the last world-state update, then describe the new changes that really happened compared with the last state (world-trend constraints, independent NPC actions, changes inside groups, spreading news and so on). Old conversation is only background; do not repeat it as new change. If little time passed or there are not enough new facts, you may write that the situation is basically stable or only slightly changed. Never mention {{user}}.
+A concise account of new background changes during the elapsed story interval, at most 150 words with no minimum. Use supplied story timestamps when available; never extend beyond the latest completed story endpoint to finish an activity. If time is unclear, keep changes proportionate to the available clues without inventing a duration. Independent off-screen activity need not already have been narrated, but must respect established facts, causal and knowledge boundaries, and the available time. Do not recap the foreground or invent departures, answers, completed tasks or decisions for participants still in the active scene. Plans and forecasts are not completed changes. When there is no material background change, return a brief nonempty stability statement instead of filling space. Old conversation is background, not a new development. Never mention {{user}}.
 
 ### enemies (array of the enemy roster)
 An enemy is a character or group with an irreversible personal grudge against {{user}} caused by concrete harm. Unlike faction-level hostility (that is the job of factions.relation), the defining traits of an enemy are: it never fades, and it hunts {{user}} down.
@@ -891,7 +891,8 @@ Only secret actions and assets that need knowledge boundaries protected across r
   // [MAP] 引擎预设：把引擎角色指令、因果检查10步提成模块级 const（内容与原函数内常量逐字一致），
   // 作为「默认预设」的单一真相源，供 world-engine-preset.js 引用（避免双份拷贝漂移）。
   // callEvolutionAPI 内不再重新定义，直接引用此处；覆写层用 Final 变量区分默认值与用户覆写。
-  const DEFAULT_SEG_ENGINE_ROLE = `You are a world-simulation engine. After every round of conversation, the background world must advance one step on its own.
+  const DEFAULT_SEG_ENGINE_ROLE = `You are a world-simulation engine. Evolve the background within the elapsed completed-story interval; negligible or no background change is valid. Independent off-screen actors, organizations and environments may develop according to their own goals and the world rules, including during established time skips.
+Across all output fields, treat the latest completed scene as the foreground boundary: do not advance its participants' locations, actions, knowledge or unresolved choices beyond what the conversation establishes. A participant becomes off-screen only when their departure or absence is established by the story; do not invent a departure to make them eligible for background evolution.
 Update the world state based on the world rules and this round's conversation. Output only JSON, with no other text.`;
 
   // 身份协议属于本地数据完整性约束，不允许被自定义引擎预设覆盖。
